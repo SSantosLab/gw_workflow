@@ -1,0 +1,27 @@
+# data files
+*.201*[0-9]
+*.cat
+*.csv
+*.dat
+*.fits*
+*.gz
+*.head
+*.log
+*.nnw
+*.out
+*.ps*
+*.reg
+sex*
+*.tgz
+*.xml
+*.xtalk
+
+# directories
+heads/
+matplotlib/
+qa/
+usr/
+
+# generated
+*.pyc
+*.swp
