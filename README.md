@@ -23,10 +23,11 @@ To run the script, type, for example,
 ##### Flags
 * `r`: RNUM
 * `p`: PNUM
-* `e`: Exposure number
+* `E`: Exposure number
 * `b`: Band (`i`, `r`, `g`, `Y`, `z`, or `u`)
 * `n`: Night
-* `d`: Destination cache (e.g. `persistent`)
+* `c`: CCD list (comma-separated integers)
+* `d`: Destination cache (`scratch` or `persistent`)
 * `m`: Schema (`gw` or `wsdiff`)
 
 The following flags do not require arguments:
