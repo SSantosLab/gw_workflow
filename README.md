@@ -1,6 +1,8 @@
 # gw_workflow
 Workflow for image processing. Currently consists of single-epoch (SE) processing and difference imaging.
 
+[Demo](#demo)
+
 ### Demo
 
 ##### Running `SE_job.sh`
