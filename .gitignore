@@ -25,3 +25,4 @@ usr/
 # generated
 *.pyc
 *.swp
+*~
