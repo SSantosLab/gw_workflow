@@ -1,7 +1,7 @@
 #!/bin/bash
 
 if [ $# -lt 1 ]; then
-    echo "usage: SE_job.sh -E EXPNUM -r RNUM -p PNUM -n NITE -b BAND [-c CCDS] [-j] [-s] [-m SCHEMA (gw or wsdiff)] [-Y] [-C] [-d destcache]" 
+    echo "usage: SE_job.sh -E EXPNUM -r RNUM -p PNUM -n NITE -b BAND [-c CCDS] [-j] [-s] [-O] [-m SCHEMA (gw or wsdiff)] [-Y] [-C] [-d destcache]" 
     exit 1
 fi
 
@@ -167,7 +167,7 @@ fi
 #### add other code here from Nikolay's area
 
 # ifdh cp -D /pnfs/des/persistent/desdm/code/desdmLiby1e2.py /pnfs/des/persistent/desdm/code/run_desdmy1e2.py /pnfs/des/persistent/desdm/code/run_SEproc.py  /pnfs/des/persistent/desdm/code/getcorners.sh /pnfs/des/persistent/kuropat/scripts/MySoft.tgz  /pnfs/des/scratch/gw/code/test_mysql_libs.tar.gz ./ || { echo "Error copying input files. Exiting." ; exit 2 ; }
-tar xzf ./MySoft.tgz
+# tar xzf ./MySoft.tgz # COMMENTED OUT on 6/4 to avoid recopying of BLISS file
 
 ifdh cp --force=xrootd /pnfs/des/persistent/${SCHEMA}/db-tools/desservices.ini ${HOME}/.desservices.ini
 
@@ -452,6 +452,8 @@ fi
 if [ "$DOCALIB" == "true" ]; then 
 
     setup expCalib
+
+    setup python 2.7.9+1
     
     python ./make_red_catlist.py
 #    ./make_red_catlist.sh
@@ -470,8 +472,13 @@ if [ "$DOCALIB" == "true" ]; then
 #    chmod 775 ./GGG-expCalib_Y3apass.py
 #    ./GGG-expCalib_Y3apass.py -s desoper --expnum $EXPNUM --reqnum $RNUM --attnum $PNUM
 #switch to BLISS version
+
+    unset healpy astropy fitsio matplotlib six python
+    export CONDA_DIR=/cvmfs/des.opensciencegrid.org/fnal/anaconda2
+    source $CONDA_DIR/etc/profile.d/conda.sh
+    conda activate des18a
     
-    ./BLISS-expCalib_Y3apass.py --expnum $EXPNUM --reqnum $RNUM --attnum $PNUM
+    ./BLISS-expCalib_Y3apass.py --expnum $EXPNUM --reqnum $RNUM --attnum $PNUM --ccd $CCDS
     
     RESULT=$? 
     echo "GGG-expCalib_Y3pass.py exited with status $RESULT"
