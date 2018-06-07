@@ -21,6 +21,10 @@ heads/
 matplotlib/
 qa/
 usr/
+.astropy/
+.eups/
+
+.desservices.ini
 
 # generated
 *.pyc
