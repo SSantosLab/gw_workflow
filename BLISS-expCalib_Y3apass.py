@@ -34,6 +34,7 @@ def main():
     parser.add_argument('--expnum', help='expnum is queried', default=350245, type=int)
     parser.add_argument('--reqnum', help='reqnum is queried', default=922, type=str)
     parser.add_argument('--attnum', help='attnum is queried', default=1, type=int)
+    parser.add_argument('--ccd', help='ccd is queried', default=1, type=int)
     parser.add_argument('--magType', help='mag type to use (mag_psf, mag_auto, mag_aper_8, ...)', default='mag_psf')
     parser.add_argument('--sex_mag_zeropoint', help='default sextractor zeropoint to use to convert fluxes to sextractor mags (mag_sex = -2.5log10(flux) + sex_mag_zeropoint)', type=float, default=25.0)
     parser.add_argument('--verbose', help='verbosity level of output to screen (0,1,2,...)', default=0, type=int)
@@ -908,7 +909,7 @@ def sigmaClipZP(args):
         sys.exit(1)
 
     data1=np.genfromtxt(catlistFile,dtype=None,encoding=None,delimiter=',',names=True)
-    ZeroListFile="""Zero_D%08d_r%sp%1d.csv""" % (args.expnum,args.reqnum,args.attnum)
+    ZeroListFile="""Zero_D%08d_%02d_r%sp%1d.csv""" % (args.expnum,args.ccd,args.reqnum,args.attnum)
 #change Feb22,2017		
     #ZeroListFile="""Zero_D%08d_r%sp%02d.csv""" % (args.expnum,args.reqnum,args.attnum)
     
@@ -969,12 +970,13 @@ def sigmaClipZP(args):
 #Added new!
     fout.close()        
 
+    #ZeroListFile="""Zero_D%08d_%02d_r%sp%1d.csv""" % (args.expnum,args.ccd,args.reqnum,args.attnum)
     ZeroListFile="""Zero_D%08d_r%sp%1d.csv""" % (args.expnum,args.reqnum,args.attnum)
     if not os.path.isfile(catlistFile):
         print '%s does not seem to exist... exiting now...' % ZeroListFile
         sys.exit(1)
 
-    MergedFile="""Merged_D%08d_r%sp%1d.csv""" % (args.expnum,args.reqnum,args.attnum)
+    MergedFile="""Merged_D%08d_%02d_r%sp%1d.csv""" % (args.expnum,args.ccd,args.reqnum,args.attnum)
     jointwocsv(catlistFile,ZeroListFile,MergedFile)
 
 ##################################
@@ -1113,12 +1115,12 @@ def ZP_OUTLIERS(args):
     #    print '%s does not seem to exist... exiting now...' % ZeroListFile
     #    sys.exit(1)
 
-    MergedFile="""Merged_D%08d_r%sp%1d.csv""" % (args.expnum,args.reqnum,args.attnum)
+    MergedFile="""Merged_D%08d_%02d_r%sp%1d.csv""" % (args.expnum,args.ccd,args.reqnum,args.attnum)
     if not os.path.isfile(MergedFile):
         print '%s does not seem to exist... exiting now...' % MergedFile
         sys.exit(1)
 
-    fout="""Merg_allZP_D%08d_r%sp%1d.csv""" % (args.expnum,args.reqnum,args.attnum)
+    fout="""Merg_allZP_D%08d_%02d_r%sp%1d.csv""" % (args.expnum,args.ccd,args.reqnum,args.attnum)
 
     df1=pd.read_csv(MergedFile)
     df2=np.genfromtxt(allZeroFile,dtype=None,encoding=None,delimiter=',',names=True)
@@ -1244,7 +1246,7 @@ def plotradec_ZP(args):
     #jointwocsv(catlistFile,ZeroListFile,Mergedout)
     #MergedFile="""Merg_allZP_D%08d_r%sp%1d.csv""" % (args.expnum,args.reqnum,args.attnum)
 
-    MergedFile="""Merged_D%08d_r%sp%1d.csv""" % (args.expnum,args.reqnum,args.attnum)    
+    MergedFile="""Merged_D%08d_%02d_r%sp%1d.csv""" % (args.expnum,args.ccd,args.reqnum,args.attnum)    
     data=np.genfromtxt(MergedFile,dtype=None,encoding=None,delimiter=',',names=True)
     stdRA = np.std(data['RA_CENT'])
     if stdRA > 20:
@@ -1478,12 +1480,12 @@ def Onefile(args):
 
     if args.verbose >0 : print args
 
-    catlistFile="""Merg_allZP_D%08d_r%sp%1d.csv""" % (args.expnum,args.reqnum,args.attnum)
+    catlistFile="""Merg_allZP_D%08d_%02d_r%sp%1d.csv""" % (args.expnum,args.ccd,args.reqnum,args.attnum)
     if not os.path.isfile(catlistFile):
         print '%s does not seem to exist...' % catlistFile
 
-    fout="""D%08d_r%sp%1d_ZP.csv""" % (args.expnum,args.reqnum,args.attnum)
-    fitsout="""D%08d_r%sp%1d_ZP.fits""" % (args.expnum,args.reqnum,args.attnum)
+    fout="""D%08d_%02d_r%sp%1d_ZP.csv""" % (args.expnum,args.ccd,args.reqnum,args.attnum)
+    fitsout="""D%08d_%02d_r%sp%1d_ZP.fits""" % (args.expnum,args.ccd,args.reqnum,args.attnum)
 
     #Removed Feb23,2017
     #os.system('rm %s ' %fitsout)

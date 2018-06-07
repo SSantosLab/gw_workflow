@@ -168,7 +168,7 @@ fi
 
 # ifdh cp -D /pnfs/des/persistent/desdm/code/desdmLiby1e2.py /pnfs/des/persistent/desdm/code/run_desdmy1e2.py /pnfs/des/persistent/desdm/code/run_SEproc.py  /pnfs/des/persistent/desdm/code/getcorners.sh /pnfs/des/persistent/kuropat/scripts/MySoft.tgz  /pnfs/des/scratch/gw/code/test_mysql_libs.tar.gz ./ || { echo "Error copying input files. Exiting." ; exit 2 ; }
 # tar xzf ./MySoft.tgz # COMMENTED OUT on 6/4 to avoid recopying of BLISS file
- tar xzf ./MySoft.tgz # COMMENTED OUT on 6/4 to avoid recopying of BLISS file
+# tar xzf ./MySoft.tgz # COMMENTED OUT on 6/4 to avoid recopying of BLISS file
 
 ifdh cp --force=xrootd /pnfs/des/persistent/${SCHEMA}/db-tools/desservices.ini ${HOME}/.desservices.ini
 
@@ -480,7 +480,7 @@ if [ "$DOCALIB" == "true" ]; then
     conda activate des18a
     
 #    ./BLISS-expCalib_Y3apass.py --expnum $EXPNUM --reqnum $RNUM --attnum $PNUM --ccd $CCDS
-    ./BLISS-expCalib_Y3apass-old.py --expnum $EXPNUM --reqnum $RNUM --attnum $PNUM #--ccd $CCDS
+    ./BLISS-expCalib_Y3apass-old.py --expnum $EXPNUM --reqnum $RNUM --attnum $PNUM --ccd $CCDS
 
     
     RESULT=$? 
