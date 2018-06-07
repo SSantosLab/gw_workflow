@@ -34,7 +34,6 @@ def main():
     parser.add_argument('--expnum', help='expnum is queried', default=350245, type=int)
     parser.add_argument('--reqnum', help='reqnum is queried', default=922, type=str)
     parser.add_argument('--attnum', help='attnum is queried', default=1, type=int)
-    parser.add_argument('--ccd', help='ccd is queried', default=1, type=int)
     parser.add_argument('--magType', help='mag type to use (mag_psf, mag_auto, mag_aper_8, ...)', default='mag_psf')
     parser.add_argument('--sex_mag_zeropoint', help='default sextractor zeropoint to use to convert fluxes to sextractor mags (mag_sex = -2.5log10(flux) + sex_mag_zeropoint)', type=float, default=25.0)
     parser.add_argument('--verbose', help='verbosity level of output to screen (0,1,2,...)', default=0, type=int)
@@ -57,7 +56,7 @@ def main():
 
     #-- ADDED NEW
     #GET STD from APASS-DR9 and 2MASS FULL SKY
-#    status= getallccdfromAPASS92MASS(args)
+    #status= getallccdfromAPASS92MASS(args)
     status= getallccdfromGAIA(args)
 
     #-- ADDED NEW
@@ -110,8 +109,10 @@ def doset(args):
 #    print " file %s found \n" %catlistFile
     data=np.genfromtxt(catlistFile,dtype=None,encoding=None,delimiter=',',names=True)
 #    print " befor loop \n"    
+
     for i in range(data['FILENAME'].size):
-        # to avoid error when array is not 2D because it only has one entry
+    # to avoid error when array is not 2D because it only has one entry
+    # different from line 417 because this is a numpy array, not pandas
         filetocheck = data['FILENAME']
         databand = data['BAND']
         dataracent = data['RA_CENT']
@@ -160,7 +161,7 @@ def doset(args):
             desipix12=getipix(128,datarac1,datadeccent)
             desipix23=getipix(128,dataracent,datadec2)
             desipix34=getipix(128,datarac3,datadeccent)
-            desipix14=getipix(128,dataracent,datadec4) 
+            desipix14=getipix(128,dataracent,datadec4)
 
             desipixlist= desipixc,desipix1,desipix2,desipix3,desipix4,desipix12,desipix23,desipix34,desipix14
             desipixlist=uniqlist(desipixlist)
@@ -168,7 +169,7 @@ def doset(args):
             ra1=[];ra2=[];dec1=[];dec2=[]
             matchlistout="""%s_match.csv""" % (filetocheck)
             objlistFile ="""%s_Obj.csv"""   % (filetocheck)
-            stdlistFile ="""%s_std.csv"""   % (filetocheck)        
+            stdlistFile ="""%s_std.csv"""   % (filetocheck)
 
             if not os.path.isfile(objlistFile):
                 print '%s does not seem to exist... exiting now...' % objlistFile            
@@ -239,7 +240,7 @@ def Read_Sexcatalogfitstocsv(args,fitsname,band):
     SEXdata=[]
     columns=['NUMBER','ALPHAWIN_J2000','DELTAWIN_J2000',fluxType,fluxerrType,'SPREAD_MODEL','SPREADERR_MODEL','FWHM_WORLD', 'CLASS_STAR', 'FLAGS']
 
-    Fdata = fitsio.read(catFilename,  columns=columns, ext=extension) #TODO: a guess that this is supposed to be the Fdata used in subsequent lines
+    Fdata = fitsio.read(catFilename,  columns=columns, ext=extension)[:]
     #w0=( Fdata['FLUX_PSF'] > 2000) _OLD  
     w0=( Fdata['FLUX_PSF'] > 1000)  #NEW
     w1=( Fdata['FLAGS'] <= 3)
@@ -301,6 +302,7 @@ def getallccdfromGAIA(args):
     import pandas as pd
     import string,sys,os,glob
     import fitsio
+    import math
 
     #print NEED Round RA
     catlistFile="""D%08d_r%sp%s_red_catlist.csv""" % (args.expnum,str(args.reqnum),str(args.attnum))
@@ -341,7 +343,21 @@ def getallccdfromGAIA(args):
     dec=-45
     nside=32
     radius=np.radians(0.2)
-    vec = hp.pixelfunc.ang2vec(ra,dec,lonlat=True)
+    #vec = hp.pixelfunc.ang2vec(ra,dec,lonlat=True) # for new healpy 1.11.0 and python 2.7.15
+
+    # FOR OLD HEALPY 1.5dev
+    conversion=math.pi/180
+    colatitude=conversion*dec
+    longitude=conversion*(90-ra)
+    if colatitude > math.pi:
+        colatitude=colatitude-math.pi
+    if colatitude < 0:
+        colatitude=colatitude+math.pi
+    if longitude > math.pi:
+        longitude=longitude-math.pi
+    if longitude < 0:
+        longitude=longitude+math.pi
+    vec = hp.pixelfunc.ang2vec(colatitude, longitude)
 
     # List of nside=32 healpix pixel around specific ra,dec
     pix = hp.query_disc(nside,vec,radius,inclusive=True)
@@ -397,11 +413,12 @@ def getallccdfromGAIA(args):
 
     for i in range(data['RA_CENT'].size):
         # adjust naming in case array is not 2d because it only contains one element
-        filetocheck = data['FILENAME']
-        databand = data['BAND']
-        if data['FILENAME'].size>1:
-            filetocheck = data['FILENAME'][i]
-            databand = data['BAND'][i]
+        #filetocheck = data['FILENAME'] #this line was writing a funky csv file
+#        filetocheck = data['FILENAME'][0]
+#        databand = data['BAND']
+#        if data['FILENAME'].size>1:
+        filetocheck = data['FILENAME'][i]
+        databand = data['BAND'][i]
         dataracent = data['RA_CENT'][i]
         datarac1 = data['RAC1'][i]
         datarac2 = data['RAC2'][i]
@@ -425,6 +442,7 @@ def getallccdfromGAIA(args):
         w3 = ( datastd1['DEC'] > mindec );w4 = ( datastd1['DEC'] < maxdec )
         df = datastd1[ w1 &  w2 & w3 & w4 ].sort_values(by=['RA'], ascending=True)
         df.to_csv(stdlistFile,columns=col,sep=',',index=False)
+
 ###################################
 #NEW  July 14,2016 
 #This is a FULL SKY 
@@ -551,7 +569,7 @@ def plotradec_sexvsY2Q1(args):
         print '%s does not seem to exist... exiting now...' % catlistFile
         sys.exit(1)
 
-    data=np.genfromtxt(catlistFile,dtype=None,delimiter=',',names=True)
+    data=np.genfromtxt(catlistFile,dtype=None,encoding=None,delimiter=',',names=True)
 
     for i in range(data['FILENAME'].size):
         ra1=[];ra2=[];dec1=[];dec2=[]
@@ -903,7 +921,7 @@ def sigmaClipZP(args):
         if data1['FILENAME'].size>1:
             data1name = data1['FILENAME'][i]
         data1name = np.array2string(data1name).strip('\'') # problem with filetocheck being a numpy array
-        data1name = data1name[2:] # hacky fix for unicode encoding
+        data1name = data1name[data1name.find('\'')+1:]# hacky fix in case of unicode encoding
 
         catFilename = os.path.basename(data1name)
         matchListFile="%s_match.csv" % (catFilename)        
@@ -1019,10 +1037,8 @@ def sigmaClipZPallCCDs(args):
     stddf.to_csv(stdfile,sep=',',index=False)
     path='./'
     all_files = glob.glob(os.path.join(path, "*Obj.csv"))     
-    df = pd.concat((pd.read_csv(f) for f in all_files))
-    #df = df.sort_values(by=['RA'], ascending=True) 
-    df = df.sort_values(by=['NUMBER'], ascending=True) # guessed to sort by number... originally by RA
-    #TODO: no RA field
+    df = pd.concat((pd.read_csv(f) for f in all_files)).sort_values(by=['NUMBER'], ascending=True) # guessed to sort by number... originally by RA
+    #TODO: oscillates between no RA field and having one????
     # fields are EXPNUM  CCDNUM  NUMBER  ALPHAWIN_J2000  DELTAWIN_J2000     FLUX_AUTO FLUXERR_AUTO      FLUX_PSF  FLUXERR_PSF   MAG_AUTO SPREADERR_MODEL  FWHM_WORLD  FWHMPSF_IMAGE  FWHMPSF_WORLD  CLASS_STAR FLAGS  IMAFLAGS_ISO  ZeroPoint  ZeroPoint_rms  ZeroPoint_FLAGS
 
     #read all file and sort and save 
@@ -1102,10 +1118,10 @@ def ZP_OUTLIERS(args):
         print '%s does not seem to exist... exiting now...' % MergedFile
         sys.exit(1)
 
-    fout="""Merg_allZP_D%08d_r%sp%1d_ccd%d.csv""" % (args.expnum,args.reqnum,args.attnum,args.ccd)
+    fout="""Merg_allZP_D%08d_r%sp%1d.csv""" % (args.expnum,args.reqnum,args.attnum)
 
     df1=pd.read_csv(MergedFile)
-    df2=np.genfromtxt(allZeroFile,dtype=None,delimiter=',',names=True)
+    df2=np.genfromtxt(allZeroFile,dtype=None,encoding=None,delimiter=',',names=True)
 
     w0= ( df1['Nclipped'] < 4 ) | ( df1['ZP'] < -100 ) | ( df1['ZPrms'] > 0.3 )
     df1['NewZP']=np.where(w0 , df2['sigclipZP'],df1['ZP'])
@@ -1229,7 +1245,7 @@ def plotradec_ZP(args):
     #MergedFile="""Merg_allZP_D%08d_r%sp%1d.csv""" % (args.expnum,args.reqnum,args.attnum)
 
     MergedFile="""Merged_D%08d_r%sp%1d.csv""" % (args.expnum,args.reqnum,args.attnum)    
-    data=np.genfromtxt(MergedFile,dtype=None,delimiter=',',names=True)
+    data=np.genfromtxt(MergedFile,dtype=None,encoding=None,delimiter=',',names=True)
     stdRA = np.std(data['RA_CENT'])
     if stdRA > 20:
         data['RA_CENT']=[roundra(x) for x in data['RA_CENT']]
@@ -1422,14 +1438,14 @@ def apply_ZP_Sexcatalogfitstocsv(catFilename,EXPNUM,CCDNUM,zeropoint,zeropoint_r
     hdr=['NUMBER','ALPHAWIN_J2000','DELTAWIN_J2000','FLUX_AUTO','FLUXERR_AUTO','FLUX_PSF','FLUXERR_PSF','MAG_AUTO','MAGERR_AUTO','MAG_PSF','MAGERR_PSF','SPREAD_MODEL','SPREADERR_MODEL','FWHM_WORLD','FWHMPSF_IMAGE','FWHMPSF_WORLD','CLASS_STAR','FLAGS','IMAFLAGS_ISO']
 
     catFilename = np.array2string(catFilename).strip('\'') # problem with filetocheck being a numpy array
-    catFilename = catFilename[2:] # hacky fix for unicode encoding
+    #catFilename = catFilename[2:] # hacky fix for unicode encoding
+    catFilename = catFilename[catFilename.find('\'')+1:]# hacky fix in case of unicode encoding
 
     #print "catFilename: " ; print catFilename
 
     data = fitsio.read(catFilename,  columns=hdr, ext=extension)[:]
     data = data[np.argsort(data['ALPHAWIN_J2000'])]
 
-#    for i in range(data['FLUX_AUTO'].size):
     w1=( data['FLUX_AUTO'] >0. )
     data['MAG_AUTO'] = np.where(w1 , (-2.5*np.log10(data['FLUX_AUTO']) - zeropoint) ,np.int16(-9999))
     data['MAGERR_AUTO'] = np.where(w1 ,(2.5/math.log(10.))*(data['FLUXERR_AUTO']/data['FLUX_AUTO']) ,np.int16(-9999))
@@ -1466,8 +1482,8 @@ def Onefile(args):
     if not os.path.isfile(catlistFile):
         print '%s does not seem to exist...' % catlistFile
 
-    fout="""D%08d_r%sp%1d_ccd%d_ZP.csv""" % (args.expnum,args.reqnum,args.attnum,args.ccd)
-    fitsout="""D%08d_r%sp%1d_ccd%d_ZP.fits""" % (args.expnum,args.reqnum,args.attnum,args.ccd)
+    fout="""D%08d_r%sp%1d_ZP.csv""" % (args.expnum,args.reqnum,args.attnum)
+    fitsout="""D%08d_r%sp%1d_ZP.fits""" % (args.expnum,args.reqnum,args.attnum)
 
     #Removed Feb23,2017
     #os.system('rm %s ' %fitsout)
