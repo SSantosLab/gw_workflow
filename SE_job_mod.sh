@@ -155,7 +155,7 @@ else
 fi
 
 if [ "$DOCALIB" == "true" ] ; then
-    echo "This SE job will include GGG calib step."
+    echo "This SE job will include BLISS calib step."
 else
     echo "This SE job will use calib info from the DB."
     filestorm="`ifdh ls /pnfs/des/${DESTCACHE}/${SCHEMA}/exp/${NITE}/${EXPNUM}/'*_r'${RNUM}p${PNUM}'_fullcat.fits' | grep fits | grep fnal` `ifdh ls /pnfs/des/${DESTCACHE}/${SCHEMA}/exp/${NITE}/${EXPNUM}/'*_r'${RNUM}p${PNUM}'*csv*' | grep csv | grep fnal`"
@@ -479,10 +479,12 @@ if [ "$DOCALIB" == "true" ]; then
     source $CONDA_DIR/etc/profile.d/conda.sh
     conda activate des18a
     
-    ./BLISS-expCalib_Y3apass.py --expnum $EXPNUM --reqnum $RNUM --attnum $PNUM --ccd $CCDS
+#    ./BLISS-expCalib_Y3apass.py --expnum $EXPNUM --reqnum $RNUM --attnum $PNUM --ccd $CCDS
+    ./BLISS-expCalib_Y3apass-old.py --expnum $EXPNUM --reqnum $RNUM --attnum $PNUM #--ccd $CCDS
+
     
     RESULT=$? 
-    echo "GGG-expCalib_Y3pass.py exited with status $RESULT"
+    echo "BLISS-expCalib_Y3pass.py exited with status $RESULT"
     
 #not needed anymore since we are going to overwrite existing files via xrootd    
 #    files2rm="`ifdh ls /pnfs/des/${DESTCACHE}/${SCHEMA}/exp/${NITE}/${EXPNUM}/'allZP*r'${RNUM}'*p'${PNUM}'*.csv' | grep csv` `ifdh ls /pnfs/des/${DESTCACHE}/${SCHEMA}/exp/${NITE}/${EXPNUM}/'Zero*r'${RNUM}'*p'${PNUM}'*.csv' | grep csv` `ifdh ls /pnfs/des/${DESTCACHE}/${SCHEMA}/exp/${NITE}/${EXPNUM}/'D*'${EXPNUM}'*_ZP.csv'  | grep csv` `ifdh ls /pnfs/des/${DESTCACHE}/${SCHEMA}/exp/${NITE}/${EXPNUM}/'D*'${EXPNUM}'*CCDsvsZPs.png' | grep png` `ifdh ls /pnfs/des/${DESTCACHE}/${SCHEMA}/exp/${NITE}/${EXPNUM}/'D*'${EXPNUM}'*NumClipstar.png' | grep png` `ifdh ls /pnfs/des/${DESTCACHE}/${SCHEMA}/exp/${NITE}/${EXPNUM}/'D*'${EXPNUM}'*ZP.png'  | grep png`" 
