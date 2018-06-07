@@ -1,0 +1,114 @@
+
+# Oct 18, 2014: use NERSC-astrom file with DES-v2 catalog
+
+# Jun 1, 2015: test at FNAL on des41
+
+# we just want to make the directory structure; nothing more now
+#NODELIST:  des41 des41 des30 des30 des21 des21 des20 des20 
+#NODELIST:  des41 des41 des41 des41 des41 des41 des41 des41
+#NODELIST:  des20 des30 des20 des30  des20 des30
+#NODELIST:  des20 des20 des20 des20 des20 des20
+
+TARGET_NITE: THENITE
+TARGET_TILE: THETILE
+NEXPOSE: 1
+OPT_MKTEMPLATE: 1
+OPT_COMPRESS:   0  # 1 = yes
+OPT_ASTROM:     6  # astrometry bits, 7=original value ; 6=turns off stripPV
+OPT_DIFF_COADD: 1  # 1=subtract coadd (default);  2=coadd subtractions
+OPT_MASKFILES:  0
+
+EXPOSURE_TIME: 90
+#TOPDIR_INPUTSUMMARY:   /data/des20.b/data/WSruns/input  # night scheme for SN, for GW we will figure this out later
+#TOPDIR_INPUTSUMMARY:   /home/s1/kherner  # night scheme for SN, for GW we will figure this out later
+TOPDIR_INPUTSUMMARY: .
+#TOPDIR_TEMPLATES:      /pnfs/des/scratch/gw/exp/THENITE/THEEXP  # this will be modified when we make our templates
+TOPDIR_TEMPLATES:     JOBDIR/template_inputs/THENITE/THEEXP  # this will be modified when we make our templates
+TOPDIR_DATA: JOBDIR/data
+TOPDIR_WSTEMPLATES: JOBDIR/WSTemplates
+TOPDIR_SNTEMPLATES: JOBDIR/SNTemplates
+TOPDIR_WSRUNS: JOBDIR/data/WSruns
+TOPDIR_SNRUNS: JOBDIR/data/SNruns
+
+
+
+#TOPDIR_OUT: mytemp_THEEXP/r1_p1
+TOPDIR_OUT: JOBDIR/THEPROCNUM
+
+#which of these is correct?
+
+DIRNAME_AUTOSCAN: /cvmfs/des.opensciencegrid.org/fnal/SNautoScanTrainings/ml3.2
+AUTOSCAN_DIRNAME: /cvmfs/des.opensciencegrid.org/fnal/SNautoScanTrainings/ml3.2
+
+TEMPLATE_VERSION: GWV1
+
+# construct template subdir and filename prefix from RADEC and version
+
+SEARCH_NITE:  THENITE
+#FIELDNAME:    SN-E1
+FIELDNAME:    THEFIELD
+
+# note that each filter & chip must be separated by a blank space 
+BANDLIST:     THEBAND
+#CCDNUM_LIST:  THECCDNUM
+#CCDNUM_RANGE: 1 62
+CCDNUM_LIST: 1 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20 21 22 23 24 25 26 27 28 29 30 32 33 34 35 36 37 38 39 40 41 42 43 44 45 46 47 48 49 50 51 52 53 54 55 56 57 58 59 60 62
+
+DOFAKE_FLAG:   1  # 0 => no fakes (copy xxx.fits xxx+fakeSN.fits) ; 
+                  # 1 => use fakeSN program
+
+#
+# To change after ask to Stephanie
+#DOFAKE_OPTIONS: -outFile_STARCAT  STARMATCH_doFake.out -SNCUT_MAG 15 25 -SNCUT_TREST -10 30 -dbVersion_SNFake KBOMAG20ALLSKY
+#DOFAKE_KBOFILE: OUTPUT_FROM_STEPHANIE or /cvmfs/des.osgstorage.org/stash/wsdiff/fakecats/TNOFAKEOBS_SVTOY4.csv
+#DOFAKE_OPTIONS:  -dbVersion_SNFake  TNOFAKEOBS_Y5_{NITE} or TNOFAKEOBS_SVTOY4
+# And then I assume the output file will show up in /cvmfs/des.osgstorage.org/stash/wsdiff/fakecats
+# Though you actually need to copy it to /pnfs/des/persistent/stash/wsdiff/fakecats/
+# Then it will get automatically synced to cvmfs within 30 minutes
+# In the .INPUT file, change SCAMP_INFILE to be  WS_astrom_FNAL_v4.scamp
+#
+# needed for later
+DOFAKE_OPTIONS: -outFile_STARCAT  STARMATCH_doFake.out -SNCUT_MAG 15 25 -SNCUT_TREST -10 30 -dbVersion_SNFake FIXMAGGW170814noHost
+
+
+#-DOFAKE_KBOFILE /cvmfs/des.opensciencegrid.org/eeups/fnaleups/Linux64/diffimg/fakecats/TNOFAKEOBS_SVTOY4.csv
+#DOFAKE_OPTIONS: -outFile_STARCAT  STARMATCH_doFake.out -SNCUT_MAG 15 25 -SNCUT_TREST -10 30 -dbVersion_SNFake KNFakes57382noHost
+#-STARCUT_MAG 15 22.5
+#DOFAKE_LIBDIR:  fakeLib_kherner_KNFakes_57279_noHost
+#DOFAKE_LIBDIR:  fakeLib_kherner_KNFakes_57382_noHost
+#DOFAKE_LIBDIR: fakeLib_rkessler_Y2Fakes_KNova_noHost
+#SNFAKE_DBVERSION: KNFakes57279noHost
+###FILTEROBJ_WRITEDB:   1  # 0=>don't write to db;  1=>write to db
+
+# -------------
+MKWGT_INFILE:  SN_makeWeight.param
+PSFEX_INFILE:  SN_image.psfex           
+#SCAMP_INFILE:  SN_astrom_NERSC.scamp
+#SCAMP_INFILE: GW_astrom_v3.scamp
+SCAMP_INFILE: WS_astrom_FNAL_v4.scamp
+
+SWARP_INFILE_TEMPLATE:  SN_template.swarp  # for coadd template to be stored
+SWARP_INFILE_DISTEMP:   SN_distemp.swarp   # for distorted template 
+SWARP_INFILE_NITECMB:   SN_nitecmb.swarp   # for nitely combined (search)
+SWARP_INFILE_DIFFCMB:   SN_diffcmb.swarp   # for test-option to coadd diffs
+
+SEXTR_INFILE_REDIM:  SN_redim.sex    SN_redim.sex.param   SN_redim.sex.conv
+SEXTR_INFILE_REDIM_ALL:  SN_redim_ALL.sex    SN_redim_ALL.sex.param   SN_redim_ALL.sex.conv
+SEXTR_INFILE_REDIM_ASSOC: SN_redim_ASSOC.sex  SN_redim_ASSOC.sex.param  SN_redim_ASSOC.sex.conv
+SEXTR_INFILE_DIFFIM: SN_diffim.sex   SN_diffim.sex.param  SN_diffim.sex.conv  
+
+HOTPANTS_INFILE:  SN_hotpants.param
+FILTEROBJ_CUTFILE:   SN_cuts.filterObj
+
+#DIFFIMG_LOGIN_SETUP:  source /data/des41.a/data/marcelle/diffim-sn/devel/setup_DiffImg_devel
+
+WSTEMPLATE_NSTARMIN: 10
+
+SEASON: THESEASON
+
+# give the SNSTAR_FILENAME option and it should set the makeStarCat options accordingly.
+# Comment these lines out if you want to just read the star catalog or veto catalog from the DB
+# below lines were commented on Aug 16, since we're using in-footprint
+#SNSTAR_FILENAME: SNSTAR_THEEXP_rTHERNUMpTHEPNUM.LIST
+#SNVETO_FILENAME: SNVETO_THEEXP_rTHERNUMpTHEPNUM.LIST
+# ====================== END =====================
