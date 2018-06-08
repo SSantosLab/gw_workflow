@@ -45,6 +45,9 @@ export IFDH_CP_MAXRETRIES=2
 export IFDH_XROOTD_EXTRA="-f -N"
 export XRD_REDIRECTLIMIT=255
 export IFDH_CP_UNLINK_ON_ERROR=1
+export CONDA_DIR=/cvmfs/des.opensciencegrid.org/fnal/anaconda2
+source $CONDA_DIR/etc/profile.d/conda.sh
+conda activate des18a
 
 ARGS="$@"
 while getopts "E:n:b:r:p:d:c:CjhsYOm:" opt $ARGS
@@ -166,9 +169,9 @@ fi
 
 #### add other code here from Nikolay's area
 
-# ifdh cp -D /pnfs/des/persistent/desdm/code/desdmLiby1e2.py /pnfs/des/persistent/desdm/code/run_desdmy1e2.py /pnfs/des/persistent/desdm/code/run_SEproc.py  /pnfs/des/persistent/desdm/code/getcorners.sh /pnfs/des/persistent/kuropat/scripts/MySoft.tgz  /pnfs/des/scratch/gw/code/test_mysql_libs.tar.gz ./ || { echo "Error copying input files. Exiting." ; exit 2 ; }
+ifdh cp -D /pnfs/des/persistent/desdm/code/desdmLiby1e2.py /pnfs/des/persistent/desdm/code/run_desdmy1e2.py /pnfs/des/persistent/desdm/code/run_SEproc.py  /pnfs/des/persistent/desdm/code/getcorners.sh /pnfs/des/persistent/kuropat/scripts/MySoft.tgz  /pnfs/des/scratch/gw/code/test_mysql_libs.tar.gz /pnfs/des/scratch/nglaeser/BLISS-expCalib_Y3apass-old.py /pnfs/des/scratch/nglaeser/Scamp_allCCD_r4p5.fits ./ || { echo "Error copying input files. Exiting." ; exit 2 ; }
 # tar xzf ./MySoft.tgz # COMMENTED OUT on 6/4 to avoid recopying of BLISS file
-# tar xzf ./MySoft.tgz # COMMENTED OUT on 6/4 to avoid recopying of BLISS file
+tar xzf ./MySoft.tgz # COMMENTED OUT on 6/4 to avoid recopying of BLISS file
 
 ifdh cp --force=xrootd /pnfs/des/persistent/${SCHEMA}/db-tools/desservices.ini ${HOME}/.desservices.ini
 
@@ -176,7 +179,7 @@ tar xzfm ./test_mysql_libs.tar.gz
 
 export DES_SERVICES=${HOME}/.desservices.ini
 chmod 600 ${HOME}/.desservices.ini
-chmod +x make_red_catlist.py BLISS-expCalib_Y3apass.py getcorners.sh
+chmod +x make_red_catlist.py BLISS-expCalib_Y3apass.py BLISS-expCalib_Y3apass-old.py getcorners.sh
 
 rm -f confFile
 
@@ -210,7 +213,7 @@ if [ "${SPECIALY4}" == "true" ]; then
     dflatfile='D_n20151113t1123_{filter:s}_c{ccd:>02s}_r2350p02_norm-dflatcor.fits'
     skytempfile='Y2T4_20150715t0315_{filter:s}_c{ccd:>02s}_r2404p01_skypca-tmpl.fits'
     starflatfile='Y2A1_20150715t0315_{filter:s}_c{ccd:>02s}_r2360p01_starflat.fits'
-    headfile='heads/f'$CCDS'.head'
+    headfile='f'$CCDS'.head'
     pcaprefix='binned-fp/Y2T4_20150715t0315_{filter:s}_r2404p01_skypca-binned-fp.fits'
 else
     if [ $EXPNUM -lt 165290 ]; then
@@ -221,7 +224,7 @@ else
 	dflatfile='D_n20130115t0131_{filter:s}_c{ccd:>02s}_r1788p01_norm-dflatcor.fits'
 	skytempfile='Y2A1_20130101t0315_{filter:s}_c{ccd:>02s}_r1979p01_skypca-tmpl.fits'
 	starflatfile='Y2A1_20130101t0315_{filter:s}_c{ccd:>02s}_r1976p01_starflat.fits'
-	headfile='heads/f'$CCDS'.head'
+	headfile='f'$CCDS'.head'
 	pcaprefix='binned-fp/Y2A1_20130101t0315_{filter:s}_r1979p01_skypca-binned-fp.fits'	
     elif [ $EXPNUM -lt 226353 ]; then
 	YEAR=sv
@@ -231,7 +234,7 @@ else
 	dflatfile='D_n20130115t0131_{filter:s}_c{ccd:>02s}_r1788p01_norm-dflatcor.fits'
 	skytempfile='Y2A1_20130101t0315_{filter:s}_c{ccd:>02s}_r1979p01_skypca-tmpl.fits'
 	starflatfile='Y2A1_20130101t0315_{filter:s}_c{ccd:>02s}_r1976p01_starflat.fits'
-	headfile='heads/f'$CCDS'.head'
+	headfile='f'$CCDS'.head'
 	pcaprefix='binned-fp/Y2A1_20130101t0315_{filter:s}_r1979p01_skypca-binned-fp.fits'	
     elif [ $EXPNUM -lt 258564 ]; then
 	YEAR=y1
@@ -242,7 +245,7 @@ else
 	#skytempfile='Y2A1_20131129t0315_{filter:s}_c{ccd:>02s}_r2106p01_skypca-tmpl.fits'
 	skytempfile='Y2A1_20130801t1128_{filter:s}_c{ccd:>02s}_r2044p01_skypca-tmpl.fits'
 	starflatfile='Y2A1_20130801t1128_{filter:s}_c{ccd:>02s}_r2046p01_starflat.fits'
-	headfile='heads/f'$CCDS'.head'
+	headfile='f'$CCDS'.head'
 	pcaprefix='binned-fp/Y2A1_20130801t1128_{filter:s}_r2044p01_skypca-binned-fp.fits'
     elif [ $EXPNUM -lt 284391 ]; then
 	YEAR=y1
@@ -252,7 +255,7 @@ else
 	dflatfile='D_n20140117t0129_{filter:s}_c{ccd:>02s}_r2045p01_norm-dflatcor.fits'
 	skytempfile='Y2A1_20131129t0315_{filter:s}_c{ccd:>02s}_r2106p01_skypca-tmpl.fits'
 	starflatfile='Y2A1_20131129t0315_{filter:s}_c{ccd:>02s}_r2107p01_starflat.fits'
-	headfile='heads/f'$CCDS'.head'
+	headfile='f'$CCDS'.head'
 	pcaprefix='binned-fp/Y2A1_20131129t0315_{filter:s}_r2106p01_skypca-binned-fp.fits'
     elif [ $EXPNUM -le 383321 ]; then
 	YEAR=y2
@@ -262,7 +265,7 @@ else
 	dflatfile='D_n20141020t1030_{filter:s}_c{ccd:>02s}_r1471p01_norm-dflatcor.fits'
 	skytempfile='Y2A1_20140801t1130_{filter:s}_c{ccd:>02s}_r1635p01_skypca-tmpl.fits'
 	starflatfile='Y2A1_20140801t1130_{filter:s}_c{ccd:>02s}_r1637p01_starflat.fits'
-        headfile='heads/f'$CCDS'.head'                                                 
+    headfile='f'$CCDS'.head'                                                 
 	pcaprefix='binned-fp/Y2A1_20140801t1130_{filter:s}_r1635p01_skypca-binned-fp.fits'
     elif [ $EXPNUM -le 438444 ]; then
 	YEAR=y2
@@ -272,7 +275,7 @@ else
 	dflatfile='D_n20150105t0115_{filter:s}_c{ccd:>02s}_r2050p02_norm-dflatcor.fits'
 	skytempfile='Y2A1_20141205t0315_{filter:s}_c{ccd:>02s}_r2133p01_skypca-tmpl.fits'
 	starflatfile='Y2A1_20141205t0315_{filter:s}_c{ccd:>02s}_r2132p01_starflat.fits'
-        headfile='heads/f'$CCDS'.head'                                                 
+    headfile='f'$CCDS'.head'                                                 
 	pcaprefix='binned-fp/Y2A1_20141205t0315_{filter:s}_r2133p01_skypca-binned-fp.fits'
     elif [ $EXPNUM -le 519543 ]; then
 	YEAR=y3
@@ -282,7 +285,7 @@ else
 	dflatfile='D_n20151113t1123_{filter:s}_c{ccd:>02s}_r2350p02_norm-dflatcor.fits'
 	skytempfile='Y2A1_20150715t0315_{filter:s}_c{ccd:>02s}_r2361p01_skypca-tmpl.fits'
 	starflatfile='Y2A1_20150715t0315_{filter:s}_c{ccd:>02s}_r2360p01_starflat.fits'
-        headfile='heads/f'$CCDS'.head'                                                 
+    headfile='f'$CCDS'.head'                                                 
 	pcaprefix='binned-fp/Y2A1_20150715t0315_{filter:s}_r2361p01_skypca-binned-fp.fits'
     else
 	YEAR=y4
@@ -292,7 +295,7 @@ else
 	dflatfile='D_n20151113t1123_{filter:s}_c{ccd:>02s}_r2350p02_norm-dflatcor.fits'
 	skytempfile='Y2T4_20150715t0315_{filter:s}_c{ccd:>02s}_r2404p01_skypca-tmpl.fits'
 	starflatfile='Y2A1_20150715t0315_{filter:s}_c{ccd:>02s}_r2360p01_starflat.fits'
-        headfile='heads/f'$CCDS'.head'                                                 
+    headfile='f'$CCDS'.head'                                                 
 	pcaprefix='binned-fp/Y2T4_20150715t0315_{filter:s}_r2404p01_skypca-binned-fp.fits'
     fi
     if [ "${BAND}" == "u" ]; then
@@ -303,7 +306,7 @@ else
         dflatfile='D_n20141020t1030_{filter:s}_c{ccd:>02s}_r1471p01_norm-dflatcor.fits'   
         skytempfile='Y2A1_20140801t1130_{filter:s}_c{ccd:>02s}_r1635p02_skypca-tmpl.fits' 
         starflatfile='Y2A1_20140801t1130_{filter:s}_c{ccd:>02s}_r1637p01_starflat.fits'   
-        headfile='heads/f'$CCDS'.head'                                                 
+        headfile='f'$CCDS'.head'                                                 
         pcaprefix='binned-fp/Y2A1_20140801t1130_{filter:s}_r1635p02_skypca-binned-fp.fits'
     fi
 fi
@@ -480,7 +483,7 @@ if [ "$DOCALIB" == "true" ]; then
     conda activate des18a
     
 #    ./BLISS-expCalib_Y3apass.py --expnum $EXPNUM --reqnum $RNUM --attnum $PNUM --ccd $CCDS
-    ./BLISS-expCalib_Y3apass-old.py --expnum $EXPNUM --reqnum $RNUM --attnum $PNUM --ccd $CCDS
+    ./BLISS-expCalib_Y3apass-old.py --expnum $EXPNUM --reqnum $RNUM --attnum $PNUM #--ccd $CCDS
 
     
     RESULT=$? 
