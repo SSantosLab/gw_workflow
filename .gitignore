@@ -31,3 +31,9 @@ usr/
 *.swp
 *~
 confFile
+listpcain
+*.dag
+
+# logs
+error*
+output*

@@ -92,9 +92,9 @@ if __name__ == '__main__':
     Parallel(n_jobs=NPARALLEL)(delayed(run_stage_1)(ccd) for ccd in CCD)
 
 #use the entire image to get astrometry solution
-#    combineFiles('D00'+str(EXPNUM)+'**sextractor.fits', 'Scamp_allCCD_r'+rRun+'p'+pRun+'.fits')
-    scamp('D00'+str(EXPNUM)+'_i_01_r4p5_sextractor.fits')
-    change_head('D00'+str(EXPNUM)+'_i_01_r4p5_sextractor.head', 'sextractor', 'detrend', 'wcs', CCD, **args)
+    combineFiles('D00'+str(EXPNUM)+'**sextractor.fits', 'Scamp_allCCD_r'+rRun+'p'+pRun+'.fits')
+    scamp('Scamp_allCCD_r'+rRun+'p'+pRun+'.fits')
+    change_head('Scamp_allCCD_r'+rRun+'p'+pRun+'.head', 'sextractor', 'detrend', 'wcs', CCD, **args)
 
     Parallel(n_jobs=NPARALLEL)(delayed(run_stage_2)(ccd) for ccd in CCD)
 
