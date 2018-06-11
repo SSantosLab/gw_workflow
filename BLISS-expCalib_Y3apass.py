@@ -16,7 +16,7 @@
     Example:   
     expCalib_Y3apass.py --help
 
-    GW-expCalib_Y3apass.py -s db-desoper --expnum 475956 --reqnum 04 --attnum 11 
+    BLISS-expCalib_Y3apass.py -s db-desoper --expnum 475956 --reqnum 04 --attnum 11 
     
     """
 import os
@@ -34,6 +34,7 @@ def main():
     parser.add_argument('--expnum', help='expnum is queried', default=350245, type=int)
     parser.add_argument('--reqnum', help='reqnum is queried', default=922, type=str)
     parser.add_argument('--attnum', help='attnum is queried', default=1, type=int)
+    parser.add_argument('--ccd', help='ccd is queried', default=1, type=int)
     parser.add_argument('--magType', help='mag type to use (mag_psf, mag_auto, mag_aper_8, ...)', default='mag_psf')
     parser.add_argument('--sex_mag_zeropoint', help='default sextractor zeropoint to use to convert fluxes to sextractor mags (mag_sex = -2.5log10(flux) + sex_mag_zeropoint)', type=float, default=25.0)
     parser.add_argument('--verbose', help='verbosity level of output to screen (0,1,2,...)', default=0, type=int)
@@ -304,6 +305,8 @@ def getallccdfromGAIA(args):
     import string,sys,os,glob
     import fitsio
 
+##### UNPACK IMAGE ###########
+
     #print NEED Round RA
     catlistFile="""D%08d_r%sp%s_red_catlist.csv""" % (args.expnum,str(args.reqnum),str(args.attnum))
     print "looking for file %s \n" % catlistFile
@@ -314,10 +317,10 @@ def getallccdfromGAIA(args):
     data=pd.read_csv(catlistFile)
 #    print " the file is read  unpack data \n"
 
-    # unpack image? data
+    # unpack image data
     BAND=data['BAND'][0]
    
-    # check image? standard deviation 
+    # check image standard deviation 
     stdRA = np.std(data['RA_CENT'])
     if ( stdRA >20 ) :
         data['RA_CENT']=[roundra(x) for x in data['RA_CENT']]
@@ -326,27 +329,26 @@ def getallccdfromGAIA(args):
         data['RAC3']   =[roundra(x) for x in data['RAC3']]
         data['RAC4']   =[roundra(x) for x in data['RAC4']]
 
-#    print " stdRA=%f \n" % stdRA    
-#    if ( stdRA <=20 ) :
-#        print " Something goes wrong  stdRA=%f exiting \n" % stdRA
-#        sys.exit(1)
-#    print " second step \n"
-    
-    # get image? limits
+    # get image limits
     minra=min(min(data['RA_CENT']),min(data['RAC1']),min(data['RAC2']),min(data['RAC3']),min(data['RAC4']))-0.1
     mindec=min(min(data['DEC_CENT']),min(data['DECC1']),min(data['DECC2']),min(data['DECC3']),min(data['DECC4']))-0.1
     maxra=max(max(data['RA_CENT']),max(data['RAC1']),max(data['RAC2']),max(data['RAC3']),max(data['RAC4']))+0.1
     maxdec=max(max(data['DEC_CENT']),max(data['DECC1']),max(data['DECC2']),max(data['DECC3']),max(data['DECC4']))+0.1
 
-    # read pixels from catalog
-    ra=45
-    dec=-45
+    # read pixel from catalog
+    # using only the row for the current CCD
+    correctccd = (data['CCDNUM'] == args.ccd)
+    data = data[ correctccd ]
+    ra=data['RA_CENT'] # in degrees
+    dec=data['DEC_CENT'] # in degrees
     nside=32
     radius=np.radians(0.2)
     vec = hp.pixelfunc.ang2vec(ra,dec,lonlat=True)
 
     # List of nside=32 healpix pixel around specific ra,dec
     pix = hp.query_disc(nside,vec,radius,inclusive=True)
+
+########## GET CORRESPONDING DATA FROM GAIA CATALOG ##########
 
     datadir = '/data/des40.b/data/gaia/dr2/healpix'
     catalog = []
@@ -363,21 +365,11 @@ def getallccdfromGAIA(args):
     BANDname=BAND+"_des"
     names=["MATCHID","RAJ2000_2mass","DEJ2000_2mass",BANDname]
 
-#    for i in data: # pixels from image
-#        myfile="""/pnfs/des/persistent/stash/ALLSKY_STARCAT/apass_TWO_MASS_%d.csv""" %i # catalog
-#        mmyfile="""apass_TWO_MASS_%d.csv""" %i
-#        os.system('ifdh cp -D %s .' %myfile) # copies catalog locally; shouldn't do this
-       
-#        if  not os.path.exists("./"+mmyfile):
-#            print "file was not copyed try to link it \n" 
-
-#        df= pd.read_csv(mmyfile)   
     df=pd.DataFrame(catalog.byteswap().newbyteorder(), index=range(catalog.size), columns=['SOURCE_ID','RA','DEC','PHOT_G_MEAN_MAG']) # byteswap because fits is big-endian, so swap byte order to native order
     good_data.append(df)
 
     # bounds checking; eliminate pixels not within current image (whole image)
     chunk = pd.concat(good_data, ignore_index=True)
-    print type(chunk)
     chunk = chunk.sort_values(by=['RA'], ascending=True) # DataFrame.sort is deprecated
     w1 = ( chunk['RA'] > minra )
     w2 = ( chunk['RA'] < maxra )
@@ -419,8 +411,6 @@ def getallccdfromGAIA(args):
 
         # calculate edges of image
         stdlistFile ="""%s_std.csv"""   % (filetocheck)
-        print "dataracent:" ; print dataracent
-        print "datarac1:" ; print dataracent
         minra=min(dataracent,datarac1,datarac2,datarac3,datarac4)-.1
         maxra=max(dataracent,datarac1,datarac2,datarac3,datarac4)+.1
         mindec=min(datadeccent,datadec1,datadec2,datadec3,datadec4)-.1
@@ -428,7 +418,10 @@ def getallccdfromGAIA(args):
         w1 = ( datastd1['RA'] > minra ) ;w2 = ( datastd1['RA'] < maxra )
         w3 = ( datastd1['DEC'] > mindec );w4 = ( datastd1['DEC'] < maxdec )
         df = datastd1[ w1 &  w2 & w3 & w4 ].sort_values(by=['RA'], ascending=True)
+
+##### OUTPUT TO CSV ########
         df.to_csv(stdlistFile,columns=col,sep=',',index=False)
+
 ###################################
 #NEW  July 14,2016 
 #This is a FULL SKY 
