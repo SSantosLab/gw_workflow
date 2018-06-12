@@ -21,7 +21,7 @@ CCDS=1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,
 # get some worker node information
 echo "Worker node information: `uname -a`"
 
-
+# check that xrdcp and uberftp are installed
 which xrdcp
 CHECK_XRDCP=$?
 which uberftp
@@ -40,6 +40,8 @@ if [ $CHECK_XRDCP -ne 0 ] || [ $CHECK_UBERFTP -ne 0 ]; then
 fi
 
 . /cvmfs/oasis.opensciencegrid.org/mis/osg-wn-client/3.3/3.3.27/el6-x86_64/setup.sh
+
+# set environment
 source /cvmfs/des.opensciencegrid.org/eeups/startupcachejob21i.sh
 export IFDH_CP_MAXRETRIES=2
 export IFDH_XROOTD_EXTRA="-f -N"
@@ -49,6 +51,7 @@ export CONDA_DIR=/cvmfs/des.opensciencegrid.org/fnal/anaconda2
 source $CONDA_DIR/etc/profile.d/conda.sh
 conda activate des18a
 
+# parse arguments and flags
 ARGS="$@"
 while getopts "E:n:b:r:p:d:c:CjhsYOm:" opt $ARGS
 do case $opt in
@@ -132,6 +135,7 @@ if [ "x$BAND"   = "x" ]; then echo "BAND not set; exiting."            ; exit 1 
 if [ "x$RNUM"   = "x" ]; then echo "r number not set; exiting."        ; exit 1 ; fi
 if [ "x$PNUM"   = "x" ]; then echo "p number not set; exiting."        ; exit 1 ; fi
 
+# get filenames
 immaskfiles="`ifdh ls  /pnfs/des/${DESTCACHE}/${SCHEMA}/exp/${NITE}/${EXPNUM}/'*_r'${RNUM}'p'${PNUM}'_immask.fits.fz' | grep fits | grep fnal`"
 nimmask=`echo $immaskfiles | wc -w`
 if [ $nimmask -gt 59 ]; then
@@ -157,6 +161,7 @@ else
     echo "immask files not all present; continuing with the job."
 fi
 
+# flag for whether or not to do calibration (if the image isn't/is in the DES footprint)
 if [ "$DOCALIB" == "true" ] ; then
     echo "This SE job will include BLISS calib step."
 else
@@ -326,6 +331,7 @@ else
     conf_dir="/pnfs/des/persistent/desdm/config/"
 fi
 
+# write to confFile
 cat <<EOF >> confFile
 [General]
 nite: 20141229
@@ -393,9 +399,7 @@ configfile = configse.psfex
 
 EOF
 
-#sed -i -e "/^nite\:/ s/nite\:.*/nite\: ${NITE}/" -e "/^expnum\:/ s/expnum\:.*/expnum\: ${EXPNUM}/" -e "/^filter\:/ s/filter:.*/filter\: ${BAND}/" -e "/^r\:/ s/r:.*/r\: ${RNUM}/" -e "/^p\:/ s/p:.*/p\: ${PNUM}/" -e "/^year\:/ s/year:.*/year\: ${YEAR}/" -e "/^yearb\:/ s/yearb:.*/yearb\: ${YEAR}/" -e "/^epoch\:/ s/epoch:.*/epoch\: ${EPOCH}/"  -e "/^epochb\:/ s/epochb:.*/epochb\: ${EPOCH}/" confFile
 sed -i -e "/^nite\:/ s/nite\:.*/nite\: ${NITE}/" -e "/^expnum\:/ s/expnum\:.*/expnum\: ${EXPNUM}/" -e "/^filter\:/ s/filter:.*/filter\: ${BAND}/" -e "/^r\:/ s/r:.*/r\: ${RNUM}/" -e "/^p\:/ s/p:.*/p\: ${PNUM}/" confFile
-
 
 setup fitscombine yanny
 # first cut of y2 something else is needed for Y4 images as of Nov 2016
@@ -423,6 +427,7 @@ setup scikitlearn 0.14.1+9
 
 export LD_LIBRARY_PATH=${LD_LIBRARY_PATH}:${PWD}/usr/lib64/mysql
 
+# in case single epoch processing was already done, skip that step
 if [ "$JUMPTOEXPCALIB" == "true" ] ; then
     echo "jumping to the calibration step..."
     nfiles=`ls *_r${RNUM}p${PNUM}_fullcat.fits *_r${RNUM}p${PNUM}_immask.fits.fz | wc -l`
@@ -477,28 +482,23 @@ if [ "$DOCALIB" == "true" ]; then
 #    ./GGG-expCalib_Y3apass.py -s desoper --expnum $EXPNUM --reqnum $RNUM --attnum $PNUM
 #switch to BLISS version
 
-    unset healpy astropy fitsio matplotlib six python
+    unset healpy astropy fitsio matplotlib six python # some attempted version fixing
     export CONDA_DIR=/cvmfs/des.opensciencegrid.org/fnal/anaconda2
     source $CONDA_DIR/etc/profile.d/conda.sh
     conda activate des18a
     
 #    ./BLISS-expCalib_Y3apass.py --expnum $EXPNUM --reqnum $RNUM --attnum $PNUM --ccd $CCDS
-    ./BLISS-expCalib_Y3apass-old2.py --expnum $EXPNUM --reqnum $RNUM --attnum $PNUM --ccd $CCDS
+    ./BLISS-expCalib_Y3apass-old.py --expnum $EXPNUM --reqnum $RNUM --attnum $PNUM --ccd $CCDS
 
-    
     RESULT=$? 
     echo "BLISS-expCalib_Y3pass.py exited with status $RESULT"
     
-#not needed anymore since we are going to overwrite existing files via xrootd    
-#    files2rm="`ifdh ls /pnfs/des/${DESTCACHE}/${SCHEMA}/exp/${NITE}/${EXPNUM}/'allZP*r'${RNUM}'*p'${PNUM}'*.csv' | grep csv` `ifdh ls /pnfs/des/${DESTCACHE}/${SCHEMA}/exp/${NITE}/${EXPNUM}/'Zero*r'${RNUM}'*p'${PNUM}'*.csv' | grep csv` `ifdh ls /pnfs/des/${DESTCACHE}/${SCHEMA}/exp/${NITE}/${EXPNUM}/'D*'${EXPNUM}'*_ZP.csv'  | grep csv` `ifdh ls /pnfs/des/${DESTCACHE}/${SCHEMA}/exp/${NITE}/${EXPNUM}/'D*'${EXPNUM}'*CCDsvsZPs.png' | grep png` `ifdh ls /pnfs/des/${DESTCACHE}/${SCHEMA}/exp/${NITE}/${EXPNUM}/'D*'${EXPNUM}'*NumClipstar.png' | grep png` `ifdh ls /pnfs/des/${DESTCACHE}/${SCHEMA}/exp/${NITE}/${EXPNUM}/'D*'${EXPNUM}'*ZP.png'  | grep png`" 
-#    for rmfile in $files2rm ; do ifdh rm $rmfile || echo "ifdh rm of $rmfile failed, so the final copyback may not work." ; done
-
-files2cp=`ls allZP*r${RNUM}*p${PNUM}*.csv Zero*r${RNUM}*p${PNUM}*.csv D*${EXPNUM}*_ZP.csv D*${EXPNUM}*CCDsvsZPs.png D*${EXPNUM}*NumClipstar.png D*${EXPNUM}*ZP.png`
-if [ "x${files2cp}" = "x" ]; then
-    echo "Error, no calibration files to copy!"
-else
-    ifdh cp --force=xrootd -D $files2cp /pnfs/des/${DESTCACHE}/${SCHEMA}/exp/${NITE}/${EXPNUM}/ || echo "ifdh cp of calibration csv and png files failed. There could be problems with Diffimg down the road when using this exposure."
-fi
+    files2cp=`ls allZP*r${RNUM}*p${PNUM}*.csv Zero*r${RNUM}*p${PNUM}*.csv D*${EXPNUM}*_ZP.csv D*${EXPNUM}*CCDsvsZPs.png D*${EXPNUM}*NumClipstar.png D*${EXPNUM}*ZP.png`
+    if [ "x${files2cp}" = "x" ]; then
+        echo "Error, no calibration files to copy!"
+    else
+        ifdh cp --force=xrootd -D $files2cp /pnfs/des/${DESTCACHE}/${SCHEMA}/exp/${NITE}/${EXPNUM}/ || echo "ifdh cp of calibration csv and png files failed. There could be problems with Diffimg down the road when using this exposure."
+    fi
 fi
 
 du -sh .

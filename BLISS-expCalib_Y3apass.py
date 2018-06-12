@@ -159,6 +159,7 @@ def doset(args):
             desipix3=getipix(128,datarac3,datadec3)
             desipix4=getipix(128,datarac4,datadec4)
 
+            # get midpoints
             desipix12=getipix(128,datarac1,datadeccent)
             desipix23=getipix(128,dataracent,datadec2)
             desipix34=getipix(128,datarac3,datadeccent)
@@ -241,7 +242,6 @@ def Read_Sexcatalogfitstocsv(args,fitsname,band):
     SEXdata=[]
     columns=['NUMBER','ALPHAWIN_J2000','DELTAWIN_J2000',fluxType,fluxerrType,'SPREAD_MODEL','SPREADERR_MODEL','FWHM_WORLD', 'CLASS_STAR', 'FLAGS']
 
-    #Fdata = fitsio.read(catFilename,  columns=columns, ext=extension) #TODO: a guess that this is supposed to be the Fdata used in subsequent lines
     Fdata = fitsio.read(catFilename,  columns=columns, ext=extension)[:]
     #w0=( Fdata['FLUX_PSF'] > 2000) _OLD  
     w0=( Fdata['FLUX_PSF'] > 1000)  #NEW
@@ -424,6 +424,8 @@ def getallccdfromGAIA(args):
 
 ###################################
 #NEW  July 14,2016 
+#### REPLACED by getacllccdfromGAIA on June 1, 2018
+
 #This is a FULL SKY 
 #/data/des20.b/data/sallam/pyPSM_Year2/TWOMASS/ALL-2MASS/2arcsec 
 #catalog now in stash cache in dcache
@@ -1016,7 +1018,7 @@ def sigmaClipZPallCCDs(args):
     all_files = glob.glob(os.path.join(path, "*Obj.csv"))     
     df = pd.concat((pd.read_csv(f) for f in all_files))
     #df = df.sort_values(by=['RA'], ascending=True) 
-    df = df.sort_values(by=['NUMBER'], ascending=True) # guessed to sort by number... originally by RA
+    df = df.sort_values(by=['RA'], ascending=True) # guessed to sort by number... originally by RA
     #TODO: oscillates between no RA field and having one????
     # fields are EXPNUM  CCDNUM  NUMBER  ALPHAWIN_J2000  DELTAWIN_J2000     FLUX_AUTO FLUXERR_AUTO      FLUX_PSF  FLUXERR_PSF   MAG_AUTO SPREADERR_MODEL  FWHM_WORLD  FWHMPSF_IMAGE  FWHMPSF_WORLD  CLASS_STAR FLAGS  IMAFLAGS_ISO  ZeroPoint  ZeroPoint_rms  ZeroPoint_FLAGS
 
@@ -1530,6 +1532,7 @@ def Onefile(args):
     cols=fits.ColDefs([col1, col2, col3, col4, col5, col6, col7, col8, col9, col10, col11, col12, col13, col14, col15, col16, col17, col18, col19, col20, col21, col22, col23, col24,col25])
 
     tbhdu=fits.BinTableHDU.from_columns(cols)
+    # overwrite flag writes out even if the output file already existed
     tbhdu.writeto(fitsout,overwrite=True)
 
 ##################################

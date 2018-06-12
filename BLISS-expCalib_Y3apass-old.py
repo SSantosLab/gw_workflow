@@ -159,6 +159,7 @@ def doset(args):
             desipix3=getipix(128,datarac3,datadec3)
             desipix4=getipix(128,datarac4,datadec4)
 
+            # get midpoints
             desipix12=getipix(128,datarac1,datadeccent)
             desipix23=getipix(128,dataracent,datadec2)
             desipix34=getipix(128,datarac3,datadeccent)
@@ -303,7 +304,6 @@ def getallccdfromGAIA(args):
     import pandas as pd
     import string,sys,os,glob
     import fitsio
-    import math
 
 ##### UNPACK IMAGE ###########
 
@@ -346,17 +346,17 @@ def getallccdfromGAIA(args):
     #vec = hp.pixelfunc.ang2vec(ra,dec,lonlat=True) # for new healpy 1.11.0 and python 2.7.15
 
     # FOR OLD HEALPY 1.5dev
-    conversion=math.pi/180
+    conversion=np.pi/180
     colatitude=conversion*dec
     longitude=conversion*(90-ra)
-    if colatitude > math.pi:
-        colatitude=colatitude-math.pi
+    if colatitude > np.pi:
+        colatitude=colatitude-np.pi
     if colatitude < 0:
-        colatitude=colatitude+math.pi
-    if longitude > math.pi:
-        longitude=longitude-math.pi
+        colatitude=colatitude+np.pi
+    if longitude > np.pi:
+        longitude=longitude-np.pi
     if longitude < 0:
-        longitude=longitude+math.pi
+        longitude=longitude+np.pi
     vec = hp.pixelfunc.ang2vec(colatitude, longitude)
 
 ########## GET CORRESPONDING DATA FROM GAIA CATALOG ##########
@@ -440,6 +440,8 @@ def getallccdfromGAIA(args):
 
 ###################################
 #NEW  July 14,2016 
+#### REPLACED by getacllccdfromGAIA on June 1, 2018
+
 #This is a FULL SKY 
 #/data/des20.b/data/sallam/pyPSM_Year2/TWOMASS/ALL-2MASS/2arcsec 
 #catalog now in stash cache in dcache
@@ -1544,6 +1546,7 @@ def Onefile(args):
     cols=fits.ColDefs([col1, col2, col3, col4, col5, col6, col7, col8, col9, col10, col11, col12, col13, col14, col15, col16, col17, col18, col19, col20, col21, col22, col23, col24,col25])
 
     tbhdu=fits.BinTableHDU.from_columns(cols)
+    # clobber flag writes out even if the output file already existed (deprecated, replaced by overwrite)
     tbhdu.writeto(fitsout,clobber=True)
 
 ##################################
