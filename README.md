@@ -1,7 +1,7 @@
 # gw_workflow
 Workflow for image processing. Currently consists of single-epoch (SE) processing and difference imaging. 
 
-[Introduction](#introduction)
+[Introduction](#introduction)  
 [Demo](#demo)
 
 ## Introduction
@@ -17,7 +17,7 @@ The goal of this project is to speed up the pipeline by about a factor of 10. So
 
 #### Setup
 
-These scripts should be run on the cluster machines. SSH into a machine and follow the instructions below to set up the environment. As these jobs tend to take a long time, you may want to run it in Screen. This can be done by simply typing `screen`. 
+These scripts should be run on the cluster machines. As these jobs tend to take a long time, you may want to run it in Screen. SSH into a machine and follow the instructions below to set up the environment.
 ```
 screen
 
@@ -31,12 +31,12 @@ voms-proxy-init -rfc -noregen -voms des:/des/Role=Analysis -valid 24:00
 source /cvmfs/des.opensciencegrid.org/eeups/startupcachejob21i.sh
 ```
 
-#### Running Single Epoch (SE) Processing with `SE_job_mod.sh`
+#### Running Single Epoch (SE) Processing (`SE_job_mod.sh`)
 
-You are now ready to run this script! For example, type:
+After following the setup steps above, you can run the SE processing script. For example, type:
 ```
 # to run all CCDs in series
-./SE_job.sh -r 4 -p 5 -E 668439 -b i -n 20170817  -d persistent -m gw -C -O
+./SE_job_mod.sh -r 4 -p 5 -E 668439 -b i -n 20170817  -d persistent -m gw -C -O
 
 # to run a single CCD
 ./SE_job_mod.sh -r 4 -p 5 -E 668439 -b i -n 20170817  -d persistent -m gw -C -O -c 1
@@ -48,7 +48,7 @@ You are now ready to run this script! For example, type:
 * `E`: Exposure number
 * `b`: Band (`i`, `r`, `g`, `Y`, `z`, or `u`)
 * `n`: Night
-* `c`: CCD list (comma-separated integers) -- for `SE_job_mod.sh` only
+* `c`: CCD number
 * `d`: Destination cache (`scratch` or `persistent`)
 * `m`: Schema (`gw` or `wsdiff`)
 
@@ -64,16 +64,16 @@ The following flags do not require arguments:
 To run all 60 CCDs in parallel, create a directed acyclic graph (DAG) by running `./dag-create.sh`. This will produce the file `parallel.dag` which can then be run with jobsub:
 ```
 source /cvmfs/des.opensciencegrid.org/eeups/startupcachejob21i.sh
-jobsub\_submit\_dag -G des file://parallel.dag
+jobsub_submit_dag -G des file://parallel.dag
 ```
 
 #### Running Image Calibration with `BLISS-expCalib_Y3apass.py`  
 
 After the setup steps (above), you can also choose to run only the BLISS calibration script.  
 
-**Note:** `SE_job.sh` and `SE_job_mod.sh` execute the script `BLISS-expCalib_Y3apass.py`. Due to deprecated package versions (should be fixed soon!), the `SE_job` scripts run the deprecated version of the BLISS script called `BLISS-expCalib_Y3apass-old.py`. When running the BLISS script on its own, however, use the new version, `BLISS-expCalib_Y3apass.py` as follows:  
+**Note:** `SE_job_mod.sh` executes the script `BLISS-expCalib_Y3apass.py`. Due to deprecated package versions (should be fixed soon!), the SE script calls the deprecated version of the BLISS script, `BLISS-expCalib_Y3apass-old.py`. When running the BLISS script on its own, however, use the new version, `BLISS-expCalib_Y3apass.py` as follows:  
 ```
-./BLISS-expCalib\_Y3apass.py --expnum 668439 --reqnum 4 --attnum 5 --ccd 1
+./BLISS-expCalib_Y3apass.py --expnum 668439 --reqnum 4 --attnum 5 --ccd 1
 ```
 
 ##### Flags
@@ -87,4 +87,4 @@ After the setup steps (above), you can also choose to run only the BLISS calibra
 
 The following flags do not require arguments:
 
-* `debug`: Debugging option
+* `debug`: Run in debug org
