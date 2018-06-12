@@ -16,7 +16,7 @@
     Example:   
     expCalib_Y3apass.py --help
 
-    GW-expCalib_Y3apass.py -s db-desoper --expnum 475956 --reqnum 04 --attnum 11 
+    BLISS-expCalib_Y3apass.py -s db-desoper --expnum 475956 --reqnum 04 --attnum 11 --ccd 1
     
     """
 import os
@@ -34,7 +34,7 @@ def main():
     parser.add_argument('--expnum', help='expnum is queried', default=350245, type=int)
     parser.add_argument('--reqnum', help='reqnum is queried', default=922, type=str)
     parser.add_argument('--attnum', help='attnum is queried', default=1, type=int)
-    parser.add_argument('--ccd', help='ccd is queried', default=1, type=int)
+    parser.add_argument('--ccd', help='ccd is queried', default='1', type=int)
     parser.add_argument('--magType', help='mag type to use (mag_psf, mag_auto, mag_aper_8, ...)', default='mag_psf')
     parser.add_argument('--sex_mag_zeropoint', help='default sextractor zeropoint to use to convert fluxes to sextractor mags (mag_sex = -2.5log10(flux) + sex_mag_zeropoint)', type=float, default=25.0)
     parser.add_argument('--verbose', help='verbosity level of output to screen (0,1,2,...)', default=0, type=int)
@@ -57,7 +57,7 @@ def main():
 
     #-- ADDED NEW
     #GET STD from APASS-DR9 and 2MASS FULL SKY
-    #status= getallccdfromAPASS92MASS(args)
+#    status= getallccdfromAPASS92MASS(args)
     status= getallccdfromGAIA(args)
 
     #-- ADDED NEW
@@ -112,7 +112,8 @@ def doset(args):
 #    print " befor loop \n"    
 
     for i in range(data['FILENAME'].size):
-    # to avoid error when array is not 2D because it only has one entry
+        # to avoid error when array is not 2D because it only has one entry
+        # different from line 417 because this is a numpy array, not pandas
         filetocheck = data['FILENAME']
         databand = data['BAND']
         dataracent = data['RA_CENT']
@@ -304,6 +305,8 @@ def getallccdfromGAIA(args):
     import fitsio
     import math
 
+##### UNPACK IMAGE ###########
+
     #print NEED Round RA
     catlistFile="""D%08d_r%sp%s_red_catlist.csv""" % (args.expnum,str(args.reqnum),str(args.attnum))
     print "looking for file %s \n" % catlistFile
@@ -314,10 +317,10 @@ def getallccdfromGAIA(args):
     data=pd.read_csv(catlistFile)
 #    print " the file is read  unpack data \n"
 
-    # unpack image? data
+    # unpack image data
     BAND=data['BAND'][0]
    
-    # check image? standard deviation 
+    # check image standard deviation 
     stdRA = np.std(data['RA_CENT'])
     if ( stdRA >20 ) :
         data['RA_CENT']=[roundra(x) for x in data['RA_CENT']]
@@ -326,21 +329,18 @@ def getallccdfromGAIA(args):
         data['RAC3']   =[roundra(x) for x in data['RAC3']]
         data['RAC4']   =[roundra(x) for x in data['RAC4']]
 
-#    print " stdRA=%f \n" % stdRA    
-#    if ( stdRA <=20 ) :
-#        print " Something goes wrong  stdRA=%f exiting \n" % stdRA
-#        sys.exit(1)
-#    print " second step \n"
-    
-    # get image? limits
+    # get image limits
     minra=min(min(data['RA_CENT']),min(data['RAC1']),min(data['RAC2']),min(data['RAC3']),min(data['RAC4']))-0.1
     mindec=min(min(data['DEC_CENT']),min(data['DECC1']),min(data['DECC2']),min(data['DECC3']),min(data['DECC4']))-0.1
     maxra=max(max(data['RA_CENT']),max(data['RAC1']),max(data['RAC2']),max(data['RAC3']),max(data['RAC4']))+0.1
     maxdec=max(max(data['DEC_CENT']),max(data['DECC1']),max(data['DECC2']),max(data['DECC3']),max(data['DECC4']))+0.1
 
-    # read pixels from catalog
-    ra=45
-    dec=-45
+    # read pixel from catalog
+    # using only the row for the current CCD
+    correctccd = (data['CCDNUM'] == args.ccd)
+    data = data[ correctccd ]
+    ra=data.iloc[0]['RA_CENT'] # in degrees; use iloc to get single cell
+    dec=data.iloc[0]['DEC_CENT'] # in degrees
     nside=32
     radius=np.radians(0.2)
     #vec = hp.pixelfunc.ang2vec(ra,dec,lonlat=True) # for new healpy 1.11.0 and python 2.7.15
@@ -358,6 +358,8 @@ def getallccdfromGAIA(args):
     if longitude < 0:
         longitude=longitude+math.pi
     vec = hp.pixelfunc.ang2vec(colatitude, longitude)
+
+########## GET CORRESPONDING DATA FROM GAIA CATALOG ##########
 
     # List of nside=32 healpix pixel around specific ra,dec
     pix = hp.query_disc(nside,vec,radius,inclusive=True)
@@ -377,15 +379,6 @@ def getallccdfromGAIA(args):
     BANDname=BAND+"_des"
     names=["MATCHID","RAJ2000_2mass","DEJ2000_2mass",BANDname]
 
-#    for i in data: # pixels from image
-#        myfile="""/pnfs/des/persistent/stash/ALLSKY_STARCAT/apass_TWO_MASS_%d.csv""" %i # catalog
-#        mmyfile="""apass_TWO_MASS_%d.csv""" %i
-#        os.system('ifdh cp -D %s .' %myfile) # copies catalog locally; shouldn't do this
-       
-#        if  not os.path.exists("./"+mmyfile):
-#            print "file was not copyed try to link it \n" 
-
-#        df= pd.read_csv(mmyfile)   
     df=pd.DataFrame(catalog.byteswap().newbyteorder(), index=range(catalog.size), columns=['SOURCE_ID','RA','DEC','PHOT_G_MEAN_MAG']) # byteswap because fits is big-endian, so swap byte order to native order
     good_data.append(df)
 
@@ -412,22 +405,24 @@ def getallccdfromGAIA(args):
 
     for i in range(data['RA_CENT'].size):
         # adjust naming in case array is not 2d because it only contains one element
-        #filetocheck = data['FILENAME'] #this line was writing a funky csv file
-#        filetocheck = data['FILENAME'][0]
-#        databand = data['BAND']
-#        if data['FILENAME'].size>1:
-        filetocheck = data['FILENAME'][i]
-        databand = data['BAND'][i]
-        dataracent = data['RA_CENT'][i]
-        datarac1 = data['RAC1'][i]
-        datarac2 = data['RAC2'][i]
-        datarac3 = data['RAC3'][i]
-        datarac4 = data['RAC4'][i]
-        datadeccent = data['DEC_CENT'][i]
-        datadec1 = data['DECC1'][i]
-        datadec2 = data['DECC2'][i]
-        datadec3 = data['DECC3'][i]
-        datadec4 = data['DECC4'][i]
+        #filetocheck = data['FILENAME'] # this line was writing a funky csv file
+        #databand = data['BAND']
+        #if data['FILENAME'].size>1:
+
+        # no checks like elsewhere because this is a pandas df not numpy array
+        #filetocheck = data['FILENAME'][i]
+        filetocheck = data.iloc[0]['FILENAME']
+        databand = data.iloc[0]['BAND']
+        dataracent = data.iloc[0]['RA_CENT']
+        datarac1 = data.iloc[0]['RAC1']
+        datarac2 = data.iloc[0]['RAC2']
+        datarac3 = data.iloc[0]['RAC3']
+        datarac4 = data.iloc[0]['RAC4']
+        datadeccent = data.iloc[0]['DEC_CENT']
+        datadec1 = data.iloc[0]['DECC1']
+        datadec2 = data.iloc[0]['DECC2']
+        datadec3 = data.iloc[0]['DECC3']
+        datadec4 = data.iloc[0]['DECC4']
 
         # calculate edges of image
         stdlistFile ="""%s_std.csv"""   % (filetocheck)
@@ -438,6 +433,9 @@ def getallccdfromGAIA(args):
         w1 = ( datastd1['RA'] > minra ) ;w2 = ( datastd1['RA'] < maxra )
         w3 = ( datastd1['DEC'] > mindec );w4 = ( datastd1['DEC'] < maxdec )
         df = datastd1[ w1 &  w2 & w3 & w4 ].sort(['RA'], ascending=True)
+
+##### OUTPUT TO CSV ########
+
         df.to_csv(stdlistFile,columns=col,sep=',',index=False)
 
 ###################################
@@ -906,8 +904,6 @@ def sigmaClipZP(args):
 
     data1=np.genfromtxt(catlistFile,dtype=None,delimiter=',',names=True)
     ZeroListFile="""Zero_D%08d_%02d_r%sp%1d.csv""" % (args.expnum,args.ccd,args.reqnum,args.attnum)
-#change Feb22,2017		
-    #ZeroListFile="""Zero_D%08d_r%sp%02d.csv""" % (args.expnum,args.reqnum,args.attnum)
     
     fout=open(ZeroListFile,'w')
     hdr = "FILENAME,Nall,Nclipped,ZP,ZPrms,magType\n"
@@ -918,7 +914,7 @@ def sigmaClipZP(args):
         if data1['FILENAME'].size>1:
             data1name = data1['FILENAME'][i]
         data1name = np.array2string(data1name).strip('\'') # problem with filetocheck being a numpy array
-        data1name = data1name[data1name.find('\'')+1:]# hacky fix in case of unicode encoding
+        data1name = data1name[data1name.find('\'')+1:] # hacky fix in case of unicode encoding
 
         catFilename = os.path.basename(data1name)
         matchListFile="%s_match.csv" % (catFilename)        
@@ -966,7 +962,7 @@ def sigmaClipZP(args):
 #Added new!
     fout.close()        
 
-    ZeroListFile="""Zero_D%08d_r%sp%1d.csv""" % (args.expnum,args.reqnum,args.attnum)
+    ZeroListFile="""Zero_D%08d_%02d_r%sp%1d.csv""" % (args.expnum,args.ccd,args.reqnum,args.attnum)
     if not os.path.isfile(catlistFile):
         print '%s does not seem to exist... exiting now...' % ZeroListFile
         sys.exit(1)
@@ -1034,8 +1030,10 @@ def sigmaClipZPallCCDs(args):
     stddf.to_csv(stdfile,sep=',',index=False)
     path='./'
     all_files = glob.glob(os.path.join(path, "*Obj.csv"))     
-    df = pd.concat((pd.read_csv(f) for f in all_files)).sort(['RA'], ascending=True)
-    #TODO: no RA field
+    df = pd.concat((pd.read_csv(f) for f in all_files))
+    #df = df.sort(['RA'], ascending=True) 
+    df = df.sort(['NUMBER'], ascending=True) # guessed to sort by number... originally by RA
+    #TODO: oscillates between no RA field and having one????
     # fields are EXPNUM  CCDNUM  NUMBER  ALPHAWIN_J2000  DELTAWIN_J2000     FLUX_AUTO FLUXERR_AUTO      FLUX_PSF  FLUXERR_PSF   MAG_AUTO SPREADERR_MODEL  FWHM_WORLD  FWHMPSF_IMAGE  FWHMPSF_WORLD  CLASS_STAR FLAGS  IMAFLAGS_ISO  ZeroPoint  ZeroPoint_rms  ZeroPoint_FLAGS
 
     #read all file and sort and save 
@@ -1435,8 +1433,7 @@ def apply_ZP_Sexcatalogfitstocsv(catFilename,EXPNUM,CCDNUM,zeropoint,zeropoint_r
     hdr=['NUMBER','ALPHAWIN_J2000','DELTAWIN_J2000','FLUX_AUTO','FLUXERR_AUTO','FLUX_PSF','FLUXERR_PSF','MAG_AUTO','MAGERR_AUTO','MAG_PSF','MAGERR_PSF','SPREAD_MODEL','SPREADERR_MODEL','FWHM_WORLD','FWHMPSF_IMAGE','FWHMPSF_WORLD','CLASS_STAR','FLAGS','IMAFLAGS_ISO']
 
     catFilename = np.array2string(catFilename).strip('\'') # problem with filetocheck being a numpy array
-#    catFilename = catFilename[2:] # hacky fix for unicode encoding
-    catFilename = catFilename[catFilename.find('\'')+1:]# hacky fix in case of unicode encoding
+    catFilename = catFilename[catFilename.find('\'')+1:] # hacky fix in case of unicode encoding
 
     #print "catFilename: " ; print catFilename
 

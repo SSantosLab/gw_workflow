@@ -18,7 +18,10 @@ def main():
     
     datadir = '/data/des40.b/data/gaia/dr2/healpix'
     files = glob(datadir + "/*") # a list of filenames in the datadir
+    done = glob('./*') # files already done and in the current directory
     for f in files:
+        if f in done:
+           continue 
         catalog = []
         healpixnum = f[f.rfind("_")+1:-5]
 
