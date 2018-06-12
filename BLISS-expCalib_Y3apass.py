@@ -16,7 +16,7 @@
     Example:   
     expCalib_Y3apass.py --help
 
-    GW-expCalib_Y3apass.py -s db-desoper --expnum 475956 --reqnum 04 --attnum 11 
+    BLISS-expCalib_Y3apass.py -s db-desoper --expnum 475956 --reqnum 04 --attnum 11 --ccd 1
     
     """
 import os
@@ -34,6 +34,7 @@ def main():
     parser.add_argument('--expnum', help='expnum is queried', default=350245, type=int)
     parser.add_argument('--reqnum', help='reqnum is queried', default=922, type=str)
     parser.add_argument('--attnum', help='attnum is queried', default=1, type=int)
+    parser.add_argument('--ccd', help='ccd is queried', default='1', type=int)
     parser.add_argument('--magType', help='mag type to use (mag_psf, mag_auto, mag_aper_8, ...)', default='mag_psf')
     parser.add_argument('--sex_mag_zeropoint', help='default sextractor zeropoint to use to convert fluxes to sextractor mags (mag_sex = -2.5log10(flux) + sex_mag_zeropoint)', type=float, default=25.0)
     parser.add_argument('--verbose', help='verbosity level of output to screen (0,1,2,...)', default=0, type=int)
@@ -56,7 +57,8 @@ def main():
 
     #-- ADDED NEW
     #GET STD from APASS-DR9 and 2MASS FULL SKY
-    status= getallccdfromAPASS92MASS(args)
+#    status= getallccdfromAPASS92MASS(args)
+    status= getallccdfromGAIA(args)
 
     #-- ADDED NEW
     status = doset(args)
@@ -106,38 +108,69 @@ def doset(args):
         print '%s does not seem to exist... exiting now...' % catlistFile
         sys.exit(1)
 #    print " file %s found \n" %catlistFile
-    data=np.genfromtxt(catlistFile,dtype=None,delimiter=',',names=True)
+    data=np.genfromtxt(catlistFile,dtype=None,encoding=None,delimiter=',',names=True)
 #    print " befor loop \n"    
+
     for i in range(data['FILENAME'].size):
-        if os.path.isfile(data['FILENAME'][i]):
-            Read_Sexcatalogfitstocsv(args,data['FILENAME'][i],data['BAND'][i])
+        # to avoid error when array is not 2D because it only has one entry
+        # different from line 417 because this is a numpy array, not pandas
+        filetocheck = data['FILENAME']
+        databand = data['BAND']
+        dataracent = data['RA_CENT']
+        datarac1 = data['RAC1']
+        datarac2 = data['RAC2']
+        datarac3 = data['RAC3']
+        datarac4 = data['RAC4']
+        datadeccent = data['DEC_CENT']
+        datadec1 = data['DECC1']
+        datadec2 = data['DECC2']
+        datadec3 = data['DECC3']
+        datadec4 = data['DECC4']
+        if data['FILENAME'].size>1:
+            filetocheck = data['FILENAME'][i]
+            databand = data['BAND'][i]
+            dataracent = data['RA_CENT'][i]
+            datarac1 = data['RAC1'][i]
+            datarac2 = data['RAC2'][i]
+            datarac3 = data['RAC3'][i]
+            datarac4 = data['RAC4'][i]
+            datadeccent = data['DEC_CENT'][i]
+            datadec1 = data['DECC1'][i]
+            datadec2 = data['DECC2'][i]
+            datadec3 = data['DECC3'][i]
+            datadec4 = data['DECC4'][i]
 
-            minra=min(data['RA_CENT'][i],data['RAC1'][i],data['RAC2'][i],data['RAC3'][i],data['RAC4'][i])
-            maxra=max(data['RA_CENT'][i],data['RAC1'][i],data['RAC2'][i],data['RAC3'][i],data['RAC4'][i])
-            mindec=min(data['DEC_CENT'][i],data['DECC1'][i],data['DECC2'][i],data['DECC3'][i],data['DECC4'][i])
-            maxdec=max(data['DEC_CENT'][i],data['DECC1'][i],data['DECC2'][i],data['DECC3'][i],data['DECC4'][i])
+        filetocheck = np.array2string(filetocheck).strip('\'') # problem with filetocheck being a numpy array
+        if os.path.isfile(filetocheck):
 
-            rac  = data['RA_CENT'][i]
-            decc = data['DEC_CENT'][i]
+            Read_Sexcatalogfitstocsv(args,filetocheck,databand)
+
+            minra=min(dataracent,datarac1,datarac2,datarac3,datarac4)
+            maxra=max(dataracent,datarac1,datarac2,datarac3,datarac4)
+            mindec=min(datadeccent,datadec1,datadec3,datadec4)
+            maxdec=max(datadeccent,datadec1,datadec3,datadec4)
+
+            rac  = dataracent
+            decc = datadeccent
             
-            desipixc=getipix(128,data['RA_CENT'][i], data['DEC_CENT'][i])
-            desipix1=getipix(128,data['RAC1'][i],data['DECC1'][i])
-            desipix2=getipix(128,data['RAC2'][i],data['DECC2'][i])
-            desipix3=getipix(128,data['RAC3'][i],data['DECC3'][i])
-            desipix4=getipix(128,data['RAC4'][i],data['DECC4'][i])
+            desipixc=getipix(128,dataracent, datadeccent)
+            desipix1=getipix(128,datarac1,datadec1)
+            desipix2=getipix(128,datarac2,datadec2)
+            desipix3=getipix(128,datarac3,datadec3)
+            desipix4=getipix(128,datarac4,datadec4)
 
-            desipix12=getipix(128,data['RAC1'][i],data['DEC_CENT'][i])
-            desipix23=getipix(128,data['RA_CENT'][i],data['DECC2'][i])
-            desipix34=getipix(128,data['RAC3'][i],data['DEC_CENT'][i])
-            desipix14=getipix(128,data['RA_CENT'][i],data['DECC4'][i]) 
+            desipix12=getipix(128,datarac1,datadeccent)
+            desipix23=getipix(128,dataracent,datadec2)
+            desipix34=getipix(128,datarac3,datadeccent)
+            desipix14=getipix(128,dataracent,datadec4) 
 
             desipixlist= desipixc,desipix1,desipix2,desipix3,desipix4,desipix12,desipix23,desipix34,desipix14
             desipixlist=uniqlist(desipixlist)
         
             ra1=[];ra2=[];dec1=[];dec2=[]
-            matchlistout="""%s_match.csv""" % (data['FILENAME'][i])
-            objlistFile ="""%s_Obj.csv"""   % (data['FILENAME'][i])
-            stdlistFile ="""%s_std.csv"""   % (data['FILENAME'][i])        
+            matchlistout="""%s_match.csv""" % (filetocheck)
+            objlistFile ="""%s_Obj.csv"""   % (filetocheck)
+            stdlistFile ="""%s_std.csv"""   % (filetocheck)        
 
             if not os.path.isfile(objlistFile):
                 print '%s does not seem to exist... exiting now...' % objlistFile            
@@ -208,6 +241,7 @@ def Read_Sexcatalogfitstocsv(args,fitsname,band):
     SEXdata=[]
     columns=['NUMBER','ALPHAWIN_J2000','DELTAWIN_J2000',fluxType,fluxerrType,'SPREAD_MODEL','SPREADERR_MODEL','FWHM_WORLD', 'CLASS_STAR', 'FLAGS']
 
+    #Fdata = fitsio.read(catFilename,  columns=columns, ext=extension) #TODO: a guess that this is supposed to be the Fdata used in subsequent lines
     Fdata = fitsio.read(catFilename,  columns=columns, ext=extension)[:]
     #w0=( Fdata['FLUX_PSF'] > 2000) _OLD  
     w0=( Fdata['FLUX_PSF'] > 1000)  #NEW
@@ -256,6 +290,137 @@ def uniqlist(seq):
    noDupes = []
    [noDupes.append(i) for i in seq if not noDupes.count(i)]
    return noDupes
+
+###################################
+#NEW  June 1,2018 
+#This is a FULL SKY 
+#/data/des40.b/data/gaia/dr2
+#################################
+def getallccdfromGAIA(args):
+    import csv
+    import numpy as np
+    import healpy as hp
+    import healpy.pixelfunc
+    import pandas as pd
+    import string,sys,os,glob
+    import fitsio
+
+##### UNPACK IMAGE ###########
+
+    #print NEED Round RA
+    catlistFile="""D%08d_r%sp%s_red_catlist.csv""" % (args.expnum,str(args.reqnum),str(args.attnum))
+    print "looking for file %s \n" % catlistFile
+    if not os.path.exists(catlistFile):
+        print '%s does not seem to exist... exiting now...' % catlistFile
+        sys.exit(1)
+#    print " found file %s \n" % catlistFile
+    data=pd.read_csv(catlistFile)
+#    print " the file is read  unpack data \n"
+
+    # unpack image data
+    BAND=data['BAND'][0]
+   
+    # check image standard deviation 
+    stdRA = np.std(data['RA_CENT'])
+    if ( stdRA >20 ) :
+        data['RA_CENT']=[roundra(x) for x in data['RA_CENT']]
+        data['RAC1']   =[roundra(x) for x in data['RAC1']]
+        data['RAC2']   =[roundra(x) for x in data['RAC2']]
+        data['RAC3']   =[roundra(x) for x in data['RAC3']]
+        data['RAC4']   =[roundra(x) for x in data['RAC4']]
+
+    # get image limits
+    minra=min(min(data['RA_CENT']),min(data['RAC1']),min(data['RAC2']),min(data['RAC3']),min(data['RAC4']))-0.1
+    mindec=min(min(data['DEC_CENT']),min(data['DECC1']),min(data['DECC2']),min(data['DECC3']),min(data['DECC4']))-0.1
+    maxra=max(max(data['RA_CENT']),max(data['RAC1']),max(data['RAC2']),max(data['RAC3']),max(data['RAC4']))+0.1
+    maxdec=max(max(data['DEC_CENT']),max(data['DECC1']),max(data['DECC2']),max(data['DECC3']),max(data['DECC4']))+0.1
+
+    # read pixel from catalog
+    # using only the row for the current CCD
+    correctccd = (data['CCDNUM'] == args.ccd)
+    data = data[ correctccd ]
+    ra=data.iloc[0]['RA_CENT'] # in degrees; use iloc to get single cell
+    dec=data.iloc[0]['DEC_CENT'] # in degrees
+    nside=32
+    radius=np.radians(0.2)
+    vec = hp.pixelfunc.ang2vec(ra,dec,lonlat=True)
+
+    # List of nside=32 healpix pixel around specific ra,dec
+    pix = hp.query_disc(nside,vec,radius,inclusive=True)
+
+########## GET CORRESPONDING DATA FROM GAIA CATALOG ##########
+
+    datadir = '/data/des40.b/data/gaia/dr2/healpix'
+    catalog = []
+    for p in pix:
+        d = fitsio.read(datadir+'/GaiaSource_%05d.fits'%p, columns=['SOURCE_ID','RA','DEC','PHOT_G_MEAN_MAG'])
+        catalog.append(d)
+    # assumes all pixels are unique
+    catalog = np.concatenate(catalog)
+
+    outfile="""STD%s""" % catlistFile
+
+    df=pd.DataFrame()
+    good_data=[]
+    BANDname=BAND+"_des"
+    names=["MATCHID","RAJ2000_2mass","DEJ2000_2mass",BANDname]
+
+    df=pd.DataFrame(catalog.byteswap().newbyteorder(), index=range(catalog.size), columns=['SOURCE_ID','RA','DEC','PHOT_G_MEAN_MAG']) # byteswap because fits is big-endian, so swap byte order to native order
+    good_data.append(df)
+
+    # bounds checking; eliminate pixels not within current image (whole image)
+    chunk = pd.concat(good_data, ignore_index=True)
+    chunk = chunk.sort_values(by=['RA'], ascending=True) # DataFrame.sort is deprecated
+    w1 = ( chunk['RA'] > minra )
+    w2 = ( chunk['RA'] < maxra )
+    w3 = ( chunk['DEC'] > mindec )
+    w4 = ( chunk['DEC'] < maxdec )
+    w5 = ( chunk['PHOT_G_MEAN_MAG'] >0 )
+    
+    datastd = chunk[ w1 &  w2 & w3 & w4 & w5 ]
+    datastd1= pd.DataFrame({'MATCHID':datastd['SOURCE_ID'],'RA':datastd['RA'],'DEC':datastd['DEC'],'WAVG_MAG_PSF':datastd['PHOT_G_MEAN_MAG']})
+
+    col=["MATCHID", "RA","DEC", "WAVG_MAG_PSF"]
+
+    datastd1.to_csv(outfile,columns=col,sep=',',index=False)
+
+    hdr=["MATCHID","RA","DEC","wavg_mag_psf"]
+
+    # per CCD
+    # filtering image pixel set into CCD sets
+
+    for i in range(data['RA_CENT'].size):
+        # adjust naming in case array is not 2d because it only contains one element
+        #filetocheck = data['FILENAME'] # this line was writing a funky csv file
+        #databand = data['BAND']
+        #if data['FILENAME'].size>1:
+        
+        # no checks like elsewhere because this is a pandas df not numpy array
+        filetocheck = data.iloc[0]['FILENAME']
+        databand = data.iloc[0]['BAND']
+        dataracent = data.iloc[0]['RA_CENT']
+        datarac1 = data.iloc[0]['RAC1']
+        datarac2 = data.iloc[0]['RAC2']
+        datarac3 = data.iloc[0]['RAC3']
+        datarac4 = data.iloc[0]['RAC4']
+        datadeccent = data.iloc[0]['DEC_CENT']
+        datadec1 = data.iloc[0]['DECC1']
+        datadec2 = data.iloc[0]['DECC2']
+        datadec3 = data.iloc[0]['DECC3']
+        datadec4 = data.iloc[0]['DECC4']
+
+        # calculate edges of image
+        stdlistFile ="""%s_std.csv"""   % (filetocheck)
+        minra=min(dataracent,datarac1,datarac2,datarac3,datarac4)-.1
+        maxra=max(dataracent,datarac1,datarac2,datarac3,datarac4)+.1
+        mindec=min(datadeccent,datadec1,datadec2,datadec3,datadec4)-.1
+        maxdec=max(datadeccent,datadec1,datadec2,datadec3,datadec4)+.1
+        w1 = ( datastd1['RA'] > minra ) ;w2 = ( datastd1['RA'] < maxra )
+        w3 = ( datastd1['DEC'] > mindec );w4 = ( datastd1['DEC'] < maxdec )
+        df = datastd1[ w1 &  w2 & w3 & w4 ].sort_values(by=['RA'], ascending=True)
+
+##### OUTPUT TO CSV ########
+        df.to_csv(stdlistFile,columns=col,sep=',',index=False)
 
 ###################################
 #NEW  July 14,2016 
@@ -342,7 +507,7 @@ def getallccdfromAPASS92MASS(args):
         df= pd.read_csv(mmyfile)   
         good_data.append(df)
 
-    chunk = pd.concat(good_data, ignore_index=True).sort(['RAJ2000_APASS'], ascending=True) 
+    chunk = pd.concat(good_data, ignore_index=True).sort_values(by=['RAJ2000_APASS'], ascending=True) 
     w1 = ( chunk['RAJ2000_2MASS'] > minra ) ; w2 = ( chunk['RAJ2000_2MASS'] < maxra )
     w3 = ( chunk['DEJ2000_2MASS'] > mindec ); w4 = ( chunk['DEJ2000_2MASS'] < maxdec )
     w5 = ( chunk[BANDname] >0 )
@@ -364,7 +529,7 @@ def getallccdfromAPASS92MASS(args):
         maxdec=max(data['DEC_CENT'][i],data['DECC1'][i],data['DECC2'][i],data['DECC3'][i],data['DECC4'][i])+.1
         w1 = ( datastd1['RA'] > minra ) ;w2 = ( datastd1['RA'] < maxra )
         w3 = ( datastd1['DEC'] > mindec );w4 = ( datastd1['DEC'] < maxdec )
-        df = datastd1[ w1 &  w2 & w3 & w4 ].sort(['RA'], ascending=True)
+        df = datastd1[ w1 &  w2 & w3 & w4 ].sort_values(by=['RA'], ascending=True)
         df.to_csv(stdlistFile,columns=col,sep=',',index=False)
 
 ##################################
@@ -721,25 +886,30 @@ def sigmaClipZP(args):
         print '%s does not seem to exist... exiting now...' % catlistFile
         sys.exit(1)
 
-    data1=np.genfromtxt(catlistFile,dtype=None,delimiter=',',names=True)
-    ZeroListFile="""Zero_D%08d_r%sp%1d.csv""" % (args.expnum,args.reqnum,args.attnum)
-#change Feb22,2017		
-    #ZeroListFile="""Zero_D%08d_r%sp%02d.csv""" % (args.expnum,args.reqnum,args.attnum)
+    data1=np.genfromtxt(catlistFile,dtype=None,encoding=None,delimiter=',',names=True)
+    ZeroListFile="""Zero_D%08d_%02d_r%sp%1d.csv""" % (args.expnum,args.ccd,args.reqnum,args.attnum)
     
     fout=open(ZeroListFile,'w')
     hdr = "FILENAME,Nall,Nclipped,ZP,ZPrms,magType\n"
     fout.write(hdr)
 
     for i in range(data1['FILENAME'].size):
-        catFilename = os.path.basename(data1['FILENAME'][i])
+        data1name = data1['FILENAME']
+        if data1['FILENAME'].size>1:
+            data1name = data1['FILENAME'][i]
+        data1name = np.array2string(data1name).strip('\'') # problem with filetocheck being a numpy array
+        data1name = data1name[data1name.find('\'')+1:] # hacky fix in case of unicode encoding
+
+        catFilename = os.path.basename(data1name)
         matchListFile="%s_match.csv" % (catFilename)        
+
         if not os.path.isfile(matchListFile):
             print '%s does not seem to exist... exiting now...' % matchListFile
             sys.exit(1)
 
         try:
             #add new cuts for Apass9-2mass data set
-            data11=np.genfromtxt(matchListFile,dtype=None,delimiter=',',names=True)
+            data11=np.genfromtxt(matchListFile,dtype=None,encoding=None,delimiter=',',names=True)
             #New CUTS
             w0=(data11['MAG_2']-data11['WAVG_MAG_PSF_1']-25.0) < -10
             w1=(data11['MAG_2']-data11['WAVG_MAG_PSF_1']-25.0) > -40
@@ -776,12 +946,12 @@ def sigmaClipZP(args):
 #Added new!
     fout.close()        
 
-    ZeroListFile="""Zero_D%08d_r%sp%1d.csv""" % (args.expnum,args.reqnum,args.attnum)
+    ZeroListFile="""Zero_D%08d_%02d_r%sp%1d.csv""" % (args.expnum,args.ccd,args.reqnum,args.attnum)
     if not os.path.isfile(catlistFile):
         print '%s does not seem to exist... exiting now...' % ZeroListFile
         sys.exit(1)
 
-    MergedFile="""Merged_D%08d_r%sp%1d.csv""" % (args.expnum,args.reqnum,args.attnum)
+    MergedFile="""Merged_D%08d_%02d_r%sp%1d.csv""" % (args.expnum,args.ccd,args.reqnum,args.attnum)
     jointwocsv(catlistFile,ZeroListFile,MergedFile)
 
 ##################################
@@ -839,12 +1009,16 @@ def sigmaClipZPallCCDs(args):
     stdfile="""STDD%08d_r%sp%1d_red_catlist.csv""" % (args.expnum,args.reqnum,args.attnum)
     objfile="""ObjD%08d_r%sp%1d_red_catlist.csv""" % (args.expnum,args.reqnum,args.attnum)
     outfile="""OUTD%08d_r%sp%1d_red_catlist.csv""" % (args.expnum,args.reqnum,args.attnum)
-    stddf = pd.read_csv(stdfile).sort(['RA'], ascending=True)
+    stddf = pd.read_csv(stdfile).sort_values(by=['RA'], ascending=True)
     #read  file and sort and save 
     stddf.to_csv(stdfile,sep=',',index=False)
     path='./'
     all_files = glob.glob(os.path.join(path, "*Obj.csv"))     
-    df = pd.concat((pd.read_csv(f) for f in all_files)).sort(['RA'], ascending=True)
+    df = pd.concat((pd.read_csv(f) for f in all_files))
+    #df = df.sort_values(by=['RA'], ascending=True) 
+    df = df.sort_values(by=['NUMBER'], ascending=True) # guessed to sort by number... originally by RA
+    #TODO: oscillates between no RA field and having one????
+    # fields are EXPNUM  CCDNUM  NUMBER  ALPHAWIN_J2000  DELTAWIN_J2000     FLUX_AUTO FLUXERR_AUTO      FLUX_PSF  FLUXERR_PSF   MAG_AUTO SPREADERR_MODEL  FWHM_WORLD  FWHMPSF_IMAGE  FWHMPSF_WORLD  CLASS_STAR FLAGS  IMAFLAGS_ISO  ZeroPoint  ZeroPoint_rms  ZeroPoint_FLAGS
 
     #read all file and sort and save 
     df.to_csv(objfile,sep=',',index=False)
@@ -859,7 +1033,7 @@ def sigmaClipZPallCCDs(args):
 	print '%s does not seem to exist... exiting now...' % outfile
 	sys.exit(1)
     try:
-	data11=np.genfromtxt(outfile,dtype=None,delimiter=',',names=True)
+	data11=np.genfromtxt(outfile,dtype=None,encoding=None,delimiter=',',names=True)
         #New CUTS
 	w0=(data11['MAG_2']-data11['WAVG_MAG_PSF_1']-25.0) < -10
 	w1=(data11['MAG_2']-data11['WAVG_MAG_PSF_1']-25.0) > -40
@@ -918,15 +1092,15 @@ def ZP_OUTLIERS(args):
     #    print '%s does not seem to exist... exiting now...' % ZeroListFile
     #    sys.exit(1)
 
-    MergedFile="""Merged_D%08d_r%sp%1d.csv""" % (args.expnum,args.reqnum,args.attnum)
+    MergedFile="""Merged_D%08d_%02d_r%sp%1d.csv""" % (args.expnum,args.ccd,args.reqnum,args.attnum)
     if not os.path.isfile(MergedFile):
         print '%s does not seem to exist... exiting now...' % MergedFile
         sys.exit(1)
 
-    fout="""Merg_allZP_D%08d_r%sp%1d.csv""" % (args.expnum,args.reqnum,args.attnum)
+    fout="""Merg_allZP_D%08d_%02d_r%sp%1d.csv""" % (args.expnum,args.ccd,args.reqnum,args.attnum)
 
     df1=pd.read_csv(MergedFile)
-    df2=np.genfromtxt(allZeroFile,dtype=None,delimiter=',',names=True)
+    df2=np.genfromtxt(allZeroFile,dtype=None,encoding=None,delimiter=',',names=True)
 
     w0= ( df1['Nclipped'] < 4 ) | ( df1['ZP'] < -100 ) | ( df1['ZPrms'] > 0.3 )
     df1['NewZP']=np.where(w0 , df2['sigclipZP'],df1['ZP'])
@@ -1049,8 +1223,8 @@ def plotradec_ZP(args):
     #jointwocsv(catlistFile,ZeroListFile,Mergedout)
     #MergedFile="""Merg_allZP_D%08d_r%sp%1d.csv""" % (args.expnum,args.reqnum,args.attnum)
 
-    MergedFile="""Merged_D%08d_r%sp%1d.csv""" % (args.expnum,args.reqnum,args.attnum)    
-    data=np.genfromtxt(MergedFile,dtype=None,delimiter=',',names=True)
+    MergedFile="""Merged_D%08d_%02d_r%sp%1d.csv""" % (args.expnum,args.ccd,args.reqnum,args.attnum)    
+    data=np.genfromtxt(MergedFile,dtype=None,encoding=None,delimiter=',',names=True)
     stdRA = np.std(data['RA_CENT'])
     if stdRA > 20:
         data['RA_CENT']=[roundra(x) for x in data['RA_CENT']]
@@ -1242,9 +1416,16 @@ def apply_ZP_Sexcatalogfitstocsv(catFilename,EXPNUM,CCDNUM,zeropoint,zeropoint_r
 
     hdr=['NUMBER','ALPHAWIN_J2000','DELTAWIN_J2000','FLUX_AUTO','FLUXERR_AUTO','FLUX_PSF','FLUXERR_PSF','MAG_AUTO','MAGERR_AUTO','MAG_PSF','MAGERR_PSF','SPREAD_MODEL','SPREADERR_MODEL','FWHM_WORLD','FWHMPSF_IMAGE','FWHMPSF_WORLD','CLASS_STAR','FLAGS','IMAFLAGS_ISO']
 
+    catFilename = np.array2string(catFilename).strip('\'') # problem with filetocheck being a numpy array
+    catFilename = catFilename[catFilename.find('\'')+1:] # hacky fix in case of unicode encoding
+
+
+    #print "catFilename: " ; print catFilename
+
     data = fitsio.read(catFilename,  columns=hdr, ext=extension)[:]
     data = data[np.argsort(data['ALPHAWIN_J2000'])]
 
+#    for i in range(data['FLUX_AUTO'].size):
     w1=( data['FLUX_AUTO'] >0. )
     data['MAG_AUTO'] = np.where(w1 , (-2.5*np.log10(data['FLUX_AUTO']) - zeropoint) ,np.int16(-9999))
     data['MAGERR_AUTO'] = np.where(w1 ,(2.5/math.log(10.))*(data['FLUXERR_AUTO']/data['FLUX_AUTO']) ,np.int16(-9999))
@@ -1277,25 +1458,38 @@ def Onefile(args):
 
     if args.verbose >0 : print args
 
-    catlistFile="""Merg_allZP_D%08d_r%sp%1d.csv""" % (args.expnum,args.reqnum,args.attnum)
+    catlistFile="""Merg_allZP_D%08d_%02d_r%sp%1d.csv""" % (args.expnum,args.ccd,args.reqnum,args.attnum)
     if not os.path.isfile(catlistFile):
         print '%s does not seem to exist...' % catlistFile
 
-    fout="""D%08d_r%sp%1d_ZP.csv""" % (args.expnum,args.reqnum,args.attnum)
-    fitsout="""D%08d_r%sp%1d_ZP.fits""" % (args.expnum,args.reqnum,args.attnum)
+    fout="""D%08d_%02d_r%sp%1d_ZP.csv""" % (args.expnum,args.ccd,args.reqnum,args.attnum)
+    fitsout="""D%08d_%02d_r%sp%1d_ZP.fits""" % (args.expnum,args.ccd,args.reqnum,args.attnum)
 
     #Removed Feb23,2017
     #os.system('rm %s ' %fitsout)
 
-    data=np.genfromtxt(catlistFile,dtype=None,delimiter=',',names=True)
+    data=np.genfromtxt(catlistFile,dtype=None,encoding=None,delimiter=',',names=True)
         
     for i in range(data['FILENAME'].size):
-        apply_ZP_Sexcatalogfitstocsv(data['FILENAME'][i],data['EXPNUM'][i],data['CCDNUM'][i],data['NewZP'][i],data['NewZPrms'][i],data['NewZPFlag'][i])
+        dataname = data['FILENAME']
+        dataexpnum = data['EXPNUM'] 
+        dataccdnum = data['CCDNUM'] 
+        datazp = data['NewZP'] 
+        datazprms = data['NewZPrms'] 
+        datazpflag = data['NewZPFlag'] 
+        if data['FILENAME'].size>1:
+            dataname = data['FILENAME'][i]
+            dataexpnum = data['EXPNUM'][i]
+            dataccdnum = data['CCDNUM'][i]
+            datazp = data['NewZP'][i]
+            datazprms = data['NewZPrms'][i]
+            datazpflag = data['NewZPFlag'][i]
+        apply_ZP_Sexcatalogfitstocsv(dataname,dataexpnum,dataccdnum,datazp,datazprms,datazpflag)
         
     path='./'
     all_files = glob.glob(os.path.join(path, "*Obj.csv"))     
 
-    big_frame=pd.concat((pd.read_csv(f) for f in all_files)).sort(['ALPHAWIN_J2000'], ascending=True)
+    big_frame=pd.concat((pd.read_csv(f) for f in all_files)).sort_values(by=['ALPHAWIN_J2000'], ascending=True)
 
     big_frame['ID']=list(range(len(big_frame['ALPHAWIN_J2000'].index)))
     big_frame['ID']=1+big_frame['ID']
@@ -1336,7 +1530,7 @@ def Onefile(args):
     cols=fits.ColDefs([col1, col2, col3, col4, col5, col6, col7, col8, col9, col10, col11, col12, col13, col14, col15, col16, col17, col18, col19, col20, col21, col22, col23, col24,col25])
 
     tbhdu=fits.BinTableHDU.from_columns(cols)
-    tbhdu.writeto(fitsout)
+    tbhdu.writeto(fitsout,overwrite=True)
 
 ##################################
 #
