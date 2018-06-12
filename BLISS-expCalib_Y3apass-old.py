@@ -1032,7 +1032,7 @@ def sigmaClipZPallCCDs(args):
     all_files = glob.glob(os.path.join(path, "*Obj.csv"))     
     df = pd.concat((pd.read_csv(f) for f in all_files))
     #df = df.sort(['RA'], ascending=True) 
-    df = df.sort(['NUMBER'], ascending=True) # guessed to sort by number... originally by RA
+    df = df.sort(['RA'], ascending=True) # guessed to sort by number... originally by RA
     #TODO: oscillates between no RA field and having one????
     # fields are EXPNUM  CCDNUM  NUMBER  ALPHAWIN_J2000  DELTAWIN_J2000     FLUX_AUTO FLUXERR_AUTO      FLUX_PSF  FLUXERR_PSF   MAG_AUTO SPREADERR_MODEL  FWHM_WORLD  FWHMPSF_IMAGE  FWHMPSF_WORLD  CLASS_STAR FLAGS  IMAFLAGS_ISO  ZeroPoint  ZeroPoint_rms  ZeroPoint_FLAGS
 

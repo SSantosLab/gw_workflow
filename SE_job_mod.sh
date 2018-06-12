@@ -483,7 +483,7 @@ if [ "$DOCALIB" == "true" ]; then
     conda activate des18a
     
 #    ./BLISS-expCalib_Y3apass.py --expnum $EXPNUM --reqnum $RNUM --attnum $PNUM --ccd $CCDS
-    ./BLISS-expCalib_Y3apass-old.py --expnum $EXPNUM --reqnum $RNUM --attnum $PNUM #--ccd $CCDS
+    ./BLISS-expCalib_Y3apass-old2.py --expnum $EXPNUM --reqnum $RNUM --attnum $PNUM --ccd $CCDS
 
     
     RESULT=$? 
