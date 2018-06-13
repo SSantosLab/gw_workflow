@@ -350,15 +350,16 @@ def getallccdfromGAIA(args):
 
 ########## GET CORRESPONDING DATA FROM GAIA CATALOG ##########
 
-    datadir = '/cvmfs/des.osgstorage.org/stash/ALLSKY_STARCAT'
+    datadir = '/cvmfs/des.osgstorage.org/stash/ALLSKY_STARCAT/GAIA_DR2'
     catalog = []
     for p in pix:
-        prefix=p[:3]
-        print "p: %s\tprefix: %s" % (p, prefix)
-        d = fitsio.read(datadir+'/GaiaOut%03dXX/GaiaOut%05d.csv'%(p, p), columns=['SOURCE_ID','RA','DEC','PHOT_G_MEAN_MAG'])
+        prefix=p/100
+        #d = fitsio.read(datadir+'/GaiaOut%03dXX/GaiaOut%05d.csv'%(prefix, p), columns=['SOURCE_ID','RA','DEC','PHOT_G_MEAN_MAG'])
+        d = pd.read_csv(datadir+'/GaiaOut%03dXX/GaiaOut%05d.csv'%(prefix, p))
         catalog.append(d)
     # assumes all pixels are unique
     catalog = np.concatenate(catalog)
+    rows, cols = catalog.shape
 
     outfile="""STD%s""" % catlistFile
 
@@ -367,7 +368,8 @@ def getallccdfromGAIA(args):
     BANDname=BAND+"_des"
     names=["MATCHID","RAJ2000_2mass","DEJ2000_2mass",BANDname]
 
-    df=pd.DataFrame(catalog.byteswap().newbyteorder(), index=range(catalog.size), columns=['SOURCE_ID','RA','DEC','PHOT_G_MEAN_MAG']) # byteswap because fits is big-endian, so swap byte order to native order
+    #df=pd.DataFrame(catalog.byteswap().newbyteorder(), index=range(catalog.size), columns=['SOURCE_ID','RA','DEC','PHOT_G_MEAN_MAG']) # byteswap because fits is big-endian, so swap byte order to native order
+    df=pd.DataFrame(catalog, index=range(rows), columns=['SOURCE_ID','RA','DEC','PHOT_G_MEAN_MAG'])
     good_data.append(df)
 
     # bounds checking; eliminate pixels not within current image (whole image)
