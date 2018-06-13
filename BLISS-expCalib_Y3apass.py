@@ -141,6 +141,8 @@ def doset(args):
             datadec4 = data['DECC4'][i]
 
         filetocheck = np.array2string(filetocheck).strip('\'') # problem with filetocheck being a numpy array
+        filetocheck = filetocheck[filetocheck.find('\'')+1:] # hacky fix in case of unicode encoding
+        print "filetocheck: %s" % filetocheck
         if os.path.isfile(filetocheck):
 
             Read_Sexcatalogfitstocsv(args,filetocheck,databand)
@@ -1422,7 +1424,7 @@ def apply_ZP_Sexcatalogfitstocsv(catFilename,EXPNUM,CCDNUM,zeropoint,zeropoint_r
 
     hdr=['NUMBER','ALPHAWIN_J2000','DELTAWIN_J2000','FLUX_AUTO','FLUXERR_AUTO','FLUX_PSF','FLUXERR_PSF','MAG_AUTO','MAGERR_AUTO','MAG_PSF','MAGERR_PSF','SPREAD_MODEL','SPREADERR_MODEL','FWHM_WORLD','FWHMPSF_IMAGE','FWHMPSF_WORLD','CLASS_STAR','FLAGS','IMAFLAGS_ISO']
 
-    catFilename = np.array2string(catFilename).strip('\'') # problem with filetocheck being a numpy array
+    catFilename = np.array2string(catFilename).strip('\'') # problem with catFilename being a numpy array
     catFilename = catFilename[catFilename.find('\'')+1:] # hacky fix in case of unicode encoding
 
 

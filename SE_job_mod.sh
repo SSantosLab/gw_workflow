@@ -184,6 +184,7 @@ tar xzfm ./test_mysql_libs.tar.gz
 
 ifdh cp -D /pnfs/des/scratch/nglaeser/BLISS-expCalib_Y3apass-old.py ./ || { echo "Error copying BLISS-old.py file. Exiting." ; exit 2; }
 ifdh cp -D /pnfs/des/scratch/nglaeser/BLISS-expCalib_Y3apass.py ./ || { echo "Error copying BLISS.py file. Exiting." ; exit 2; }
+ifdh cp -D /pnfs/des/scratch/nglaeser/run_SEproc.py /pnfs/des/scratch/nglaeser/run_desdmy1e2.py ./ || { echo "Error copying run_SEproc.py and run_desdmy1e2.py. Exiting." ; exit 2; }
 
 export DES_SERVICES=${HOME}/.desservices.ini
 chmod 600 ${HOME}/.desservices.ini
@@ -211,7 +212,6 @@ rm -f confFile
 # we are doing no2no61.head for everything as of now (2017-01-04)
 
 # IMPORTANT NOTE: Be sure that all of the filenames below are in SINGLE QUOTES.
-
 if [ "${SPECIALY4}" == "true" ]; then
     
     YEAR=y4

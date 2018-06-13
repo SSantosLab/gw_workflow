@@ -141,6 +141,7 @@ def doset(args):
             datadec4 = data['DECC4'][i]
 
         filetocheck = np.array2string(filetocheck).strip('\'') # problem with filetocheck being a numpy array
+        filetocheck = filetocheck[filetocheck.find('\'')+1:] # hacky fix in case of unicode encoding
         if os.path.isfile(filetocheck):
 
             Read_Sexcatalogfitstocsv(args,filetocheck,databand)
