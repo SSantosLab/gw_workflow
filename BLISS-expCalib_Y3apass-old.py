@@ -335,10 +335,13 @@ def getallccdfromGAIA(args):
     maxra=max(max(data['RA_CENT']),max(data['RAC1']),max(data['RAC2']),max(data['RAC3']),max(data['RAC4']))+0.1
     maxdec=max(max(data['DEC_CENT']),max(data['DECC1']),max(data['DECC2']),max(data['DECC3']),max(data['DECC4']))+0.1
 
+    print "data: %s" % data
     # read pixel from catalog
     # using only the row for the current CCD
     correctccd = (data['CCDNUM'] == args.ccd)
     data = data[ correctccd ]
+    print "data: %s" % data
+    print "ccd: %s" % args.ccd
     ra=data.iloc[0]['RA_CENT'] # in degrees; use iloc to get single cell
     dec=data.iloc[0]['DEC_CENT'] # in degrees
     nside=32
@@ -363,8 +366,9 @@ def getallccdfromGAIA(args):
 
     # List of nside=32 healpix pixel around specific ra,dec
     pix = hp.query_disc(nside,vec,radius,inclusive=True)
+    print "pix: %s" % pix
 
-    datadir = '/cvmfs/des.osgstorage.org/stash/ALLSKY_STARCAT/GAIA_DR'
+    datadir = '/cvmfs/des.osgstorage.org/stash/ALLSKY_STARCAT/GAIA_DR2'
     catalog = []
     for p in pix:
         prefix=p/100

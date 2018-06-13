@@ -4,7 +4,7 @@ expnum: 668439
 filter: i
 r: 4
 p: 5
-chiplist: 1,3
+chiplist: 3
 data_dir: /pnfs/des/scratch/gw/dts/
 corr_dir: /cvmfs/des.osgstorage.org/pnfs/fnal.gov/usr/des/persistent/stash/desdm/calib/
 conf_dir: /cvmfs/des.osgstorage.org/pnfs/fnal.gov/usr/des/persistent/stash/desdm/config/
@@ -53,7 +53,7 @@ flag_mask =   0x00fd
 flag_astr =   0x0000
 catalog_ref =   GAIA-DR2
 default_scamp =  default2.scamp.20140423
-head = f1,3.head
+head = f3.head
 
 [starflat]
 starflat = Y2A1_20150715t0315_{filter:s}_c{ccd:>02s}_r2360p01_starflat.fits

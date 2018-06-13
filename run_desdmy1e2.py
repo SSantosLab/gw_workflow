@@ -28,7 +28,7 @@ for ccd in CCD:
 #    psfex( 'sextractor', ccdstring, **args)
 
 
-combineFiles('D00'+str(EXPNUM)+'**sextractor.fits', 'Scamp_allCCD_r'+rRun+'p'+pRun+'.fits')
+combineFiles('D00'+str(EXPNUM)+'_i_01_r4p5_sextractor.fits', 'Scamp_allCCD_r'+rRun+'p'+pRun+'.fits')
 scamp('Scamp_allCCD_r'+rRun+'p'+pRun+'.fits')
 change_head('Scamp_allCCD_r'+rRun+'p'+pRun+'.head', 'sextractor', 'detrend', 'wcs', CCD, **args)
 
