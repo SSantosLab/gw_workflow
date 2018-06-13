@@ -29,8 +29,8 @@ for ccd in CCD:
 
 
 combineFiles('D00'+str(EXPNUM)+'_i_01_r4p5_sextractor.fits', 'Scamp_allCCD_r'+rRun+'p'+pRun+'.fits')
-scamp('Scamp_allCCD_r'+rRun+'p'+pRun+'.fits')
-change_head('Scamp_allCCD_r'+rRun+'p'+pRun+'.head', 'sextractor', 'detrend', 'wcs', CCD, **args)
+scamp('D00'+str(EXPNUM)+'_i_01_r4p5_sextractor.fits')
+change_head('D00'+str(EXPNUM)+'_i_01_r4p5_sextractor.head', 'sextractor', 'detrend', 'wcs', CCD, **args)
 
 for ccd in CCD:
     ccdstring= "%02d"%int(ccd)
