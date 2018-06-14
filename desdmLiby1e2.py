@@ -359,7 +359,7 @@ def scamp(inputFile):
         ' ' + '-AHEADER_GLOBAL ' + head_FILE +\
         ' -ASTRINSTRU_KEY DUMMY -AHEADER_SUFFIX .aheadnoexist -ASTREFMAG_LIMITS -99,17 ' +\
         ' -ASTREF_CATALOG ' +catalog_ref +' -c ' +default_scamp +\
-        ' -WRITE_XML Y -XML_NAME scamp.xml -MOSAIC_TYPE SAME_CRVAL -ASTREF_BAND DEFAULT -POSITION_MAXERR 10.0 -NTHREADS 1 '
+        ' -WRITE_XML Y -XML_NAME scamp.xml -MOSAIC_TYPE SAME_CRVAL -ASTREF_BAND DEFAULT -POSITION_MAXERR 60.0 -NTHREADS 1 '
 
     print '\n',cmd,'\n'
 
