@@ -27,13 +27,13 @@ for ccd in CCD:
     sextractor('nullweight', 'sextractor', ccdstring, **args)
 #    psfex( 'sextractor', ccdstring, **args)
 
-
-combineFiles('D00'+str(EXPNUM)+'_i_01_r4p5_sextractor.fits', 'Scamp_allCCD_r'+rRun+'p'+pRun+'.fits')
-scamp('D00'+str(EXPNUM)+'_i_01_r4p5_sextractor.fits')
-change_head('D00'+str(EXPNUM)+'_i_01_r4p5_sextractor.head', 'sextractor', 'detrend', 'wcs', CCD, **args)
-
 for ccd in CCD:
     ccdstring= "%02d"%int(ccd)
+
+    combineFiles('D00'+str(EXPNUM)+'_i_'+ccdstring+'_r4p5_sextractor.fits', 'Scamp_allCCD_r'+rRun+'p'+pRun+'.fits')
+    scamp('D00'+str(EXPNUM)+'_i_'+ccdstring+'_r4p5_sextractor.fits')
+    change_head('D00'+str(EXPNUM)+'_i_'+ccdstring+'_r4p5_sextractor.head', 'sextractor', 'detrend', 'wcs', CCD, **args)
+
     bleedmask(ccdstring,'wcs','bleedmasked',**args)
     skycompress(ccdstring,'bleedmasked','bleedmask-mini',**args)
 

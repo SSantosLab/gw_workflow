@@ -34,7 +34,7 @@ def main():
     parser.add_argument('--expnum', help='expnum is queried', default=350245, type=int)
     parser.add_argument('--reqnum', help='reqnum is queried', default=922, type=str)
     parser.add_argument('--attnum', help='attnum is queried', default=1, type=int)
-    parser.add_argument('--ccd', help='ccd is queried', default='1', type=int)
+    parser.add_argument('--ccd', help='ccd is queried', default=1, type=int)
     parser.add_argument('--magType', help='mag type to use (mag_psf, mag_auto, mag_aper_8, ...)', default='mag_psf')
     parser.add_argument('--sex_mag_zeropoint', help='default sextractor zeropoint to use to convert fluxes to sextractor mags (mag_sex = -2.5log10(flux) + sex_mag_zeropoint)', type=float, default=25.0)
     parser.add_argument('--verbose', help='verbosity level of output to screen (0,1,2,...)', default=0, type=int)
@@ -109,6 +109,9 @@ def doset(args):
         sys.exit(1)
 #    print " file %s found \n" %catlistFile
     data=np.genfromtxt(catlistFile,dtype=None,delimiter=',',names=True)
+    # get only data for correct CCD
+    correctccd = (data['CCDNUM'] == args.ccd)
+    data = data[ correctccd ]
 #    print " befor loop \n"    
 
     for i in range(data['FILENAME'].size):
@@ -140,8 +143,11 @@ def doset(args):
             datadec3 = data['DECC3'][i]
             datadec4 = data['DECC4'][i]
 
-        filetocheck = np.array2string(filetocheck).strip('\'') # problem with filetocheck being a numpy array
-        filetocheck = filetocheck[filetocheck.find('\'')+1:] # hacky fix in case of unicode encoding
+        filetocheck = filetocheck.astype(str)
+        filetocheck = filetocheck[0]
+#        filetocheck = np.array2string(filetocheck).strip('\'') # problem with filetocheck being a numpy array
+#        filetocheck = filetocheck[filetocheck.find('\'')+1:] # hacky fix in case of unicode encoding
+#        filetocheck = filetocheck[:-2] # hacky fix in case of unicode encoding
         if os.path.isfile(filetocheck):
 
             Read_Sexcatalogfitstocsv(args,filetocheck,databand)
@@ -336,13 +342,10 @@ def getallccdfromGAIA(args):
     maxra=max(max(data['RA_CENT']),max(data['RAC1']),max(data['RAC2']),max(data['RAC3']),max(data['RAC4']))+0.1
     maxdec=max(max(data['DEC_CENT']),max(data['DECC1']),max(data['DECC2']),max(data['DECC3']),max(data['DECC4']))+0.1
 
-    print "data: %s" % data
     # read pixel from catalog
     # using only the row for the current CCD
     correctccd = (data['CCDNUM'] == args.ccd)
     data = data[ correctccd ]
-    print "data: %s" % data
-    print "ccd: %s" % args.ccd
     ra=data.iloc[0]['RA_CENT'] # in degrees; use iloc to get single cell
     dec=data.iloc[0]['DEC_CENT'] # in degrees
     nside=32
@@ -367,7 +370,6 @@ def getallccdfromGAIA(args):
 
     # List of nside=32 healpix pixel around specific ra,dec
     pix = hp.query_disc(nside,vec,radius,inclusive=True)
-    print "pix: %s" % pix
 
     datadir = '/cvmfs/des.osgstorage.org/stash/ALLSKY_STARCAT/GAIA_DR2'
     catalog = []
@@ -576,6 +578,8 @@ def plotradec_sexvsY2Q1(args):
         sys.exit(1)
 
     data=np.genfromtxt(catlistFile,dtype=None,delimiter=',',names=True)
+    correctccd = (data['CCDNUM'] == args.ccd)
+    data = data[ correctccd ]
 
     for i in range(data['FILENAME'].size):
         ra1=[];ra2=[];dec1=[];dec2=[]
@@ -671,6 +675,7 @@ def matchSortedStdwithObsCats(inputStdFile,inputObsFile,outputMatch,racolStdFile
     # Read header line of observed data CSV file...
     h2=fd2.readline()
     h2n=h2.strip().split(',')
+    obsracol=h2n.index("RA")
 
     # Create and output header for the output CSV file...
     #  Note that the column names from the standard star file
@@ -914,6 +919,8 @@ def sigmaClipZP(args):
         sys.exit(1)
 
     data1=np.genfromtxt(catlistFile,dtype=None,delimiter=',',names=True)
+    correctccd = (data1['CCDNUM'] == args.ccd)
+    data1 = data1[ correctccd ]
     ZeroListFile="""Zero_D%08d_%02d_r%sp%1d.csv""" % (args.expnum,args.ccd,args.reqnum,args.attnum)
     
     fout=open(ZeroListFile,'w')
@@ -924,8 +931,11 @@ def sigmaClipZP(args):
         data1name = data1['FILENAME']
         if data1['FILENAME'].size>1:
             data1name = data1['FILENAME'][i]
-        data1name = np.array2string(data1name).strip('\'') # problem with filetocheck being a numpy array
-        data1name = data1name[data1name.find('\'')+1:] # hacky fix in case of unicode encoding
+        data1name = data1name.astype(str)
+        data1name = data1name[0]
+#        data1name = np.array2string(data1name).strip('\'') # problem with filetocheck being a numpy array
+#        data1name = data1name[data1name.find('\'')+1:] # hacky fix in case of unicode encoding
+#        data1name = data1name[:-2] # hacky fix in case of unicode encoding
 
         catFilename = os.path.basename(data1name)
         matchListFile="%s_match.csv" % (catFilename)        
@@ -1040,7 +1050,7 @@ def sigmaClipZPallCCDs(args):
     #read  file and sort and save 
     stddf.to_csv(stdfile,sep=',',index=False)
     path='./'
-    all_files = glob.glob(os.path.join(path, "*Obj.csv"))     
+    all_files = glob.glob(os.path.join(path, "*Obj.csv")) # make sure the columns are still in the same order TODO
     df = pd.concat((pd.read_csv(f) for f in all_files))
     #df = df.sort(['RA'], ascending=True) 
     df = df.sort(['RA'], ascending=True) # guessed to sort by number... originally by RA
@@ -1051,7 +1061,8 @@ def sigmaClipZPallCCDs(args):
     df.to_csv(objfile,sep=',',index=False)
 
     stdracol=1; stddeccol=2
-    obsracol=1 ; obsdeccol=2 
+    #obsracol=1 ; obsdeccol=2 
+    obsracol=df.columns.get_loc("RA") ; obsdeccol=df.columns.get_loc("DEC")
     matchTolArcsec=1.0 #1.0arcsec 
     verbose=2
     matchSortedStdwithObsCats(stdfile,objfile,outfile,stdracol,stddeccol,obsracol,obsdeccol,matchTolArcsec,verbose)
@@ -1091,7 +1102,6 @@ def sigmaClipZPallCCDs(args):
 
     hdr="EXPNUM,REQNUM,ATTNUM,NumStarsAll,NumStarsClipped,sigclipZP,stdsigclipzp\n"    
     line = """%d,%s,%d,%d,%d,%f,%f""" % (args.expnum,args.reqnum,args.attnum, NumStarsAll,NumStarsClipped,sigclipZP,stdsigclipzp)
-    print line
     fout=open(allZPout,'w')
     fout.write(hdr)
     fout.write(line+'\n')
@@ -1443,10 +1453,10 @@ def apply_ZP_Sexcatalogfitstocsv(catFilename,EXPNUM,CCDNUM,zeropoint,zeropoint_r
 
     hdr=['NUMBER','ALPHAWIN_J2000','DELTAWIN_J2000','FLUX_AUTO','FLUXERR_AUTO','FLUX_PSF','FLUXERR_PSF','MAG_AUTO','MAGERR_AUTO','MAG_PSF','MAGERR_PSF','SPREAD_MODEL','SPREADERR_MODEL','FWHM_WORLD','FWHMPSF_IMAGE','FWHMPSF_WORLD','CLASS_STAR','FLAGS','IMAFLAGS_ISO']
 
-    catFilename = np.array2string(catFilename).strip('\'') # problem with filetocheck being a numpy array
-    catFilename = catFilename[catFilename.find('\'')+1:] # hacky fix in case of unicode encoding
+    catFilename = catFilename.astype(str)
+#    catFilename = np.array2string(catFilename).strip('\'') # problem with filetocheck being a numpy array
+#    catFilename = catFilename[catFilename.find('\'')+1:] # hacky fix in case of unicode encoding
 
-    #print "catFilename: " ; print catFilename
 
     data = fitsio.read(catFilename,  columns=hdr, ext=extension)[:]
     data = data[np.argsort(data['ALPHAWIN_J2000'])]
