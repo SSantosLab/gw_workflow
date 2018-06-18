@@ -94,13 +94,22 @@ def main():
 
 
 def doset(args):
-    import os
+    import os,glob
     import csv
     import time
     import healpy as hp    
     import sys
     
     if args.verbose >0 : print args
+
+    # delete previous *Obj.csv files
+    oldfiles = glob.glob("*Obj.csv")
+    for f in oldfiles:
+        if os.path.isfile(f):
+            os.remove(f)
+        else:
+            print "Old object file not deleted because it could not be found."
+    
 
     catlistFile="D%08d_r%sp%s_red_catlist.csv" % (args.expnum,str(args.reqnum),str(args.attnum))
 #    print " looking for file %s in local directory \n" % catlistFile
@@ -1436,12 +1445,9 @@ def apply_ZP_Sexcatalogfitstocsv(catFilename,EXPNUM,CCDNUM,zeropoint,zeropoint_r
 
     hdr=['NUMBER','ALPHAWIN_J2000','DELTAWIN_J2000','FLUX_AUTO','FLUXERR_AUTO','FLUX_PSF','FLUXERR_PSF','MAG_AUTO','MAGERR_AUTO','MAG_PSF','MAGERR_PSF','SPREAD_MODEL','SPREADERR_MODEL','FWHM_WORLD','FWHMPSF_IMAGE','FWHMPSF_WORLD','CLASS_STAR','FLAGS','IMAFLAGS_ISO']
     
-    catFilename = catFilename.astype(str)
+    catFilename = str(catFilename.astype(str))
 #    catFilename = np.array2string(catFilename).strip('\'') # problem with catFilename being a numpy array
 #    catFilename = catFilename[catFilename.find('\'')+1:] # hacky fix in case of unicode encoding
-
-
-    #print "catFilename: " ; print catFilename
 
     data = fitsio.read(catFilename,  columns=hdr, ext=extension)[:]
     data = data[np.argsort(data['ALPHAWIN_J2000'])]
