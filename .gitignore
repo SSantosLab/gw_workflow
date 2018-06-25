@@ -1,6 +1,7 @@
 # data files
 *.201*[0-9]
 *.cat
+confFile
 *.csv
 *.dat
 *.DAT

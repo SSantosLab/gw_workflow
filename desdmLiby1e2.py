@@ -349,6 +349,25 @@ head_file = ConfigSectionMap("scamp")['head']
 farg = {'filter': FILTER}
 head_FILE =  head_file.format(**farg)
 
+if "," in head_FILE:
+    # assumes name format fX,X.head
+    ccdlist = head_FILE[1:head_FILE.index(".")]
+    ccdlist = ccdlist.split(",")
+    print "ccdlist: %s" % ccdlist
+    if not os.path.exists(head_FILE):
+        openfile = open(head_FILE, 'w')
+        openfile.close()
+    outfile = open(head_FILE, 'a')
+    for ccd in ccdlist:
+        tempfile = "f%s.head"%ccd
+        print "tempfile: %s" % tempfile
+        if not os.path.exists(tempfile):
+            make_link_or_copy(data_conf+tempfile)
+        with open(tempfile) as infile:
+            outfile.write(infile.read())
+            infile.close()
+    outfile.close()
+
 if not os.path.exists(default_scamp):
     make_link_or_copy(data_conf+default_scamp)
 if not os.path.exists(head_FILE):

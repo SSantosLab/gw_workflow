@@ -185,6 +185,7 @@ tar xzfm ./test_mysql_libs.tar.gz
 #ifdh cp -D /pnfs/des/scratch/nglaeser/BLISS-expCalib_Y3apass-old.py ./ || { echo "Error copying BLISS-old.py file. Exiting." ; exit 2; }
 #ifdh cp -D /pnfs/des/scratch/nglaeser/BLISS-expCalib_Y3apass.py ./ || { echo "Error copying BLISS.py file. Exiting." ; exit 2; }
 #ifdh cp -D /pnfs/des/scratch/nglaeser/run_SEproc.py /pnfs/des/scratch/nglaeser/run_desdmy1e2.py /pnfs/des/scratch/nglaeser/desdmLiby1e2.py ./ || { echo "Error copying run_SEproc.py and run_desdmy1e2.py. Exiting." ; exit 2; }
+#ifdh cp -D /pnfs/des/scratch/nglaeser/desdmLiby1e2.py ./ || { echo "Error copying run_desdmy1e2.py. Exiting." ; exit 2; }
 
 export DES_SERVICES=${HOME}/.desservices.ini
 chmod 600 ${HOME}/.desservices.ini
@@ -317,21 +318,6 @@ else
         headfile='f'$CCDS'.head'                                                 
         pcaprefix='binned-fp/Y2A1_20140801t1130_{filter:s}_r1635p02_skypca-binned-fp.fits'
     fi
-fi
-
-#### For running multiple CCDs (currently only works if individual .head files are already in directory  ####
-if [[ $CCDS = *","* ]] ; then # if the CCD list contains commas (i.e. is more than one CCD)
-    echo "\n***in the multiple ccd loop!***"
-    list=$(echo $CCDS | tr "," "\n") # list of the CCDs
-
-    # concatenate the individual CCD head files into one
-    for item in $list
-    do
-        echo "item: " ; echo $item
-        file="f${item}.head"
-        echo "file: " ; echo $file
-        cat $file >> $headfile
-    done
 fi
 
 
