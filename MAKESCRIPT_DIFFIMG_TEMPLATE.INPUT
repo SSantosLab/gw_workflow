@@ -59,7 +59,7 @@ DOFAKE_FLAG:   1  # 0 => no fakes (copy xxx.fits xxx+fakeSN.fits) ;
 
 #
 # To change after ask to Stephanie
-#DOFAKE_OPTIONS: -outFile_STARCAT  STARMATCH_doFake.out -SNCUT_MAG 15 25 -SNCUT_TREST -10 30 -dbVersion_SNFake KBOMAG20ALLSKY
+DOFAKE_OPTIONS: -outFile_STARCAT  STARMATCH_doFake.out -SNCUT_MAG 15 25 -SNCUT_TREST -10 30 -dbVersion_SNFake KBOMAG20ALLSKY
 #DOFAKE_KBOFILE: OUTPUT_FROM_STEPHANIE or /cvmfs/des.osgstorage.org/stash/wsdiff/fakecats/TNOFAKEOBS_SVTOY4.csv
 #DOFAKE_OPTIONS:  -dbVersion_SNFake  TNOFAKEOBS_Y5_{NITE} or TNOFAKEOBS_SVTOY4
 # And then I assume the output file will show up in /cvmfs/des.osgstorage.org/stash/wsdiff/fakecats
@@ -68,7 +68,7 @@ DOFAKE_FLAG:   1  # 0 => no fakes (copy xxx.fits xxx+fakeSN.fits) ;
 # In the .INPUT file, change SCAMP_INFILE to be  WS_astrom_FNAL_v4.scamp
 #
 # needed for later
-DOFAKE_OPTIONS: -outFile_STARCAT  STARMATCH_doFake.out -SNCUT_MAG 15 25 -SNCUT_TREST -10 30 -dbVersion_SNFake FIXMAGGW170814noHost
+#DOFAKE_OPTIONS: -outFile_STARCAT  STARMATCH_doFake.out -SNCUT_MAG 15 25 -SNCUT_TREST -10 30 -dbVersion_SNFake FIXMAGGW170814noHost
 
 
 #-DOFAKE_KBOFILE /cvmfs/des.opensciencegrid.org/eeups/fnaleups/Linux64/diffimg/fakecats/TNOFAKEOBS_SVTOY4.csv
@@ -84,8 +84,8 @@ DOFAKE_OPTIONS: -outFile_STARCAT  STARMATCH_doFake.out -SNCUT_MAG 15 25 -SNCUT_T
 MKWGT_INFILE:  SN_makeWeight.param
 PSFEX_INFILE:  SN_image.psfex           
 #SCAMP_INFILE:  SN_astrom_NERSC.scamp
-#SCAMP_INFILE: GW_astrom_v3.scamp
-SCAMP_INFILE: WS_astrom_FNAL_v4.scamp
+SCAMP_INFILE: GW_astrom_v3.scamp
+#SCAMP_INFILE: WS_astrom_FNAL_v4.scamp
 
 SWARP_INFILE_TEMPLATE:  SN_template.swarp  # for coadd template to be stored
 SWARP_INFILE_DISTEMP:   SN_distemp.swarp   # for distorted template 
@@ -109,6 +109,6 @@ SEASON: THESEASON
 # give the SNSTAR_FILENAME option and it should set the makeStarCat options accordingly.
 # Comment these lines out if you want to just read the star catalog or veto catalog from the DB
 # below lines were commented on Aug 16, since we're using in-footprint
-#SNSTAR_FILENAME: SNSTAR_THEEXP_rTHERNUMpTHEPNUM.LIST
-#SNVETO_FILENAME: SNVETO_THEEXP_rTHERNUMpTHEPNUM.LIST
+SNSTAR_FILENAME: SNSTAR_THEEXP_rTHERNUMpTHEPNUM.LIST
+SNVETO_FILENAME: SNVETO_THEEXP_rTHERNUMpTHEPNUM.LIST
 # ====================== END =====================

@@ -114,7 +114,7 @@ do case $opt in
 	    shift
 	    ;;
     h)
-	    echo "usage: SE_job.sh -E EXPNUM -r RNUM -p PNUM -n NITE -b BAND [-c CCDS] [-j] [-s] [-S scratch|persistent] [ -m gw|wsdiff] [-Y] [-C] [-O]" 
+	    echo "usage: SE_job_mod.sh -E EXPNUM -r RNUM -p PNUM -n NITE -b BAND [-c CCDS] [-j] [-s] [-S scratch|persistent] [ -m gw|wsdiff] [-Y] [-C] [-O]" 
 	    exit 1
             ;;
 	c)  # TODO: argument checking
@@ -318,6 +318,22 @@ else
         pcaprefix='binned-fp/Y2A1_20140801t1130_{filter:s}_r1635p02_skypca-binned-fp.fits'
     fi
 fi
+
+#### For running multiple CCDs (currently only works if individual .head files are already in directory  ####
+if [[ $CCDS = *","* ]] ; then # if the CCD list contains commas (i.e. is more than one CCD)
+    echo "\n***in the multiple ccd loop!***"
+    list=$(echo $CCDS | tr "," "\n") # list of the CCDs
+
+    # concatenate the individual CCD head files into one
+    for item in $list
+    do
+        echo "item: " ; echo $item
+        file="f${item}.head"
+        echo "file: " ; echo $file
+        cat $file >> $headfile
+    done
+fi
+
 
 # IMPORTANT: test whether we are on a node where stashCache work properly. 
 # now, we test if /cvmfs/des.ogstorage.ord is available and works properly. If it does,
