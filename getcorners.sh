@@ -13,6 +13,7 @@ get_corners ()
   rm -f ${CORNERDIR}/${e}.out
 
   for f in ${DATADIR}/D00${e}*_immask.fits.fz
+  #for f in ${DATADIR}/D00*immask.fits
   #for f in ${DATADIR}/DECam_${e}/DECam*[0-9][0-9].fits
   do
 
