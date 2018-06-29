@@ -1,27 +1,70 @@
 # data files
 *.201*[0-9]
 *.cat
+confFile
 *.csv
 *.dat
+*.DAT
 *.fits*
+*.filterObj
 *.gz
 *.head
-*.log
+*.ini
+*.input
+*.lis
+*.list
+*.LIST
 *.nnw
 *.out
+*.param
 *.ps*
+*.scamp
 *.reg
-sex*
+RUN*
+*sex*
+*.stdout
 *.tgz
 *.xml
 *.xtalk
 
+# scripts
+dummyjob.sh
+makeWSTemplates.sh
+
 # directories
-heads/
+data/
+diff*
+dp*
+heads
+headers
+ingest
 matplotlib/
+mytemp_668439/
+oradiag_nglaeser/
 qa/
+seriestest/
+stamps*
+syspfiles*
+temp/
 usr/
+WSTemplates/
+.astropy/
+.easyaccess/
+.eups/
+
+.desservices.ini
 
 # generated
 *.pyc
 *.swp
+*.swarp
+*~
+confFile
+listpcain
+*.dag
+
+# logs
+*error*
+*output*
+*.log
+*.LOG

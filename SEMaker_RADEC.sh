@@ -58,19 +58,19 @@ fetch_from_DESDM () {
     
     while read url
     do
-	FILENAME=`basename $url`
-	FILENAME=`echo $FILENAME | sed -r -e "s/r[0-9]+p[0-9]+/r4p4/" -e "s/immasked/immask/" -e "s/_c([0-9]{2})/_\1/"`
-	wget -nv --user=kherner --password=krh70chips --ca-directory=/etc/grid-security/certificates $url
-	mv `basename $url` $FILENAME
-#	    check_header
-	NITE=`echo $url | cut -d "/" -f 10`
-	overlapnum=`echo $url | cut -d "/" -f 11 | sed -e "s/D[0-9][0-9]//"`
+    FILENAME=`basename $url`
+    FILENAME=`echo $FILENAME | sed -r -e "s/r[0-9]+p[0-9]+/r4p4/" -e "s/immasked/immask/" -e "s/_c([0-9]{2})/_\1/"`
+    wget -nv --user=kherner --password=krh70chips --ca-directory=/etc/grid-security/certificates $url
+    mv `basename $url` $FILENAME
+#       check_header
+    NITE=`echo $url | cut -d "/" -f 10`
+    overlapnum=`echo $url | cut -d "/" -f 11 | sed -e "s/D[0-9][0-9]//"`
     done < desdm_files_${overlapnum}.list
     if [ `wc -l desdm_files_${overlapnum}.list | cut -d " " -f 1` -eq 0 ] ; then 
-	rm desdm_files_${overlapnum}.list
-	echo "No files available for this exposure from DESDM. Mostly likely it fails a zero point or other quality cut."
-	export PYTHONPATH=$OLDPYTHONPATH
-	return 1
+    rm desdm_files_${overlapnum}.list
+    echo "No files available for this exposure from DESDM. Mostly likely it fails a zero point or other quality cut."
+    export PYTHONPATH=$OLDPYTHONPATH
+    return 1
     fi
     if [ ! -d /pnfs/des/persistent/${SCHEMA}/exp/${NITE}/${overlapnum} ]; then mkdir -p /pnfs/des/persistent/${SCHEMA}/exp/${NITE}/${overlapnum}  ; chmod g+w /pnfs/des/persistent/${SCHEMA}/exp/${NITE}/${overlapnum} ; fi
     ./getcorners.sh $overlapnum ./ ./ && if [ -f /pnfs/des/persistent/${SCHEMA}/exp/${NITE}/${overlapnum}/${overlapnum}.out ]; then rm -f /pnfs/des/persistent/${SCHEMA}/exp/${NITE}/${overlapnum}/${overlapnum}.out ; fi ; cp ${overlapnum}.out /pnfs/des/persistent/${SCHEMA}/exp/${NITE}/${overlapnum}/${overlapnum}.out
@@ -216,7 +216,7 @@ check_header() {
     DEC10=$(echo "$SEARCHDEC * 10" | bc | cut -d "." -f 1)
     if [ -z "$DEC10" ] ; then DEC10=0 ; fi
     if [ $DEC10 -ge 0 ]; then
-	DEC10="+${DEC10}"
+    DEC10="+${DEC10}"
     fi
     
     NEWFIELD="WS${RA10}${DEC10}"
@@ -231,16 +231,16 @@ check_header() {
 
     for hdr in {1..9} {10..70} 
     do
-	fthedit "DECam_$(printf %08d ${EXPNUM}).fits.fz[${hdr}]"  @editfile || echo "Error running fthedit for  DECam_`printf %08d ${EXPNUM}`[${hdr}].fits.fz"
+    fthedit "DECam_$(printf %08d ${EXPNUM}).fits.fz[${hdr}]"  @editfile || echo "Error running fthedit for  DECam_`printf %08d ${EXPNUM}`[${hdr}].fits.fz"
     done
     $COPYCMD DECam_`printf %08d ${EXPNUM}`.fits.fz /pnfs/des/scratch/${SCHEMA}/dts/${NITE}/DECam_`printf %08d ${EXPNUM}`.fits.fz
     
     if [ $? -eq 0 ]; then
-	rm DECam_`printf %08d ${EXPNUM}`.fits.fz
+    rm DECam_`printf %08d ${EXPNUM}`.fits.fz
     else
         echo "Error copying edited file DECam_`printf %08d ${EXPNUM}`.fits.fz back to dCache!"
-	rm DECam_`printf %08d ${EXPNUM}`.fits.fz
-	exit 1 
+    rm DECam_`printf %08d ${EXPNUM}`.fits.fz
+    exit 1 
     fi
 }
 
@@ -440,21 +440,21 @@ do
     if [ $explength -lt 30 ]; then SKIP=true ; fi
 # set the TEFF cut based on the band
     case $BAND in
-	g)
-	    TEFF_CUT=$TEFF_CUT_g
-	    ;;
-	i)
-	    TEFF_CUT=$TEFF_CUT_i
-	    ;;
-	r)
-	    TEFF_CUT=$TEFF_CUT_r
-	    ;;
-	Y)
-	    TEFF_CUT=$TEFF_CUT_Y
-	    ;;    
-	z)
-	    TEFF_CUT=$TEFF_CUT_z
-	    ;;
+    g)
+        TEFF_CUT=$TEFF_CUT_g
+        ;;
+    i)
+        TEFF_CUT=$TEFF_CUT_i
+        ;;
+    r)
+        TEFF_CUT=$TEFF_CUT_r
+        ;;
+    Y)
+        TEFF_CUT=$TEFF_CUT_Y
+        ;;    
+    z)
+        TEFF_CUT=$TEFF_CUT_z
+        ;;
     esac
     echo "Setting t_eff cut to $TEFF_CUT"
     # check that exposure's t_eff is greater than 0.25
@@ -462,17 +462,17 @@ do
    
     teff=$(egrep "^\s?${overlapnum}" exposures.list | awk '{print $10}')
     if [ "${teff}" == "NaN" ]; then
-	SKIP=true
-	echo "Invalid value for t_eff. We will not use this image."
+    SKIP=true
+    echo "Invalid value for t_eff. We will not use this image."
     elif [ $(echo "$teff < $TEFF_CUT" | bc ) -eq 1 ]; then 
-	SKIP=true
-	echo "This image has a t_eff of $teff, below the cut value of $TEFF_CUT. We will not use this image."
+    SKIP=true
+    echo "This image has a t_eff of $teff, below the cut value of $TEFF_CUT. We will not use this image."
     fi
 
 ###    # the first image in the list is the search image itself
 ###    if [ $i == 1 ]; then 
-###	if [ "$SKIP" == "true" ] ; then echo "Cannot proceed without the search image!" ; exit 1 ; fi
-###	NITE=$overlapnite  # capitalized NITE is the search image nite
+### if [ "$SKIP" == "true" ] ; then echo "Cannot proceed without the search image!" ; exit 1 ; fi
+### NITE=$overlapnite  # capitalized NITE is the search image nite
 ###    fi
     
     # image failed quality tests ; try the next exposure in the list
@@ -486,61 +486,61 @@ do
     nfiles=0    
     for file in `ls /pnfs/des/${DESTCACHE}/${SCHEMA}/exp/${overlapnite}/${overlapnum}/*_${rpnum}_immask.fits.fz`
     do
-	if [ `stat -c %s $file` -gt 0 ]; then nfiles=`expr $nfiles + 1` ; touch $file ; fi	
+    if [ `stat -c %s $file` -gt 0 ]; then nfiles=`expr $nfiles + 1` ; touch $file ; fi  
     done
 
     # ls in the dcache scratch area to see if sextractor files are already there
     mfiles=0    
     for file in `ls /pnfs/des/${DESTCACHE}/${SCHEMA}/exp/${overlapnite}/${overlapnum}/*_${rpnum}_fullcat.fits*`
     do
-	if [ `stat -c %s $file` -gt 0 ]; then mfiles=`expr $mfiles + 1` ; touch $file ; fi	
+    if [ `stat -c %s $file` -gt 0 ]; then mfiles=`expr $mfiles + 1` ; touch $file ; fi  
     done
 
     # check the .out file too
     if [ -e /pnfs/des/${DESTCACHE}/${SCHEMA}/exp/${overlapnite}/${overlapnum}/${overlapnum}.out ]; then
-	touch /pnfs/des/${DESTCACHE}/${SCHEMA}/exp/${overlapnite}/${overlapnum}/${overlapnum}.out 
+    touch /pnfs/des/${DESTCACHE}/${SCHEMA}/exp/${overlapnite}/${overlapnum}/${overlapnum}.out 
     else
-	# if all the fits files are there, try to produce the missing .out file quickly
-	if [ $nfiles -ge 59 ] ; then
-	    ./getcorners.sh $overlapnum $rpnum /pnfs/des/${DESTCACHE}/${SCHEMA}/exp/${overlapnite}/${overlapnum}
-	    if [ $? -ne 0 ] ; then 
-		echo "Warning: Missing .out file: /pnfs/des/${DESTCACHE}/${SCHEMA}/exp/${overlapnite}/${overlapnum}/${overlapnum}.out" 
-		# assume something went wrong with the previous SE proc for this image. set nfiles=0 to force reprocessing
-		nfiles=0
-	    fi
-	fi
+    # if all the fits files are there, try to produce the missing .out file quickly
+    if [ $nfiles -ge 59 ] ; then
+        ./getcorners.sh $overlapnum $rpnum /pnfs/des/${DESTCACHE}/${SCHEMA}/exp/${overlapnite}/${overlapnum}
+        if [ $? -ne 0 ] ; then 
+        echo "Warning: Missing .out file: /pnfs/des/${DESTCACHE}/${SCHEMA}/exp/${overlapnite}/${overlapnum}/${overlapnum}.out" 
+        # assume something went wrong with the previous SE proc for this image. set nfiles=0 to force reprocessing
+        nfiles=0
+        fi
+    fi
     fi
     
     if [[ $SE_OPTS == *-C* ]]; then
     # check if calibration outputs are present
     # if number of reduced images and sextractor catalogs is not the same, something looks fishy. set nfiles=0 to force reprocessing 
     if [ $mfiles -ne $nfiles ] ; then nfiles=0 ; fi
-	JUMPTOEXPCALIBOPTION=""
-	if [ -e /pnfs/des/${DESTCACHE}/${SCHEMA}/exp/${overlapnite}/${overlapnum}/allZP_D`printf %08d ${overlapnum}`_${rpnum}.csv ]; then
-	    touch /pnfs/des/${DESTCACHE}/${SCHEMA}/exp/${overlapnite}/${overlapnum}/allZP_D`printf %08d ${overlapnum}`_${rpnum}.csv 
-	else
+    JUMPTOEXPCALIBOPTION=""
+    if [ -e /pnfs/des/${DESTCACHE}/${SCHEMA}/exp/${overlapnite}/${overlapnum}/allZP_D`printf %08d ${overlapnum}`_${rpnum}.csv ]; then
+        touch /pnfs/des/${DESTCACHE}/${SCHEMA}/exp/${overlapnite}/${overlapnum}/allZP_D`printf %08d ${overlapnum}`_${rpnum}.csv 
+    else
         # if only the expCalib outputs are missing and we are not allowed to ignore them
             if [ $nfiles -ge 59 ] && [ "$IGNORECALIB" == "true" ] ; then
             # assume something went wrong with the previous SE proc for this image (set nfiles=0 to force reprocessing)
-		nfiles=0
-	    # but assume that only calibration step needs to be done for this exposure
-		JUMPTOEXPCALIBOPTION="-j"
-		echo "Warning: Missing outputs of expCalib. Will jump directly to the calibration step for this image."
+        nfiles=0
+        # but assume that only calibration step needs to be done for this exposure
+        JUMPTOEXPCALIBOPTION="-j"
+        echo "Warning: Missing outputs of expCalib. Will jump directly to the calibration step for this image."
             fi
-	fi
+    fi
     fi
     # if there are 59+ files with non-zero size, a .out file, and expCalib outputs, then don't do the SE job again for that exposure     
     if [ $nfiles -ge 59 ]; then
-	echo "SE proc. already complete for exposure $overlapnum"
-	continue
+    echo "SE proc. already complete for exposure $overlapnum"
+    continue
     fi
 
 ### try fetching inputs from DESDM. If the fetch function returns 0, call it good.
     fetch_from_DESDM
     if [ $? -eq 0 ] ; then
-	echo "DESDM fetching for $overlapnum was successful."
-	ALLGOOD=true
-	continue
+    echo "DESDM fetching for $overlapnum was successful."
+    ALLGOOD=true
+    continue
     fi
 #### see if the BLISS processing exists for this exposure, copy and use that if so.
 
@@ -549,8 +549,8 @@ if [ $(ls /data/des50.b/data/BLISS/${overlapnum:0:4}00/${overlapnum}/D`printf %0
     ALLGOOD=true
     
     if [ ! -d /pnfs/des/${DESTCACHE}/${SCHEMA}/exp/${overlapnite}/${overlapnum} ]; then
-	mkdir -p /pnfs/des/${DESTCACHE}/${SCHEMA}/exp/${overlapnite}/${overlapnum}
-	chmod 775   /pnfs/des/${DESTCACHE}/${SCHEMA}/exp/${overlapnite}/${overlapnum}
+    mkdir -p /pnfs/des/${DESTCACHE}/${SCHEMA}/exp/${overlapnite}/${overlapnum}
+    chmod 775   /pnfs/des/${DESTCACHE}/${SCHEMA}/exp/${overlapnite}/${overlapnum}
     fi
 
 ### This section copies BLISS outputs over, but it is commented out now because we are assuming this is done elsewhere.
@@ -559,34 +559,34 @@ if [ $(ls /data/des50.b/data/BLISS/${overlapnum:0:4}00/${overlapnum}/D`printf %0
     
 ##    for fullcatfile in  $(ls /data/des50.b/data/BLISS/${overlapnum:0:4}00/${overlapnum}/D`printf %08d $overlapnum`_*r1p1_fullcat.fits)
 ##    do
-##	baseout=`basename $fullcatfile | sed -e "s/r1p1/r${RNUM}p${PNUM}/" -e "s/\.fz//"`
-##	cp $fullcatfile /pnfs/des/${DESTCACHE}/${SCHEMA}/exp/$overlapnite/$overlapnum/$baseout
+##  baseout=`basename $fullcatfile | sed -e "s/r1p1/r${RNUM}p${PNUM}/" -e "s/\.fz//"`
+##  cp $fullcatfile /pnfs/des/${DESTCACHE}/${SCHEMA}/exp/$overlapnite/$overlapnum/$baseout
 ##    done
 ##    
 ##    for csvfile in  $(ls /data/des50.b/data/BLISS/${overlapnum:0:4}00/${overlapnum}/*r1p01*.csv)
 ##    do
-##	baseout=`basename $csvfile | sed -e "s/r1p01/r${RNUM}p${PNUM}/" -e "s/\.fz//"`
-##	cp $csvfile /pnfs/des/${DESTCACHE}/${SCHEMA}/exp/$overlapnite/$overlapnum/$baseout	
+##  baseout=`basename $csvfile | sed -e "s/r1p01/r${RNUM}p${PNUM}/" -e "s/\.fz//"`
+##  cp $csvfile /pnfs/des/${DESTCACHE}/${SCHEMA}/exp/$overlapnite/$overlapnum/$baseout  
 ##    done
 ##    
 ##    for blissfile in $(ls /data/des50.b/data/BLISS/${overlapnum:0:4}00/${overlapnum}/D`printf %08d $overlapnum`_*r1p1_immask.fits.fz)
 ##    do
-##	baseout=`basename $blissfile | sed -e "s/r1p1/r${RNUM}p${PNUM}/" -e "s/\.fz//"`
-##	funpack -O $baseout $blissfile
-##	if [ $? -eq 0 ] ; then
-##	    cp $baseout /pnfs/des/${DESTCACHE}/${SCHEMA}/exp/$overlapnite/$overlapnum/$baseout  || ALLGOOD=false
-##	    rm $baseout
-##	else
-##	    ALLGOOD=false
-##	fi
+##  baseout=`basename $blissfile | sed -e "s/r1p1/r${RNUM}p${PNUM}/" -e "s/\.fz//"`
+##  funpack -O $baseout $blissfile
+##  if [ $? -eq 0 ] ; then
+##      cp $baseout /pnfs/des/${DESTCACHE}/${SCHEMA}/exp/$overlapnite/$overlapnum/$baseout  || ALLGOOD=false
+##      rm $baseout
+##  else
+##      ALLGOOD=false
+##  fi
 ##    done
 ##    if [ -e /pnfs/des/${DESTCACHE}/${SCHEMA}/exp/$overlapnite/$overlapnum/${overlapnum}.out ] ; then
-##	echo "${overlapnum}.out file already in dCache."
+##  echo "${overlapnum}.out file already in dCache."
 ##    else
-##	cp /data/des50.b/data/BLISS/${overlapnum:0:4}00/${overlapnum}/${overlapnum}.out /pnfs/des/${DESTCACHE}/${SCHEMA}/exp/$overlapnite/$overlapnum/
-	DOTOUTFILES="${DOTOUTFILES} /pnfs/des/${DESTCACHE}/${SCHEMA}/exp/$overlapnite/$overlapnum/${overlapnum}.out" 
+##  cp /data/des50.b/data/BLISS/${overlapnum:0:4}00/${overlapnum}/${overlapnum}.out /pnfs/des/${DESTCACHE}/${SCHEMA}/exp/$overlapnite/$overlapnum/
+    DOTOUTFILES="${DOTOUTFILES} /pnfs/des/${DESTCACHE}/${SCHEMA}/exp/$overlapnite/$overlapnum/${overlapnum}.out" 
 ##    fi
-	if [ $ALLGOOD == "true" ] ; then continue ; fi
+    if [ $ALLGOOD == "true" ] ; then continue ; fi
 fi
 
     #### at this point we have determined that we need to run SE proc for this exposure. so let's add it to the dag:

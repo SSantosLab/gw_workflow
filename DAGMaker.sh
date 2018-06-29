@@ -181,7 +181,11 @@ check_header() {
     DEC10=$(echo "$SEARCHDEC * 10" | bc | cut -d "." -f 1)
     if [ -z "$DEC10" ] ; then DEC10=0 ; fi
     if [ $DEC10 -ge 0 ]; then
+<<<<<<< HEAD
 	DEC10="+${DEC10}"
+=======
+    DEC10="+${DEC10}"
+>>>>>>> parallelSE
     fi
     
     NEWFIELD="WS${RA10}${DEC10}"
@@ -196,17 +200,29 @@ check_header() {
     $COPYDCMD /pnfs/des/scratch/${SCHEMA}/dts/${NITE}/DECam_`printf %08d ${EXPNUM}`.fits.fz ./ && rm -f /pnfs/des/scratch/${SCHEMA}/dts/${NITE}/DECam_`printf %08d ${EXPNUM}`.fits.fz
     for hdr in {1..9} {10..70} 
     do
+<<<<<<< HEAD
 	fthedit "DECam_$(printf %08d ${EXPNUM}).fits.fz[${hdr}]"  @editfile || echo "Error running fthedit for  DECam_`printf %08d ${EXPNUM}`[${hdr}].fits.fz"
+=======
+    fthedit "DECam_$(printf %08d ${EXPNUM}).fits.fz[${hdr}]"  @editfile || echo "Error running fthedit for  DECam_`printf %08d ${EXPNUM}`[${hdr}].fits.fz"
+>>>>>>> parallelSE
     done
     
     $COPYCMD DECam_`printf %08d ${EXPNUM}`.fits.fz /pnfs/des/scratch/${SCHEMA}/dts/${NITE}/DECam_`printf %08d ${EXPNUM}`.fits.fz
     
     if [ $? -eq 0 ]; then
+<<<<<<< HEAD
 	rm DECam_`printf %08d ${EXPNUM}`.fits.fz
     else
 	echo "Error copying edited file DECam_`printf %08d ${EXPNUM}`.fits.fz back to dCache!"
 	rm DECam_`printf %08d ${EXPNUM}`.fits.fz
 	exit 1 
+=======
+    rm DECam_`printf %08d ${EXPNUM}`.fits.fz
+    else
+    echo "Error copying edited file DECam_`printf %08d ${EXPNUM}`.fits.fz back to dCache!"
+    rm DECam_`printf %08d ${EXPNUM}`.fits.fz
+    exit 1 
+>>>>>>> parallelSE
     fi
     
 } ### END check_header
@@ -366,6 +382,7 @@ fi
 # set the TEFF cut based on the band
 case $BAND in
     g)
+<<<<<<< HEAD
 	TEFF_CUT=$TEFF_CUT_g
 	;;
     i)
@@ -380,6 +397,22 @@ case $BAND in
     z)
 	TEFF_CUT=$TEFF_CUT_z
 	;;
+=======
+    TEFF_CUT=$TEFF_CUT_g
+    ;;
+    i)
+    TEFF_CUT=$TEFF_CUT_i
+    ;;
+    r)
+    TEFF_CUT=$TEFF_CUT_r
+    ;;
+    Y)
+    TEFF_CUT=$TEFF_CUT_Y
+    ;;    
+    z)
+    TEFF_CUT=$TEFF_CUT_z
+    ;;
+>>>>>>> parallelSE
 esac
 echo "Setting t_eff cut to $TEFF_CUT"
  
@@ -616,7 +649,7 @@ fi
 	    NEWCOUNT=$((${OLDCOUNT}-1))
 	    sed -i -e s/${OLDCOUNT}/${NEWCOUNT}/  mytemp_${EXPNUM}/KH_diff.list1 
 	else
-	    echo "jobsub -n --group=des --OS=SL6 --resource-provides=usage_model=${RESOURCES} $JOBSUB_OPTS $JOBSUB_OPTS_SE  --append_condor_requirements='(TARGET.GLIDEIN_Site==\\"FermiGrid\\"||(TARGET.HAS_CVMFS_des_opensciencegrid_org==true&&TARGET.HAS_CVMFS_des_osgstorage_org==true))' file://SE_job.sh -r $RNUM -p $PNUM -E $overlapnum -b $BAND -n $overlapnite $JUMPTOEXPCALIBOPTION -d $DESTCACHE -m $SCHEMA $SE_OPTS" >> $outfile
+	    echo "jobsub -n --group=des --OS=SL6 --resource-provides=usage_model=${RESOURCES} $JOBSUB_OPTS $JOBSUB_OPTS_SE  --append_condor_requirements='(TARGET.GLIDEIN_Site==\\\"FermiGrid\\\"||(TARGET.HAS_CVMFS_des_opensciencegrid_org==true&&TARGET.HAS_CVMFS_des_osgstorage_org==true))' file://SE_job.sh -r $RNUM -p $PNUM -E $overlapnum -b $BAND -n $overlapnite $JUMPTOEXPCALIBOPTION -d $DESTCACHE -m $SCHEMA $SE_OPTS" >> $outfile
 	# add the .out file for this overlap image to the list to be copied
 	    DOTOUTFILES="${DOTOUTFILES} /pnfs/des/${DESTCACHE}/${SCHEMA}/exp/$overlapnite/$overlapnum/${overlapnum}.out"
 	fi
@@ -718,7 +751,11 @@ fi
 #    RA10=$(echo "${SEARCHRA}*10" | bc | cut -d "." -f 1)
 #    DEC10=$(echo "$SEARCHDEC * 10" | bc | cut -d "." -f 1)
 #    if [ $DEC10 -ge 0 ]; then 
+<<<<<<< HEAD
 #	DEC10="+${DEC10}"
+=======
+#   DEC10="+${DEC10}"
+>>>>>>> parallelSE
 #    fi
 #    FIELD="GW${RA10}${DEC10}"
 #    TILING=1
@@ -726,6 +763,7 @@ fi
 #    echo "FIELD = $FIELD"
 #    echo "TILING = $TILING"
 #    if [ "x${TILING}" == "x" ]; then
+<<<<<<< HEAD
 #	echo "TILING not set because it was not in the database. Defaulting to 1."
 #	TILING=1
 #    fi
@@ -733,6 +771,15 @@ fi
 #	echo "FIELD and TILING are the same value ($FIELD)! This is probably because the field doesn't say 'something tiling something'."
 #	echo " Setting TILING to 1 in this case."
 #	TILING=1
+=======
+#   echo "TILING not set because it was not in the database. Defaulting to 1."
+#   TILING=1
+#    fi
+#    if [ "$FIELD" == "$TILING" ]; then
+#   echo "FIELD and TILING are the same value ($FIELD)! This is probably because the field doesn't say 'something tiling something'."
+#   echo " Setting TILING to 1 in this case."
+#   TILING=1
+>>>>>>> parallelSE
 #    fi
 #    check_header
 #fi

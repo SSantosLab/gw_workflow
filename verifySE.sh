@@ -20,6 +20,7 @@ ulimit -a
 ##ifdh cp -r  /pnfs/des/scratch/marcelle/joblib-0.9.0b4 ./joblib-0.9.0b4
 ##export PYTHONPATH=$PYTHONPATH:$PWD/joblib-0.9.0b4
 
+# check that xrdcp and uberftb are installed
 which xrdcp >/dev/null 2>&1
 CHECK_XRDCP=$?
 which uberftp >/dev/null 2>&1
@@ -143,45 +144,45 @@ do
     immaskfiles="`ifdh ls ${templatedir}'*_r'${RNUM}'p'${PNUM}'_immask.fits.fz' | grep fits | grep fnal`"
     nimmask=`echo $immaskfiles | wc -w`
     if [ $nimmask -lt 59 ]; then
-	
-	### OK, we're missing the .fz files. Maybe there are uncompressed (.fits) files. Let's check for those too.
-	immaskfiles="`ifdh ls ${templatedir}'*_r'${RNUM}'p'${PNUM}'_immask.fits' | grep fits | grep fnal`"
-	nimmask=`echo $immaskfiles | wc -w`
-	if [ $nimmask -lt 59 ]; then
-	    echo "Exposure $tempexp missing one or more immask.fits files. Editing copy_pairs_for_${EXPNUM}.sh and WS_diff.list to remove this exposure. Diffimg will not consider it as a template."
-	    sed -i -e "s:${templatedir}${tempexp}.out::" copy_pairs_for_${EXPNUM}.sh
-	    FAILEDEXPS="$FAILEDEXPS $tempexp"  
-	    continue
-	else
-	    echo ".fits files are present. It is a good idea to run fpack on these files and save them in their compressed state in dCache to save space."
-	fi
+        ### OK, we're missing the .fz files. Maybe there are uncompressed (.fits) files. Let's check for those too.
+        immaskfiles="`ifdh ls ${templatedir}'*_r'${RNUM}'p'${PNUM}'_immask.fits' | grep fits | grep fnal`"
+        nimmask=`echo $immaskfiles | wc -w`
+        if [ $nimmask -lt 59 ]; then
+            echo "Exposure $tempexp missing one or more immask.fits files. Editing copy_pairs_for_${EXPNUM}.sh and WS_diff.list to remove this exposure. Diffimg will not consider it as a template."
+            sed -i -e "s:${templatedir}${tempexp}.out::" copy_pairs_for_${EXPNUM}.sh
+            FAILEDEXPS="$FAILEDEXPS $tempexp"  
+            continue
+        else
+            echo ".fits files are present. It is a good idea to run fpack on these files and save them in their compressed state in dCache to save space."
+        fi
     fi
     
 #ok, now check the psf and csv files, but only if we need them
     if [ "$DOCALIB" == "true" ] && ( [ "${STARCAT_NAME}" != "" ] || [ "${SNVETO_NAME}" != "" ] ); then
 	
-	psffiles="`ifdh ls ${templatedir}'*_r'${RNUM}'p'${PNUM}'_fullcat.fits' | grep fullcat | grep fnal`" 
-	npsf=`echo $psffiles | wc -w`
-	if [ $npsf -lt 59 ]; then
-	    echo "Exposure $tempexp missing one or more fullcat.fits files. Editing copy_pairs_for_${EXPNUM}.sh and WS_diff.list to remove this exposure. Diffimg will not consider it as a template."
-	    sed -i -e "s:${templatedir}${tempexp}.out::" copy_pairs_for_${EXPNUM}.sh
-	    FAILEDEXPS="$FAILEDEXPS $tempexp"
-	    continue
-	fi
-	
-	csvfiles="`ifdh ls ${templatedir}'allZP_D*'${tempexp}'_r'${RNUM}p${PNUM}'*.csv' | grep csv | grep fnal` `ifdh ls ${templatedir}'Zero_*'${tempexp}'_r'${RNUM}p${PNUM}'*.csv' | grep csv | grep fnal` `ifdh ls ${templatedir}'D*'${tempexp}'_r'${RNUM}p${PNUM}'*_ZP.csv' | grep csv | grep fnal`" 
-	ncsv=`echo $csvfiles | wc -w`
-	if [ $ncsv -lt 3 ]; then
-	    echo "Exposure $tempexp missing one or more required csv files. Editing copy_pairs_for_${EXPNUM}.sh and WS_diff.list to remove this exposure. Diffimg will not consider it as a template."
-	    sed -i -e "s:${templatedir}${tempexp}.out::" copy_pairs_for_${EXPNUM}.sh
-	    FAILEDEXPS="$FAILEDEXPS $tempexp"
-	    continue
-	else
-	    ifdh cp ${IFDHCP_OPT} -D $csvfiles ./ || echo "WARNING: Copy of csv files for exposure ${tempexp} failed with status $?"
-	fi
+        psffiles="`ifdh ls ${templatedir}'*_r'${RNUM}'p'${PNUM}'_fullcat.fits' | grep fullcat | grep fnal`" 
+        npsf=`echo $psffiles | wc -w`
+        if [ $npsf -lt 59 ]; then
+            echo "Exposure $tempexp missing one or more fullcat.fits files. Editing copy_pairs_for_${EXPNUM}.sh and WS_diff.list to remove this exposure. Diffimg will not consider it as a template."
+            sed -i -e "s:${templatedir}${tempexp}.out::" copy_pairs_for_${EXPNUM}.sh
+            FAILEDEXPS="$FAILEDEXPS $tempexp"
+            continue
+        fi
+        
+        csvfiles="`ifdh ls ${templatedir}'allZP_D*'${tempexp}'_r'${RNUM}p${PNUM}'*.csv' | grep csv | grep fnal` `ifdh ls ${templatedir}'Zero_*'${tempexp}'_r'${RNUM}p${PNUM}'*.csv' | grep csv | grep fnal` `ifdh ls ${templatedir}'D*'${tempexp}'_r'${RNUM}p${PNUM}'*_ZP.csv' | grep csv | grep fnal`" 
+        ncsv=`echo $csvfiles | wc -w`
+        if [ $ncsv -lt 3 ]; then
+            echo "Exposure $tempexp missing one or more required csv files. Editing copy_pairs_for_${EXPNUM}.sh and WS_diff.list to remove this exposure. Diffimg will not consider it as a template."
+            sed -i -e "s:${templatedir}${tempexp}.out::" copy_pairs_for_${EXPNUM}.sh
+            FAILEDEXPS="$FAILEDEXPS $tempexp"
+            continue
+        else
+            ifdh cp ${IFDHCP_OPT} -D $csvfiles ./ || echo "WARNING: Copy of csv files for exposure ${tempexp} failed with status $?"
+        fi
     fi    
 done
 
+# if any of them failed remove them from WS_diff.list
 for failedexp in $FAILEDEXPS
 do
     sed -i -e "s/${failedexp}//"  ./WS_diff.list	
@@ -189,8 +190,8 @@ do
     NEWCOUNT=$((${OLDCOUNT}-1))
     sed -i -e s/${OLDCOUNT}/${NEWCOUNT}/ WS_diff.list 
 done
-#get rid of the old file so we can insert the new ones
 
+#get rid of the old file so we can insert the new ones
 if [ ! -z "${FAILEDEXPS}" ]; then
     echo "Exposures with failed SE processing and/or calibration are $FAILEDEXPS."
     ifdh rm  /pnfs/des/${DESTCACHE}/${SCHEMA}/exp/${NITE}/${EXPNUM}/WS_diff.list ||  echo "SEVERE WARNING: failed to remove existing WS_diff.list file."
@@ -208,6 +209,7 @@ setup numpy 1.9.1+8
 setup gw_utils
 setup extralibs
 
+# run make starcat
 if [ "x$STARCAT_NAME" == "x" ]; then
     if [ "x$SNVETO_NAME" == "x" ]; then
 	echo "INFO: Neither STARCAT_NAME nor SNVETO_NAME was provided. The makestarcat.py step will NOT run now."

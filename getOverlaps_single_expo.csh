@@ -13,7 +13,8 @@ if ( $# < 2 ) then
     echo "Error, you must specify an input exposure file as the first argument and then one or more search images. Exiting."
     exit 1
 endif
-    
+
+# deleted the next 4 lines in parallelSE branch (why?)
 if ( ! -e $infile ) then
     echo "Error, $infile does not exist. Exiting."
     exit 1
@@ -27,12 +28,12 @@ endif
 # 271688 20140104 56662.34845991 110.15717 -42.56786 i
 # ...
 
-
 # new : allow supernova hex too
 #grep " hex" ${infile} | \
 #  awk '{print $2,$3,$4,$5,$6,$7}' | \
 
 #grep "DES survey hex" ${infile} | \
+
 egrep -i -v "zero|flat|test|junk|bias|supernova|slew|pointing|commish|sn\-" {$infile} | \
   awk '{print $1,$2,$3,$4,$5,$6}' | \
   sort -k3 -gr | uniq > KH.list
@@ -50,7 +51,7 @@ rm -f KH_diff.tmp1 KH_diff.tmp2
 set i = 1
 while ($i <= $nexp)
 #  while ($i <= 10)
-    
+
   set expinfo = (`awk '(NR=='$i')' KH.list`)
   set rar  = `echo $expinfo[4] | awk '{printf "%9.6f",$1*'${dtor}'}'`
   set decr = `echo $expinfo[5] | awk '{printf "%9.6f",$1*'${dtor}'}'`
@@ -96,7 +97,6 @@ while ($i <= $nexp)
   awk '(NR!='${i}')&&($6=="'${band}'")&&(sin('$decr')*sin($5*'${dtor}')+cos('$decr')*cos($5*'${dtor}')*cos('$rar'-$4*'${dtor}')>='$drad')&&((($3-'$mjd')>=0.5)||(('$mjd'-$3)>=0.5)){printf " %6d",$1}' KH.list >> KH_diff.tmp1
 #  awk '(NR>'${i}')&&($6=="'${band}'")&&(sin('$decr')*sin($5*'${dtor}')+cos('$decr')*cos($5*'${dtor}')*cos('$rar'-$4*'${dtor}')>='$drad'){printf " %6d",$1}' KH.list >> KH_diff.tmp1
   echo hi | awk '{printf "\n"}' >> KH_diff.tmp1
-
 
   # Output looks like this:
   # 271694 20140104 56662.35752409 109.16375 -40.97922 i 3
