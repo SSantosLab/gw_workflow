@@ -34,7 +34,7 @@ makeWSTemplates.sh
 # directories
 data/
 diff*
-dp*
+/dp*
 heads
 headers
 ingest

@@ -261,7 +261,8 @@ def skyCombineFit(inputFile,skycombineFile,skyfitinfoFile,**args):
     del cmd, retval
 
     #------------------------
-    cmd = 'sky_combine --miniskylist listpcain -o ' + exp_template_file.format(**args)+'_'+skycombineFile+'.fits --ccdnums 1,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36,37,38,39,40,41,42,43,44,45,46,47,48,49,50,51,52,53,54,55,56,57,58,59,60,62 --invalid S30,N30' 
+    #cmd = 'sky_combine --miniskylist listpcain -o ' + exp_template_file.format(**args)+'_'+skycombineFile+'.fits --ccdnums 1,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36,37,38,39,40,41,42,43,44,45,46,47,48,49,50,51,52,53,54,55,56,57,58,59,60,62 --invalid S30,N30' 
+    cmd = 'sky_combine --miniskylist listpcain -o ' + exp_template_file.format(**args)+'_'+skycombineFile+'.fits --ccdnums'+ccdlist+' --invalid S30,N30' 
     print cmd
     retval = subprocess.call(cmd.split(),stderr=subprocess.STDOUT)
 
@@ -349,7 +350,6 @@ head_file = ConfigSectionMap("scamp")['head']
 farg = {'filter': FILTER}
 head_FILE =  head_file.format(**farg)
 
-# fix to be able to run multiple CCDs
 if "," in head_FILE:
     # assumes name format fX,X.head
     ccdlist = head_FILE[1:head_FILE.index(".")]

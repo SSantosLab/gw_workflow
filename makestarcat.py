@@ -189,9 +189,11 @@ def create(band):
                 ra360 = ra           
             
             for i in range(len(ra)):
+                print "spread_model[i]<0.003: %s -- flags[i]==0: %s -- imaflags[i]==0: %s -- mag_psf[i]>12, <21.5: %s -- magerr_psf[i]>0, >=0.011: %s -- minra<=ra360<=maxra: %s<=%s<=%s -- mindec<=dec[i]<=maxdec: %s<=%s<=%s" % (spread_model[i], flags[i], imaflags[i], mag_psf[i], magerr_psf[i], minra, ra360[i], maxra, mindec, dec[i], maxdec)
                 if spread_model[i]<0.003 and flags[i]==0 and imaflags[i]==0\
                 and mag_psf[i]>12 and mag_psf[i]<21.5 and magerr_psf[i]>0 and \
                 magerr_psf[i]<=0.011 and minra<=ra360[i]<=maxra and mindec<=dec[i]<=maxdec:
+                    print "in the if"
                     cat = 'r'+str(r)+'p'+str(p)
                     CATALOG.append(cat)
                     RA.append(round(ra[i],6))
@@ -199,6 +201,7 @@ def create(band):
                     MAG.append(round(mag_psf[i],3))
                     ERRMAG.append(round(magerr_psf[i],5))
     
+    print "RA %s, DEC %s" % (RA, DEC)
     print 'minra %.6f, maxra %.6f, mindec %.6f, maxdec %.6f' % (min(RA), max(RA), min(DEC), max(DEC))
     print len(RA)
     #sys.exit()

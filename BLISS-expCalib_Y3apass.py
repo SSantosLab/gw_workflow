@@ -39,7 +39,7 @@ def main():
     parser.add_argument('--sex_mag_zeropoint', help='default sextractor zeropoint to use to convert fluxes to sextractor mags (mag_sex = -2.5log10(flux) + sex_mag_zeropoint)', type=float, default=25.0)
     parser.add_argument('--verbose', help='verbosity level of output to screen (0,1,2,...)', default=0, type=int)
     parser.add_argument('--debug', help='debugging option', dest='debug', action='store_true', default=False)
-                        
+
     args = parser.parse_args()
                         
     if args.verbose > 0: print args
@@ -152,7 +152,9 @@ def doset(args):
             datadec4 = data['DECC4'][i]
         
         filetocheck = filetocheck.astype(str)
-        filetocheck = filetocheck[0]
+        # problem with filetocheck being a numpy array
+        if isinstance(filetocheck, np.ndarray):
+            filetocheck = filetocheck[0]
 #        filetocheck = np.array2string(filetocheck).strip('\'') # problem with filetocheck being a numpy array
 #        filetocheck = filetocheck[filetocheck.find('\'')+1:] # hacky fix in case of unicode encoding
 #        filetocheck = filetocheck[:-2] # hacky fix in case of unicode encoding
@@ -354,6 +356,7 @@ def getallccdfromGAIA(args):
     # using only the row for the current CCD
     correctccd = (data['CCDNUM'] == args.ccd)
     data = data[ correctccd ]
+    print "data: %s" % data
     ra=data.iloc[0]['RA_CENT'] # in degrees; use iloc to get single cell
     dec=data.iloc[0]['DEC_CENT'] # in degrees
     nside=32
@@ -924,7 +927,9 @@ def sigmaClipZP(args):
         if data1['FILENAME'].size>1:
             data1name = data1['FILENAME'][i]
         data1name = data1name.astype(str)
-        data1name = data1name[0]
+        # problem with filetocheck being a numpy array
+        if isinstance(data1name, np.ndarray):
+            data1name = data1name[0]
 #        data1name = np.array2string(data1name).strip('\'') # problem with filetocheck being a numpy array
 #        data1name = data1name[data1name.find('\'')+1:] # hacky fix in case of unicode encoding
 #        data1name = data1name[:-2] # hacky fix in case of unicode encoding

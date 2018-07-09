@@ -175,17 +175,19 @@ fi
 #### add other code here from Nikolay's area
 
 #ifdh cp -D /pnfs/des/persistent/desdm/code/desdmLiby1e2.py /pnfs/des/persistent/desdm/code/run_desdmy1e2.py /pnfs/des/persistent/desdm/code/run_SEproc.py  /pnfs/des/persistent/desdm/code/getcorners.sh /pnfs/des/persistent/kuropat/scripts/MySoft.tgz  /pnfs/des/scratch/gw/code/test_mysql_libs.tar.gz /pnfs/des/scratch/nglaeser/BLISS-expCalib_Y3apass-old.py /pnfs/des/scratch/nglaeser/Scamp_allCCD_r4p5.fits ./ || { echo "Error copying input files. Exiting." ; exit 2 ; }
-ifdh cp -D /pnfs/des/resilient/gw/code/MySoft3.tar.gz  /pnfs/des/scratch/gw/code/test_mysql_libs.tar.gz /pnfs/des/scratch/nglaeser/Scamp_allCCD_r4p5.fits ./ || { echo "Error copying input files. Exiting." ; exit 2 ; }
+#ifdh cp -D /pnfs/des/resilient/gw/code/MySoft3.tar.gz  /pnfs/des/scratch/gw/code/test_mysql_libs.tar.gz /pnfs/des/scratch/nglaeser/Scamp_allCCD_r4p5.fits ./ || { echo "Error copying input files. Exiting." ; exit 2 ; }
+ifdh cp -D /pnfs/des/resilient/gw/code/MySoft3.tar.gz  /pnfs/des/scratch/gw/code/test_mysql_libs.tar.gz ./ || { echo "Error copying input files. Exiting." ; exit 2 ; }
 tar xzf ./MySoft3.tar.gz
 
 ifdh cp --force=xrootd /pnfs/des/persistent/${SCHEMA}/db-tools/desservices.ini ${HOME}/.desservices.ini
 
 tar xzfm ./test_mysql_libs.tar.gz
 
-#ifdh cp -D /pnfs/des/scratch/nglaeser/BLISS-expCalib_Y3apass-old.py ./ || { echo "Error copying BLISS-old.py file. Exiting." ; exit 2; }
-#ifdh cp -D /pnfs/des/scratch/nglaeser/BLISS-expCalib_Y3apass.py ./ || { echo "Error copying BLISS.py file. Exiting." ; exit 2; }
+ifdh cp -D /pnfs/des/scratch/nglaeser/BLISS-expCalib_Y3apass-old.py ./ || { echo "Error copying BLISS-old.py file. Exiting." ; exit 2; }
+ifdh cp -D /pnfs/des/scratch/nglaeser/BLISS-expCalib_Y3apass.py ./ || { echo "Error copying BLISS.py file. Exiting." ; exit 2; }
 #ifdh cp -D /pnfs/des/scratch/nglaeser/run_SEproc.py /pnfs/des/scratch/nglaeser/run_desdmy1e2.py /pnfs/des/scratch/nglaeser/desdmLiby1e2.py ./ || { echo "Error copying run_SEproc.py and run_desdmy1e2.py. Exiting." ; exit 2; }
-#ifdh cp -D /pnfs/des/scratch/nglaeser/desdmLiby1e2.py ./ || { echo "Error copying run_desdmy1e2.py. Exiting." ; exit 2; }
+ifdh cp -D /pnfs/des/scratch/nglaeser/desdmLiby1e2.py ./ || { echo "Error copying desdmLiby1e2.py. Exiting." ; exit 2; }
+ifdh cp -D /pnfs/des/scratch/nglaeser/make_red_catlist.py ./ || { echo "Error copying make_red_catlist.py Exiting." ; exit 2; }
 
 export DES_SERVICES=${HOME}/.desservices.ini
 chmod 600 ${HOME}/.desservices.ini
@@ -440,9 +442,20 @@ if [ "$JUMPTOEXPCALIB" == "true" ] ; then
     nccds2=`expr $nccds \* 2`
     if [  $nfiles -ne $nccds2 ] ; then
 	echo "copying fits files from Dcache"
-	filestocopy1="`ifdh ls /pnfs/des/${DESTCACHE}/${SCHEMA}/exp/${NITE}/${EXPNUM}/'*_r'${RNUM}'p'${PNUM}'_fullcat.fits' | grep fnal | grep fits`"
-	filestocopy2="`ifdh ls /pnfs/des/${DESTCACHE}/${SCHEMA}/exp/${NITE}/${EXPNUM}/'*_r'${RNUM}'p'${PNUM}'_immask.fits.fz' | grep fnal | grep fits`"
-	ifdh cp --force=xrootd -D $filestocopy1 $filestocopy2 .
+    ccdlist=(${CCDS//,/ })
+
+    for c in $ccdlist; do
+        c=$(printf "%02d" $c)
+        filestocopy1="`ifdh ls /pnfs/des/${DESTCACHE}/${SCHEMA}/exp/${NITE}/${EXPNUM}/'*_'$c'_r'${RNUM}'p'${PNUM}'_fullcat.fits' | grep fnal | grep fits`"
+        echo "filestocopy1: $filestocopy1"
+        filestocopy2="`ifdh ls /pnfs/des/${DESTCACHE}/${SCHEMA}/exp/${NITE}/${EXPNUM}/'*_'$c'_r'${RNUM}'p'${PNUM}'_immask.fits.fz' | grep fnal | grep fits`"
+        echo "filestocopy2: $filestocopy2"
+        ifdh cp --force=xrootd -D $filestocopy1 $filestocopy2 .
+        # copies all ccds
+        #filestocopy1="`ifdh ls /pnfs/des/${DESTCACHE}/${SCHEMA}/exp/${NITE}/${EXPNUM}/'*_r'${RNUM}'p'${PNUM}'_fullcat.fits' | grep fnal | grep fits`"
+        #filestocopy2="`ifdh ls /pnfs/des/${DESTCACHE}/${SCHEMA}/exp/${NITE}/${EXPNUM}/'*_r'${RNUM}'p'${PNUM}'_immask.fits.fz' | grep fnal | grep fits`"
+        #ifdh cp --force=xrootd -D $filestocopy1 $filestocopy2 .
+    done
 	for file in $(ls *_immask.fits.fz)
 	do
 	    funpack -D $file

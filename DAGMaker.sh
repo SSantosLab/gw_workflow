@@ -181,11 +181,7 @@ check_header() {
     DEC10=$(echo "$SEARCHDEC * 10" | bc | cut -d "." -f 1)
     if [ -z "$DEC10" ] ; then DEC10=0 ; fi
     if [ $DEC10 -ge 0 ]; then
-<<<<<<< HEAD
-	DEC10="+${DEC10}"
-=======
     DEC10="+${DEC10}"
->>>>>>> parallelSE
     fi
     
     NEWFIELD="WS${RA10}${DEC10}"
@@ -200,29 +196,17 @@ check_header() {
     $COPYDCMD /pnfs/des/scratch/${SCHEMA}/dts/${NITE}/DECam_`printf %08d ${EXPNUM}`.fits.fz ./ && rm -f /pnfs/des/scratch/${SCHEMA}/dts/${NITE}/DECam_`printf %08d ${EXPNUM}`.fits.fz
     for hdr in {1..9} {10..70} 
     do
-<<<<<<< HEAD
 	fthedit "DECam_$(printf %08d ${EXPNUM}).fits.fz[${hdr}]"  @editfile || echo "Error running fthedit for  DECam_`printf %08d ${EXPNUM}`[${hdr}].fits.fz"
-=======
-    fthedit "DECam_$(printf %08d ${EXPNUM}).fits.fz[${hdr}]"  @editfile || echo "Error running fthedit for  DECam_`printf %08d ${EXPNUM}`[${hdr}].fits.fz"
->>>>>>> parallelSE
     done
     
     $COPYCMD DECam_`printf %08d ${EXPNUM}`.fits.fz /pnfs/des/scratch/${SCHEMA}/dts/${NITE}/DECam_`printf %08d ${EXPNUM}`.fits.fz
     
     if [ $? -eq 0 ]; then
-<<<<<<< HEAD
-	rm DECam_`printf %08d ${EXPNUM}`.fits.fz
-    else
-	echo "Error copying edited file DECam_`printf %08d ${EXPNUM}`.fits.fz back to dCache!"
-	rm DECam_`printf %08d ${EXPNUM}`.fits.fz
-	exit 1 
-=======
     rm DECam_`printf %08d ${EXPNUM}`.fits.fz
     else
     echo "Error copying edited file DECam_`printf %08d ${EXPNUM}`.fits.fz back to dCache!"
     rm DECam_`printf %08d ${EXPNUM}`.fits.fz
     exit 1 
->>>>>>> parallelSE
     fi
     
 } ### END check_header
@@ -382,7 +366,6 @@ fi
 # set the TEFF cut based on the band
 case $BAND in
     g)
-<<<<<<< HEAD
 	TEFF_CUT=$TEFF_CUT_g
 	;;
     i)
@@ -397,22 +380,6 @@ case $BAND in
     z)
 	TEFF_CUT=$TEFF_CUT_z
 	;;
-=======
-    TEFF_CUT=$TEFF_CUT_g
-    ;;
-    i)
-    TEFF_CUT=$TEFF_CUT_i
-    ;;
-    r)
-    TEFF_CUT=$TEFF_CUT_r
-    ;;
-    Y)
-    TEFF_CUT=$TEFF_CUT_Y
-    ;;    
-    z)
-    TEFF_CUT=$TEFF_CUT_z
-    ;;
->>>>>>> parallelSE
 esac
 echo "Setting t_eff cut to $TEFF_CUT"
  
@@ -425,6 +392,7 @@ fi
 cd mytemp_${EXPNUM}
 ln -s ../exposures_${BAND}.list .
 if [ ! -f KH_diff.list2 ] ; then 
+    chmod +x ../getOverlaps_single_expo.csh
     ../getOverlaps_single_expo.csh ../exposures_${BAND}.list $ALLEXPS
 fi
 cd ..
@@ -751,11 +719,7 @@ fi
 #    RA10=$(echo "${SEARCHRA}*10" | bc | cut -d "." -f 1)
 #    DEC10=$(echo "$SEARCHDEC * 10" | bc | cut -d "." -f 1)
 #    if [ $DEC10 -ge 0 ]; then 
-<<<<<<< HEAD
-#	DEC10="+${DEC10}"
-=======
 #   DEC10="+${DEC10}"
->>>>>>> parallelSE
 #    fi
 #    FIELD="GW${RA10}${DEC10}"
 #    TILING=1
@@ -763,7 +727,6 @@ fi
 #    echo "FIELD = $FIELD"
 #    echo "TILING = $TILING"
 #    if [ "x${TILING}" == "x" ]; then
-<<<<<<< HEAD
 #	echo "TILING not set because it was not in the database. Defaulting to 1."
 #	TILING=1
 #    fi
@@ -771,15 +734,6 @@ fi
 #	echo "FIELD and TILING are the same value ($FIELD)! This is probably because the field doesn't say 'something tiling something'."
 #	echo " Setting TILING to 1 in this case."
 #	TILING=1
-=======
-#   echo "TILING not set because it was not in the database. Defaulting to 1."
-#   TILING=1
-#    fi
-#    if [ "$FIELD" == "$TILING" ]; then
-#   echo "FIELD and TILING are the same value ($FIELD)! This is probably because the field doesn't say 'something tiling something'."
-#   echo " Setting TILING to 1 in this case."
-#   TILING=1
->>>>>>> parallelSE
 #    fi
 #    check_header
 #fi

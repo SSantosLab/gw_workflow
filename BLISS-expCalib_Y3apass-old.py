@@ -152,12 +152,13 @@ def doset(args):
             datadec4 = data['DECC4'][i]
 
         filetocheck = filetocheck.astype(str)
-        filetocheck = filetocheck[0]
+        # problem with filetocheck being a numpy array
+        if isinstance(filetocheck, np.ndarray):
+            filetocheck = filetocheck[0]
 #        filetocheck = np.array2string(filetocheck).strip('\'') # problem with filetocheck being a numpy array
 #        filetocheck = filetocheck[filetocheck.find('\'')+1:] # hacky fix in case of unicode encoding
 #        filetocheck = filetocheck[:-2] # hacky fix in case of unicode encoding
         if os.path.isfile(filetocheck):
-
             Read_Sexcatalogfitstocsv(args,filetocheck,databand)
 
             minra=min(dataracent,datarac1,datarac2,datarac3,datarac4)
@@ -940,7 +941,9 @@ def sigmaClipZP(args):
         if data1['FILENAME'].size>1:
             data1name = data1['FILENAME'][i]
         data1name = data1name.astype(str)
-        data1name = data1name[0]
+        # problem with filetocheck being a numpy array
+        if isinstance(data1name, np.ndarray):
+            data1name = data1name[0]
 #        data1name = np.array2string(data1name).strip('\'') # problem with filetocheck being a numpy array
 #        data1name = data1name[data1name.find('\'')+1:] # hacky fix in case of unicode encoding
 #        data1name = data1name[:-2] # hacky fix in case of unicode encoding

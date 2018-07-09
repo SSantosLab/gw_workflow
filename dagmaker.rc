@@ -7,7 +7,7 @@
 #
 RNUM=4
 #
-PNUM=4
+PNUM=6
 #
 #### PLEASE READ: A word on season numbers #######
 # Never use season numbers below 11; they are reserved for the SNe group
@@ -17,9 +17,9 @@ PNUM=4
 # Season 5000 is reserved for DES nightly difference imaging on the wide survey in Y5 (2017-2018)
 # Season 5500 is reserved for DES nightly difference imaging on the wide survey in Y5.5 (2018-2019)
 ##############
-SEASON=56
+SEASON=59
 #
-DIFFIMG_EUPS_VERSION=gw5
+DIFFIMG_EUPS_VERSION=gw2
 #
 # WRITEDB should be off for initial testing, but on for any production running.
 WRITEDB=on
@@ -30,7 +30,7 @@ JOBSUB_OPTS_SE="--memory=3600MB --disk=100GB --cpu=4 --expected-lifetime=5h"
 #
 RESOURCES="DEDICATED,OPPORTUNISTIC,OFFSITE"
 #
-IGNORECALIB=false
+IGNORECALIB=true
 #
 DESTCACHE=persistent
 #
@@ -50,10 +50,10 @@ TWINDOW=2
 #### ONLY use this option if you have nothing but late-time templates. It should be commented out for standard nightly diffim running.
 MIN_NITE=20170831
 #### Use only if you want to avoid using images taken after MAX_NITE as templates.
-#MAX_NITE=20170801
+MAX_NITE=20170901
 #this variable tells DAGMaker to remove as templates any images that it sees as missing SE output. This should only
 #only be used when you are certain you do not want to use any non-DES images and have already fetched all SE outputs from DESDM.
-SKIP_INCOMPLETE_SE=true
+SKIP_INCOMPLETE_SE=false
 ### turn off header check for FIELD, OBJECT, TILING to save time. Can do that if you have already fixed the headers elsewhere (for example when copying from DESDM).
 DO_HEADER_CHECK=0
 # for 20810221
