@@ -621,27 +621,35 @@ SNVETO_FILENAME=`grep inFile_veto RUN22_combined+expose_filterObj  | awk '{print
 if [ ! -z "$SNSTAR_FILENAME" ]; then
     cp ${DIFFIMG_DIR}/bin/makeWSTemplates.sh ./
     export PATH=${PWD}:${PATH}
-    head -1 /cvmfs/des.osgstorage.org/pnfs/fnal.gov/usr/des/persistent/stash/${SCHEMA}/CATALOG_FILES/${NITE}/${SNSTAR_FILENAME} >/dev/null 2>&1
-    HEADRESULT=$?
-    if [ $HEADRESULT -eq 0 ]; then
-	ln -s /cvmfs/des.osgstorage.org/pnfs/fnal.gov/usr/des/persistent/stash/${SCHEMA}/CATALOG_FILES/${NITE}/${SNSTAR_FILENAME} .
+    if [ -s ${SNSTAR_FILENAME} ]; then
+        echo "using local copy of SNSTAR"
     else
-# try to ifdh cp 
-	ifdh cp -D ${IFDHCP_OPT} /pnfs/des/persistent/stash/${SCHEMA}/CATALOG_FILES/${NITE}/${SNSTAR_FILENAME} ./ || echo "ERROR: ${SNSTAR_FILENAME} is not in CVMFS and there was an error copying it to the worker node. RUN02 will probably fail..."
+        head -1 /cvmfs/des.osgstorage.org/pnfs/fnal.gov/usr/des/persistent/stash/${SCHEMA}/CATALOG_FILES/${NITE}/${SNSTAR_FILENAME} >/dev/null 2>&1
+        HEADRESULT=$?
+        if [ $HEADRESULT -eq 0 ]; then
+	    ln -s /cvmfs/des.osgstorage.org/pnfs/fnal.gov/usr/des/persistent/stash/${SCHEMA}/CATALOG_FILES/${NITE}/${SNSTAR_FILENAME} .
+        else
+        # try to ifdh cp 
+        ifdh cp -D ${IFDHCP_OPT} /pnfs/des/persistent/stash/${SCHEMA}/CATALOG_FILES/${NITE}/${SNSTAR_FILENAME} ./ || echo "ERROR: ${SNSTAR_FILENAME} is not in CVMFS and there was an error copying it to the worker node. RUN02 will probably fail..."
+        fi
     fi
     # image masking for bright galaxy subtraction ; hopefully we don't need this anymore
     sed -i -e "s/0xFFFF/0xFFDF/" -e "s/0x47FB/0x47DB/" SN_makeWeight.param
     sed -i -e '/ZPTEST_ONLY/ a\             -inFile_CALIB_STARS    '"$OUTFILE_STARCAT"' \\' -e "s#\${DIFFIMG_DIR}/etc/SN_makeWeight#${PWD}/SN_makeWeight#" makeWSTemplates.sh
 fi
 if [ ! -z "$SNVETO_FILENAME" ]; then
-    head -1 /cvmfs/des.osgstorage.org/pnfs/fnal.gov/usr/des/persistent/stash/${SCHEMA}/CATALOG_FILES/${NITE}/${SNVETO_FILENAME} >/dev/null 2>&1
-    HEADRESULT=$?
-    if [ $HEADRESULT -eq 0 ]; then
-	ln -s /cvmfs/des.osgstorage.org/pnfs/fnal.gov/usr/des/persistent/stash/${SCHEMA}/CATALOG_FILES/${NITE}/${SNVETO_FILENAME} .
+    if [ -s ${SNSTAR_FILENAME} ]; then
+        echo "using local copy of SNVETO"
     else
-# try to ifdh cp 
-	ifdh cp -D ${IFDHCP_OPT} /pnfs/des/persistent/stash/${SCHEMA}/CATALOG_FILES/${NITE}/${SNVETO_FILENAME} ./ || echo "ERROR: ${SNVETO_FILENAME} is not in CVMFS and there was an error copying it to the worker node. RUN22 will probably fail..."
-    fi    
+        head -1 /cvmfs/des.osgstorage.org/pnfs/fnal.gov/usr/des/persistent/stash/${SCHEMA}/CATALOG_FILES/${NITE}/${SNVETO_FILENAME} >/dev/null 2>&1
+        HEADRESULT=$?
+        if [ $HEADRESULT -eq 0 ]; then
+            ln -s /cvmfs/des.osgstorage.org/pnfs/fnal.gov/usr/des/persistent/stash/${SCHEMA}/CATALOG_FILES/${NITE}/${SNVETO_FILENAME} .
+        else
+            # try to ifdh cp 
+            ifdh cp -D ${IFDHCP_OPT} /pnfs/des/persistent/stash/${SCHEMA}/CATALOG_FILES/${NITE}/${SNVETO_FILENAME} ./ || echo "ERROR: ${SNVETO_FILENAME} is not in CVMFS and there was an error copying it to the worker node. RUN22 will probably fail..."
+        fi
+    fi
 fi
 
 #################
