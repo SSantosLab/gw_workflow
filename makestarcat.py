@@ -40,6 +40,8 @@ parser.add_argument('-b', metavar='band', type=str, help='filter/band')
 
 parser.add_argument('-s', metavar='season', type=int, help='season for this GW run')
 
+parser.add_argument('--ccd', help='ccd is queried', default=1, type=int)
+
 parser.add_argument('-outdir', type=str, default='./', help='directory where output files will go')
 
 parser.add_argument('-rootdir', type=str, default='./', help='rootdir')
@@ -128,8 +130,8 @@ if maxra-minra>180:
     maxra = max(outra)
     minra = min(outra)
 
-print maxra
-print minra
+#print maxra
+#print minra
 
 f = open(copypairs,'r')
 line = f.readline()
@@ -149,6 +151,7 @@ for l in line:
             y = y + '/'
     pathlist.append(y)
 
+
 def create(band):  
     global nite,expnum,r,p,maxra,minra,outra
     CATALOG,RA,DEC = [],[],[]
@@ -157,14 +160,13 @@ def create(band):
     for path in pathlist:
         cc=cc+1
         if path.split('/')[7]==str(expnum):
-            print path
             continue
         else:
             psplit = path.split('/')
             exp = psplit[7]
-            filename = 'D00'+str(exp)+'_'+'r'+str(r)+'p'+str(p)+'_ZP.csv'
-            #filepath = path + filename
-            filepath = filename
+            filename = 'D00'+str(exp)+'_36_'+'r'+str(r)+'p'+str(p)+'_ZP.csv'
+            filepath = path + filename
+            #filepath = filename
             #if os.path.isfile(filename):
             #    hey = 0
             #    pass
@@ -173,7 +175,7 @@ def create(band):
             #    shutil.copy(filepath,'.')
             if os.path.isfile(filepath):
                 ra,dec,mag_psf,magerr_psf,spread_model,flags,imaflags = np.genfromtxt(\
-                    filename,delimiter=',',skip_header=1,usecols=(4,5,12,13,14,20,21),unpack=True)
+                    filepath,delimiter=',',skip_header=1,usecols=(4,5,12,13,14,20,21),unpack=True)
                 print str(exp), 'succeeded.'
             else:
                 print filepath, 'did not get copied.'        
@@ -189,11 +191,10 @@ def create(band):
                 ra360 = ra           
             
             for i in range(len(ra)):
-                print "spread_model[i]<0.003: %s -- flags[i]==0: %s -- imaflags[i]==0: %s -- mag_psf[i]>12, <21.5: %s -- magerr_psf[i]>0, >=0.011: %s -- minra<=ra360<=maxra: %s<=%s<=%s -- mindec<=dec[i]<=maxdec: %s<=%s<=%s" % (spread_model[i], flags[i], imaflags[i], mag_psf[i], magerr_psf[i], minra, ra360[i], maxra, mindec, dec[i], maxdec)
+                #print "spread_model[i]<0.003: %s -- flags[i]==0: %s -- imaflags[i]==0: %s -- mag_psf[i]>12, <21.5: %s -- magerr_psf[i]>0, >=0.011: %s -- minra<=ra360<=maxra: %s<=%s<=%s -- mindec<=dec[i]<=maxdec: %s<=%s<=%s" % (spread_model[i], flags[i], imaflags[i], mag_psf[i], magerr_psf[i], minra, ra360[i], maxra, mindec, dec[i], maxdec)
                 if spread_model[i]<0.003 and flags[i]==0 and imaflags[i]==0\
                 and mag_psf[i]>12 and mag_psf[i]<21.5 and magerr_psf[i]>0 and \
                 magerr_psf[i]<=0.011 and minra<=ra360[i]<=maxra and mindec<=dec[i]<=maxdec:
-                    print "in the if"
                     cat = 'r'+str(r)+'p'+str(p)
                     CATALOG.append(cat)
                     RA.append(round(ra[i],6))
@@ -201,9 +202,9 @@ def create(band):
                     MAG.append(round(mag_psf[i],3))
                     ERRMAG.append(round(magerr_psf[i],5))
     
-    print "RA %s, DEC %s" % (RA, DEC)
-    print 'minra %.6f, maxra %.6f, mindec %.6f, maxdec %.6f' % (min(RA), max(RA), min(DEC), max(DEC))
-    print len(RA)
+    #print "RA %s, DEC %s" % (RA, DEC)
+    #print 'minra %.6f, maxra %.6f, mindec %.6f, maxdec %.6f' % (min(RA), max(RA), min(DEC), max(DEC))
+    #print len(RA)
     #sys.exit()
             #print str(exp)
     RA,DEC,MAG,ERRMAG,CATALOG = zip(*sorted(zip(RA,DEC,MAG,ERRMAG,CATALOG)))
