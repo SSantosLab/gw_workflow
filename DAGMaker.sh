@@ -317,6 +317,10 @@ setup perl 5.18.1+6 || exit 134
 # setup other useful packages and env variables
 setup Y2Nstack
 setup diffimg $DIFFIMG_EUPS_VERSION
+## use Ken's development version of the diffimg code:
+export DIFFIMG_DIR=/data/des40.b/data/kherner/Diffimg-devel/diffimg-trunk
+export PATH=$DIFFIMG_DIR/bin:$PATH
+
 setup ftools v6.17
 export HEADAS=$FTOOLS_DIR
 setup autoscan
