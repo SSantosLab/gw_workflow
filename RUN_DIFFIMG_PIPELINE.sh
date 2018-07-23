@@ -300,6 +300,7 @@ setup perl 5.18.1+6 || exit 134
 ###### any additional required setups go here #####
 
 #we will want the GW version of diffimg for sure
+setup perl 5.18.1+6
 setup Y2Nstack 1.0.6+18
 setup diffimg $DIFFIMG_VERSION #whatever the version number ends up being
 setup ftools v6.17  # this is the heasoft stuff
@@ -309,6 +310,10 @@ setup easyaccess
 setup extralibs 1.0
 setup numpy 1.9.1+8
 setup gw_utils
+setup scamp 2.6.10+0
+
+export EUPS_PATH=/cvmfs/des.opensciencegrid.org/eeups/fnaleups:$EUPS_PATH
+export SCAMP_CATALOG_DIR=/cvmfs/des.osgstorage.org/stash/fnal/SNscampCatalog
 #export DIFFIMG_DIR=/data/des40.b/data/kherner/Diffimg-devel/diffimg-trunk
 #export PATH=`echo $PATH | sed -e s#\/cvmfs\/des.opensciencegrid.org\/eeups\/fnaleups\/Linux64\/diffimg\/gwdevel#\/data\/des40.b\/data/kherner\/Diffimg-devel\/diffimg-trunk#`
 #export DIFFIMG_DIR=/data/des41.a/data/marcelle/diffimg/DiffImg-trunk
@@ -638,20 +643,19 @@ if [ ! -z "$SNSTAR_FILENAME" ]; then
     sed -i -e '/ZPTEST_ONLY/ a\             -inFile_CALIB_STARS    '"$OUTFILE_STARCAT"' \\' -e "s#\${DIFFIMG_DIR}/etc/SN_makeWeight#${PWD}/SN_makeWeight#" makeWSTemplates.sh
 fi
 if [ ! -z "$SNVETO_FILENAME" ]; then
-    if [ -s ${SNSTAR_FILENAME} ]; then
+    if [ -s ${SNVETO_FILENAME} ]; then
         echo "using local copy of SNVETO"
     else
         head -1 /cvmfs/des.osgstorage.org/pnfs/fnal.gov/usr/des/persistent/stash/${SCHEMA}/CATALOG_FILES/${NITE}/${SNVETO_FILENAME} >/dev/null 2>&1
         HEADRESULT=$?
         if [ $HEADRESULT -eq 0 ]; then
-            ln -s /cvmfs/des.osgstorage.org/pnfs/fnal.gov/usr/des/persistent/stash/${SCHEMA}/CATALOG_FILES/${NITE}/${SNVETO_FILENAME} .
+        ln -s /cvmfs/des.osgstorage.org/pnfs/fnal.gov/usr/des/persistent/stash/${SCHEMA}/CATALOG_FILES/${NITE}/${SNVETO_FILENAME} .
         else
-            # try to ifdh cp 
-            ifdh cp -D ${IFDHCP_OPT} /pnfs/des/persistent/stash/${SCHEMA}/CATALOG_FILES/${NITE}/${SNVETO_FILENAME} ./ || echo "ERROR: ${SNVETO_FILENAME} is not in CVMFS and there was an error copying it to the worker node. RUN22 will probably fail..."
+        # try to ifdh cp 
+        ifdh cp -D ${IFDHCP_OPT} /pnfs/des/persistent/stash/${SCHEMA}/CATALOG_FILES/${NITE}/${SNVETO_FILENAME} ./ || echo "ERROR: ${SNVETO_FILENAME} is not in CVMFS and there was an error copying it to the worker node. RUN22 will probably fail..."
         fi
     fi
 fi
-
 #################
 #copyback function
 #################
@@ -784,6 +788,7 @@ IFDH_RESULT=$?
 sed -i -e "s/0x47FB/0x47DB/" RUN05_expose_makeWeight
 sed -i -e "/MAXA/ s/1.5/2.0/" SN_cuts.filterObj
 
+echo "start pipeline"
 #### THIS IS THE PIPELINE!!! #####
 ./RUN_ALL-${BAND}_`printf %02d ${CCDNUM_LIST}` $ARGS
 
