@@ -1,5 +1,12 @@
 #!/bin/bash
 
+#!/bin/bash                                                                               
+if [ ! -f ~/.pgpass ]; then
+    echo "You might have some problems running this because you don't have a .pgpass in your home directory. Try making one if
+     if this doesn't work."
+fi
+
+
 source /cvmfs/des.opensciencegrid.org/eeups/startupcachejob21i.sh
 
 setup easyaccess
