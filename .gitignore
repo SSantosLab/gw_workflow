@@ -41,7 +41,7 @@ ingest
 matplotlib/
 mytemp_668439/
 oradiag_nglaeser/
-plots/.ipynb_checkpoints/
+plots/
 qa/
 seriestest/
 stamps*
@@ -52,6 +52,11 @@ WSTemplates/
 .astropy/
 .easyaccess/
 .eups/
+
+# test directories
+r4p6test/
+r4p7test/
+gaia-scamp/
 
 .desservices.ini
 
