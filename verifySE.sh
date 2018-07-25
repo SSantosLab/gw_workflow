@@ -1,7 +1,7 @@
 #!/bin/bash
 
 if [ $# -lt 1 ]; then
-    echo "usage: verifySE.sh -E EXPNUM -r RNUM -p PNUM -n NITE -b BAND [-j] [-s] [-V SNVETO_NAME ] [-T STARCAT_NAME] [-m SCHEMA (gw or wsdiff)] [-d destcache]" 
+    echo "usage: verifySE.sh -E EXPNUM -r RNUM -p PNUM -n NITE -b BAND [-j] [-s] [-S procnum] [-V SNVETO_NAME ] [-T STARCAT_NAME] [-m SCHEMA (gw or wsdiff)] [-d destcache]" 
     exit 1
 fi
 
