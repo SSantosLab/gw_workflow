@@ -1,7 +1,6 @@
 # data files
 *.201*[0-9]
 *.cat
-confFile
 *.csv
 *.dat
 *.DAT
@@ -65,9 +64,12 @@ gaia-scamp/
 *.swp
 *.swarp
 *~
-confFile
 listpcain
 *.dag
+
+# config files
+confFile
+dagmaker.rc
 
 # logs
 *error*
