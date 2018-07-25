@@ -152,9 +152,11 @@ def doset(args):
             datadec4 = data['DECC4'][i]
 
         filetocheck = filetocheck.astype(str)
-        # problem with filetocheck being a numpy array
+        # problem with filetocheck, databand being numpy arrays
         if isinstance(filetocheck, np.ndarray):
             filetocheck = filetocheck[0]
+        if isinstance(databand, np.ndarray):
+            databand = databand[0]
 #        filetocheck = np.array2string(filetocheck).strip('\'') # problem with filetocheck being a numpy array
 #        filetocheck = filetocheck[filetocheck.find('\'')+1:] # hacky fix in case of unicode encoding
 #        filetocheck = filetocheck[:-2] # hacky fix in case of unicode encoding
@@ -362,18 +364,8 @@ def getallccdfromGAIA(args):
     #vec = hp.pixelfunc.ang2vec(ra,dec,lonlat=True) # for new healpy 1.11.0 and python 2.7.15
 
     # FOR OLD HEALPY 1.5dev
-    conversion=np.pi/180
-    colatitude=conversion*dec
-    longitude=conversion*(90-ra)
-    if colatitude > np.pi:
-        colatitude=colatitude-np.pi
-    if colatitude < 0:
-        colatitude=colatitude+np.pi
-    if longitude > np.pi:
-        longitude=longitude-np.pi
-    if longitude < 0:
-        longitude=longitude+np.pi
-    vec = hp.pixelfunc.ang2vec(colatitude, longitude)
+    theta, phi = radec2thetaphi(ra, dec)
+    vec = hp.pixelfunc.ang2vec(theta, phi)
 
 ########## GET CORRESPONDING DATA FROM GAIA CATALOG ##########
 
@@ -398,6 +390,7 @@ def getallccdfromGAIA(args):
     BANDname=BAND+"_des"
     names=["MATCHID","RAJ2000_2mass","DEJ2000_2mass",BANDname]
 
+    # this line is no longer needed because catalog is read in with pandas instead of fitsio
     #df=pd.DataFrame(catalog.byteswap().newbyteorder(), index=range(catalog.size), columns=['SOURCE_ID','RA','DEC','PHOT_G_MEAN_MAG']) # byteswap because fits is big-endian, so swap byte order to native order
     df=pd.DataFrame(catalog, index=range(rows), columns=['SOURCE_ID','RA','DEC','PHOT_G_MEAN_MAG'])
     good_data.append(df)
