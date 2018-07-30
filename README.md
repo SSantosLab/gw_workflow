@@ -3,6 +3,9 @@ Workflow for image processing. Currently consists of single-epoch (SE) processin
 
 [Introduction](#introduction)  
 [Demo](#demo)
+   [Setup](#setup)
+   [SE processing](#running-single-epoch-se-processing-se_job_modsh) 
+   [Difference Imaging](#difference-imaging)
 
 ## Introduction
 
