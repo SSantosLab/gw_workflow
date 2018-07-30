@@ -63,7 +63,7 @@ conda activate des18a
 
 # parse arguments and flags
 ARGS="$@"
-while getopts "E:n:b:r:p:S:d:c:V:T:CjhsYOm:" opt $ARGS # S, V, T from verifySE.sh #TODO FINISHED HERE ON 24.07.2018
+while getopts "E:n:b:r:p:S:d:c:V:T:CjhsYOtm:" opt $ARGS # S, V, T from verifySE.sh #TODO FINISHED HERE ON 24.07.2018
 do case $opt in
     E)
             [[ $OPTARG =~ ^[0-9]+$ ]] || { echo "Error: exposure number must be an integer! You put $OPTARG" ; exit 1; }
@@ -556,7 +556,7 @@ if [ -n "$GRID_USER" ] ; then rm -f *.fits *.fits.fz *.ps *.psf *.xml full_1.cat
 export HOME=$OLDHOME
 
 # exit now if SE processing a template
-if [ "$TEMPLATE" == "true"]; then
+if [ "$TEMPLATE" == "true" ]; then
     echo "Finished SE processing template image; exiting before verifySE steps"
     exit 0
 fi
