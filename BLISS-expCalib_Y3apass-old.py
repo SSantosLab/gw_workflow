@@ -120,7 +120,7 @@ def doset(args):
     # get only data for correct CCD
     correctccd = (data['CCDNUM'] == args.ccd)
     data = data[ correctccd ]
-#    print " befor loop \n"    
+#    print " before loop \n"    
 
     for i in range(data['FILENAME'].size):
         # to avoid error when array is not 2D because it only has one entry

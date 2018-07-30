@@ -103,6 +103,8 @@ do case $opt in
             JUMPTOEXPCALIB=true
             shift 
             ;;
+    t)
+            TEMPLATE=true
      V)
         SNVETO_NAME=$OPTARG
         shift 2
@@ -208,7 +210,7 @@ tar xzfm ./test_mysql_libs.tar.gz
 
 ifdh cp -D /pnfs/des/scratch/nglaeser/BLISS-expCalib_Y3apass-old.py ./ || { echo "Error copying BLISS-old.py file. Exiting." ; exit 2; }
 ifdh cp -D /pnfs/des/scratch/nglaeser/BLISS-expCalib_Y3apass.py ./ || { echo "Error copying BLISS.py file. Exiting." ; exit 2; }
-#ifdh cp -D /pnfs/des/scratch/nglaeser/run_SEproc.py /pnfs/des/scratch/nglaeser/run_desdmy1e2.py /pnfs/des/scratch/nglaeser/desdmLiby1e2.py ./ || { echo "Error copying run_SEproc.py and run_desdmy1e2.py. Exiting." ; exit 2; }
+ifdh cp -D /pnfs/des/scratch/nglaeser/run_SEproc.py /pnfs/des/scratch/nglaeser/run_desdmy1e2.py /pnfs/des/scratch/nglaeser/desdmLiby1e2.py ./ || { echo "Error copying run_SEproc.py and run_desdmy1e2.py. Exiting." ; exit 2; }
 ifdh cp -D /pnfs/des/scratch/nglaeser/desdmLiby1e2.py ./ || { echo "Error copying desdmLiby1e2.py. Exiting." ; exit 2; }
 ifdh cp -D /pnfs/des/scratch/nglaeser/make_red_catlist.py ./ || { echo "Error copying make_red_catlist.py Exiting." ; exit 2; }
 
@@ -457,6 +459,8 @@ setup scikitlearn 0.14.1+9
 
 export LD_LIBRARY_PATH=${LD_LIBRARY_PATH}:${PWD}/usr/lib64/mysql
 
+# tokenize ccd argument (in case of multiple comma-separated ccds)
+ccdlist=(${CCDS//,/ })
 # in case single epoch processing was already done, skip that step
 if [ "$JUMPTOEXPCALIB" == "true" ] ; then
     echo "jumping to the calibration step..."
@@ -465,7 +469,6 @@ if [ "$JUMPTOEXPCALIB" == "true" ] ; then
     nccds2=`expr $nccds \* 2`
     if [  $nfiles -ne $nccds2 ] ; then
 	echo "copying fits files from Dcache"
-    ccdlist=(${CCDS//,/ })
 
     for c in $ccdlist; do
         c=$(printf "%02d" $c)
@@ -550,7 +553,18 @@ if [ -n "$GRID_USER" ] ; then rm -f *.fits *.fits.fz *.ps *.psf *.xml full_1.cat
 
 export HOME=$OLDHOME
 
+# exit now if SE processing a template
+if [ "$TEMPLATE" == "true"]; then
+    echo "Finished SE processing template image; exiting before verifySE steps"
+    exit 0
+fi
+
 ################# NOW IT'S TIME TO VERIFY SE (the stuff below comes from what used to be verifySE.sh) ##################
+
+export RNUM=$RNUM
+export PNUM=$PNUM
+export EXPNUM=$EXPNUM
+export NITE=$NITE
 
 
 # copy over the copy_pairs script so we know the templates
@@ -619,13 +633,14 @@ do
     sed -i -e s/${OLDCOUNT}/${NEWCOUNT}/ WS_diff.list
 done
 
+# commented out so subsequent CCD runs won't interfere with each other by copying over old/new versions of WS_diff
 #get rid of the old file so we can insert the new ones
-if [ ! -z "${FAILEDEXPS}" ]; then
-    echo "Exposures with failed SE processing and/or calibration are $FAILEDEXPS."
-    ifdh rm  /pnfs/des/${DESTCACHE}/${SCHEMA}/exp/${NITE}/${EXPNUM}/WS_diff.list ||  echo "SEVERE WARNING: failed to remove existing WS_diff.list file."
-    ifdh rm /pnfs/des/${DESTCACHE}/${SCHEMA}/exp/${NITE}/${EXPNUM}/${procnum}/input_files/copy_pairs_for_${EXPNUM}.sh ||  echo "SEVERE WARNING: failed to remove existing copy_pair file."
-    ifdh cp ${IFDHCP_OPT} ./WS_diff.list  /pnfs/des/${DESTCACHE}/${SCHEMA}/exp/${NITE}/${EXPNUM}/WS_diff.list \; ./copy_pairs_for_${EXPNUM}.sh /pnfs/des/${DESTCACHE}/${SCHEMA}/exp/${NITE}/${EXPNUM}/${procnum}/input_files/copy_pairs_for_${EXPNUM}.sh || echo "SEVERE WARNING: failed to copy back edited WS_diff.list and copy_pairs files. Diffimg may have problems for CCDs depending on templates with the failed exposures\!"
-fi
+#if [ ! -z "${FAILEDEXPS}" ]; then
+#    echo "Exposures with failed SE processing and/or calibration are $FAILEDEXPS."
+#    ifdh rm  /pnfs/des/${DESTCACHE}/${SCHEMA}/exp/${NITE}/${EXPNUM}/WS_diff.list ||  echo "SEVERE WARNING: failed to remove existing WS_diff.list file."
+#    ifdh rm /pnfs/des/${DESTCACHE}/${SCHEMA}/exp/${NITE}/${EXPNUM}/${procnum}/input_files/copy_pairs_for_${EXPNUM}.sh ||  echo "SEVERE WARNING: failed to remove existing copy_pair file."
+#    ifdh cp ${IFDHCP_OPT} ./WS_diff.list  /pnfs/des/${DESTCACHE}/${SCHEMA}/exp/${NITE}/${EXPNUM}/WS_diff.list \; ./copy_pairs_for_${EXPNUM}.sh /pnfs/des/${DESTCACHE}/${SCHEMA}/exp/${NITE}/${EXPNUM}/${procnum}/input_files/copy_pairs_for_${EXPNUM}.sh || echo "SEVERE WARNING: failed to copy back edited WS_diff.list and copy_pairs files. Diffimg may have problems for CCDs depending on templates with the failed exposures\!"
+#fi
 
 # run the makestarcat step
 # NO LONGER NEEDED with the introduction of the gw_utils package.
@@ -637,43 +652,51 @@ setup numpy 1.9.1+8
 setup gw_utils
 setup extralibs
 
-# run make starcat
-if [ "x$STARCAT_NAME" == "x" ]; then
-    if [ "x$SNVETO_NAME" == "x" ]; then
-    echo "INFO: Neither STARCAT_NAME nor SNVETO_NAME was provided. The makestarcat.py step will NOT run now."
-    echo "Please note that these files will not be present if you are expecting them for a diffimg run."
-    MAKESTARCAT_RESULT=-1
+# run make starcat ccd-by-ccd (in case of comma-separated ccd list)
+for c in $ccdlist; do
+    c=$(printf "%02d" $c)
+    if [ "x$STARCAT_NAME" == "x" ]; then
+        if [ "x$SNVETO_NAME" == "x" ]; then
+        echo "INFO: Neither STARCAT_NAME nor SNVETO_NAME was provided. The makestarcat.py step will NOT run now."
+        echo "Please note that these files will not be present if you are expecting them for a diffimg run."
+        MAKESTARCAT_RESULT=-1
+        else
+        echo "WARNING: STARCAT_NAME is set but SNVETO_NAME is not. The SN veto file will be created with the default name."
+        #python ${GW_UTILS_DIR}/code/makestarcat.py -e $EXPNUM -n $NITE -r $RNUM -p $PNUM -b $BAND --ccd $c -s `echo $procnum | sed -e s/dp//` -snveto $SNVETO_NAME
+        python makestarcat.py -e $EXPNUM -n $NITE -r $RNUM -p $PNUM -b $BAND --ccd $c -s `echo $procnum | sed -e s/dp//` -snveto $SNVETO_NAME
+        MAKESTARCAT_RESULT=$?
+        fi
+    elif [ "x$SNVETO_NAME" == "x" ]; then
+        echo "WARNING: STARCAT_NAME is set but SNVETO_NAME is not. The SN veto file will be created with the default name."
+        #python ${GW_UTILS_DIR}/code/makestarcat.py -e $EXPNUM -n $NITE -r $RNUM -p $PNUM -b $BAND --ccd $c -s `echo $procnum | sed -e s/dp//` -snstar $STARCAT_NAME
+        python makestarcat.py -e $EXPNUM -n $NITE -r $RNUM -p $PNUM -b $BAND --ccd $c -s `echo $procnum | sed -e s/dp//` -snstar $STARCAT_NAME
+        MAKESTARCAT_RESULT=$?
     else
-    echo "WARNING: STARCAT_NAME is set but SNVETO_NAME is not. The SN veto file will be created with the default name."
-    python ${GW_UTILS_DIR}/code/makestarcat.py -e $EXPNUM -n $NITE -r $RNUM -p $PNUM -b $BAND -s `echo $procnum | sed -e s/dp//` -snveto $SNVETO_NAME
-    MAKESTARCAT_RESULT=$?
+        #python ${GW_UTILS_DIR}/code/makestarcat.py -e $EXPNUM -n $NITE -r $RNUM -p $PNUM -b $BAND --ccd $c -s `echo $procnum | sed -e s/dp//` -snstar $STARCAT_NAME -snveto $SNVETO_NAME
+        python makestarcat.py -e $EXPNUM -n $NITE -r $RNUM -p $PNUM -b $BAND --ccd $c -s `echo $procnum | sed -e s/dp//` -snstar $STARCAT_NAME -snveto $SNVETO_NAME
+        MAKESTARCAT_RESULT=$?
     fi
-elif [ "x$SNVETO_NAME" == "x" ]; then
-    echo "WARNING: STARCAT_NAME is set but SNVETO_NAME is not. The SN veto file will be created with the default name."
-    python ${GW_UTILS_DIR}/code/makestarcat.py -e $EXPNUM -n $NITE -r $RNUM -p $PNUM -b $BAND -s `echo $procnum | sed -e s/dp//` -snstar $STARCAT_NAME
-    MAKESTARCAT_RESULT=$?
-else
-    python ${GW_UTILS_DIR}/code/makestarcat.py -e $EXPNUM -n $NITE -r $RNUM -p $PNUM -b $BAND -s `echo $procnum | sed -e s/dp//` -snstar $STARCAT_NAME -snveto $SNVETO_NAME
-    MAKESTARCAT_RESULT=$?
-fi
 
-# set the STARCAT_NAME and SNVETO_NAME values to the default if one of them wasn't set
-if [ -z "$STARCAT_NAME" ]; then STARCAT_NAME="SNSTAR_${EXPNUM}_r${RNUM}p${PNUM}.LIST" ; fi
-if [ -z "$SNVETO_NAME"  ]; then SNVETO_NAME="SNVETO_${EXPNUM}_r${RNUM}p${PNUM}.LIST" ; fi
+    # set the STARCAT_NAME and SNVETO_NAME values to the default if one of them wasn't set
+    if [ -z "$STARCAT_NAME" ]; then STARCAT_NAME="SNSTAR_${EXPNUM}_${c}_r${RNUM}p${PNUM}.LIST" ; fi
+    if [ -z "$SNVETO_NAME"  ]; then SNVETO_NAME="SNVETO_${EXPNUM}_${c}_r${RNUM}p${PNUM}.LIST" ; fi
 
-if [ $MAKESTARCAT_RESULT -eq 0 ]; then
+    if [ $MAKESTARCAT_RESULT -eq 0 ]; then
 
-# make sure that the files actually exist before we try to copy then. If makestarcat.py did not run, then we won't need to check.
-    if [ -f $STARCAT_NAME ] && [ -f $SNVETO_NAME ]; then
-    ifdh mkdir /pnfs/des/persistent/stash/${SCHEMA}/CATALOG_FILES/${NITE}
-    ifdh cp --force=xrootd -D ${IFDHCP_OPT} $STARCAT_NAME $SNVETO_NAME /pnfs/des/persistent/stash/${SCHEMA}/CATALOG_FILES/${NITE}/ || echo "ERROR: copy of $STARCAT_NAME and $SNVETO_NAME failed with status $?. You may see problems running diffimg jobs later."  
-    fi
-else
-    if [ $MAKESTARCAT_RESULT -eq -1 ]; then
-    echo "makestarcat.py did not run; no SNSTAR or SNVETO files to copy back."
+    # make sure that the files actually exist before we try to copy then. If makestarcat.py did not run, then we won't need to check.
+        if [ -f $STARCAT_NAME ] && [ -f $SNVETO_NAME ]; then
+        ifdh mkdir /pnfs/des/persistent/stash/${SCHEMA}/CATALOG_FILES/${NITE}
+        ifdh cp --force=xrootd -D ${IFDHCP_OPT} $STARCAT_NAME $SNVETO_NAME /pnfs/des/persistent/stash/${SCHEMA}/CATALOG_FILES/${NITE}/ || echo "ERROR: copy of $STARCAT_NAME and $SNVETO_NAME failed with status $?. You may see problems running diffimg jobs later."  
+        fi
     else
-    echo "ERROR: makestarcat.py exited with status $MAKESTARCAT_RESULT. Check the logs for errors. We will NOT copy the output files back."
+        if [ $MAKESTARCAT_RESULT -eq -1 ]; then
+        echo "makestarcat.py did not run; no SNSTAR or SNVETO files to copy back."
+        else
+        echo "ERROR: makestarcat.py exited with status $MAKESTARCAT_RESULT. Check the logs for errors. We will NOT copy the output files back."
+        fi
     fi
-fi
+
+### TODO: once diffimg gets added in here, put it INSIDE the ccd-per-ccd loop
+done
 
 export HOME=$OLDHOME
