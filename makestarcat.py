@@ -164,7 +164,7 @@ def create(band):
         else:
             psplit = path.split('/')
             exp = psplit[7]
-            filename = 'D00'+str(exp)+'_36_'+'r'+str(r)+'p'+str(p)+'_ZP.csv'
+            filename = 'D00'+str(exp)+'_'+str(args.ccd)+'_r'+str(r)+'p'+str(p)+'_ZP.csv'
             filepath = path + filename
             #filepath = filename
             #if os.path.isfile(filename):
