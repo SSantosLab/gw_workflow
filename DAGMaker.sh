@@ -294,8 +294,8 @@ echo "----------------"
 # see if wre going to be doing on-the-fly SNSTAR and SNVETO catalogs from the templates. Based on the content of  MAKESCRIPT_DIFFIMG_TEMPLATE.INPUT
 SNSTAR_OPTS=""
 SNVETO_OPTS=""
-SNSTAR_FILENAME=`egrep "^\s*SNSTAR_FILENAME" MAKESCRIPT_DIFFIMG_TEMPLATE.INPUT | cut -d ":" -f 2- | sed -r -e  "s/\#.*//" -e "s/^\ *//" -e "s/(\ )*$//" | sed -e "s/THEEXP/${EXPNUM}/" -e "s/THERNUM/${RNUM}/" -e "s/THEPNUM/${PNUM}/"`
-SNVETO_FILENAME=`egrep "^\s*SNVETO_FILENAME" MAKESCRIPT_DIFFIMG_TEMPLATE.INPUT | cut -d ":" -f 2- | sed -r -e  "s/\#.*//" -e "s/^\ *//" -e "s/(\ )*$//" | sed -e "s/THEEXP/${EXPNUM}/" -e "s/THERNUM/${RNUM}/" -e "s/THEPNUM/${PNUM}/"`
+SNSTAR_FILENAME=`egrep "^\s*SNSTAR_FILENAME" MAKESCRIPT_DIFFIMG_TEMPLATE.INPUT | cut -d ":" -f 2- | sed -r -e  "s/\#.*//" -e "s/^\ *//" -e "s/(\ )*$//" | sed -e "s/THEEXP/${EXPNUM}/" -e "s/THERNUM/${RNUM}/" -e "s/THEPNUM/${PNUM}/" -e "s/THECCDNUM/\${CCDNUM_LIST}/"`
+SNVETO_FILENAME=`egrep "^\s*SNVETO_FILENAME" MAKESCRIPT_DIFFIMG_TEMPLATE.INPUT | cut -d ":" -f 2- | sed -r -e  "s/\#.*//" -e "s/^\ *//" -e "s/(\ )*$//" | sed -e "s/THEEXP/${EXPNUM}/" -e "s/THERNUM/${RNUM}/" -e "s/THEPNUM/${PNUM}/" -e "s/THECCDNUM/\${CCDNUM_LIST}/"`
 if [ -z “$SNSTAR_FILENAME” ]; then unset SNSTAR_FILENAME ; fi
 ## Above line was added on 20171208 by Ken suggestion to fix an error in Francisco submission
 ### dummy job
@@ -750,7 +750,7 @@ echo "</serial>" >> $outfile
 fi
 # edit the template files to match this exposure
 
-sed -e s/THENITE/$NITE/ -e s/THEBAND/${BAND}/ -e s/THEEXP/${EXPNUM}/ -e s/THEFIELD/${FIELD}/ -e s/THEPROCNUM/${procnum}/ -e s/THESEASON/${SEASON}/ -e s/THERNUM/${RNUM}/ -e s/THEPNUM/${PNUM}/ MAKESCRIPT_DIFFIMG_TEMPLATE.INPUT > MAKE_DIFFIMG_DIRS_${EXPNUM}.INPUT
+sed -e s/THENITE/$NITE/ -e s/THEBAND/${BAND}/ -e s/THEEXP/${EXPNUM}/ -e s/THEFIELD/${FIELD}/ -e s/THEPROCNUM/${procnum}/ -e s/THESEASON/${SEASON}/ -e s/THERNUM/${RNUM}/ -e s/THEPNUM/${PNUM}/ -e s/THECCDNUM/\${CCDNUM_LIST}/ MAKESCRIPT_DIFFIMG_TEMPLATE.INPUT > MAKE_DIFFIMG_DIRS_${EXPNUM}.INPUT
 
 sed -e s/THENITE/$NITE/ -e s/THEBAND/${BAND}/ -e s/THEEXP/${EXPNUM}/ -e s/THEFIELD/${FIELD}/ -e s/THETILE/${TILING}/ -e s/CCD2DIGIT/\$CCD/ -e "s/ALLEXP/${ALLEXPS}/" INTERNAL_INFO_TEMPLATE.DAT > INTERNAL_INFO_${EXPNUM}_tile${TILING}.DAT
 

@@ -109,6 +109,6 @@ SEASON: THESEASON
 # give the SNSTAR_FILENAME option and it should set the makeStarCat options accordingly.
 # Comment these lines out if you want to just read the star catalog or veto catalog from the DB
 # below lines were commented on Aug 16, since we're using in-footprint
-SNSTAR_FILENAME: SNSTAR_THEEXP_rTHERNUMpTHEPNUM.LIST
-SNVETO_FILENAME: SNVETO_THEEXP_rTHERNUMpTHEPNUM.LIST
+SNSTAR_FILENAME: SNSTAR_THEEXP_THECCDNUM_rTHERNUMpTHEPNUM.LIST
+SNVETO_FILENAME: SNVETO_THEEXP_THECCDNUM_rTHERNUMpTHEPNUM.LIST
 # ====================== END =====================
