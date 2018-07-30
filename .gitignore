@@ -32,17 +32,15 @@ makeWSTemplates.sh
 
 # directories
 data/
-diff*
 /dp*
 heads
 headers
 ingest
 matplotlib/
-mytemp_668439/
+mytemp_*/
 oradiag_nglaeser/
 plots/
 qa/
-seriestest/
 stamps*
 syspfiles*
 temp/
@@ -53,9 +51,12 @@ WSTemplates/
 .eups/
 
 # test directories
+diff*
+exp440/
+gaia-scamp/
 r4p6test/
 r4p7test/
-gaia-scamp/
+seriestest/
 
 .desservices.ini
 
