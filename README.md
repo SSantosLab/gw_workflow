@@ -6,12 +6,12 @@ Workflow for image processing. Currently consists of single-epoch (SE) processin
 
 ## Introduction
 
-The goal of this project is to speed up the pipeline by about a factor of 10. So far, the progress done (on the parallelSE branch) is as follows:
+The goal of this project is to speed up the pipeline by about a factor of 10. So far, the progress done is as follows:
 
 * A parallelized (CCD-by-CCD) version of SE processing (which resulted in an approximately factor 5 speedup of `SE_job_mod.sh`)
-* SE processing calls `BLISS-expCalib_Y3apass.py` for image calibration of images taken outside the DES footprint. Due to the implementation of CCD-by-CCD processing, the image to be calibrated covers much less area in the sky, causing us to switch to the GAIA DR-2 sky catalog and a finer catalog pixelation. This was implemented with a new function `getallccdfromGAIA` in the BLISS python script.  
-    * The GAIA catalog was originally 1.3T in size. We selected the relevant columns only and copied the catalog to persistent storage for easy access. This reduced the size by a factor of 12 to 110G.
-    * The BLISS script also got a CCD flag, like `SE_job_mod.sh` did, to implement the CCD-by-CCD SE processing and put the CCD number in the output files.
+* SE processing calls `BLISS-expCalib_Y3apass.py` for photometric calibration of images taken outside the DES footprint. Due to the implementation of CCD-by-CCD processing, the image to be calibrated covers only has the area of a CCD, which is far less than previously, causing us to switch to the GAIA DR-2 sky catalog and a finer catalog pixelation. This was implemented with a new function `getallccdfromGAIA` in the BLISS python script.  
+    * The GAIA catalog was originally 1.3T in size. We selected the relevant columns only and copied the catalog to persistent storage for easy access (in `/cvmfs/des.osgstorage.org/stash/ALLSKY_STARCAT/GAIA_DR2`). This reduced the size by a factor of 12 to 110G.
+    * The BLISS script now also has a CCD flag, like `SE_job_mod.sh` did, to implement the CCD-by-CCD SE processing and put the CCD number in the output files.
 
 ## Demo
 
@@ -33,13 +33,17 @@ source /cvmfs/des.opensciencegrid.org/eeups/startupcachejob21i.sh
 
 #### Running Single Epoch (SE) Processing (`SE_job_mod.sh`)
 
+A flowchart detailing the SE processing steps is shown below:
+![SE processing overview](./github-imgs/SEoverview.jpg)
+Green indicates changes made since the O2 pipeline.
+
 After following the setup steps above, you can run the SE processing script. For example, type:
 ```
 # to run all CCDs in series
-./SE_job_mod.sh -r 4 -p 5 -E 668439 -b i -n 20170817  -d persistent -m gw -C -O
+./SE_job_mod.sh -r 4 -p 5 -E 668439 -b i -n 20170817 -d persistent -m gw -C -O -S dp60
 
 # to run a single CCD
-./SE_job_mod.sh -r 4 -p 5 -E 668439 -b i -n 20170817  -d persistent -m gw -C -O -c 1
+./SE_job_mod.sh -r 4 -p 5 -E 668439 -b i -n 20170817 -d persistent -m gw -C -O -S dp60 -c 1
 ```
 
 ##### Flags
@@ -51,6 +55,7 @@ After following the setup steps above, you can run the SE processing script. For
 * `c`: CCD number
 * `d`: Destination cache (`scratch` or `persistent`)
 * `m`: Schema (`gw` or `wsdiff`)
+* `S`: Season number
 
 The following flags do not require arguments:
 
@@ -59,6 +64,7 @@ The following flags do not require arguments:
 * `s`: Run single-threaded
 * `Y`: Turn on `SPECIALY4`
 * `O`: Fetch all files again, overwriting those already in the current directory
+* `t`: Run SE for a template image (skips SE verify steps at the end)
 * `h`: Help
 
 To run all 60 CCDs in parallel, create a directed acyclic graph (DAG) by running `./dag-create.sh`. This will produce the file `parallel.dag` which can then be run with jobsub:
@@ -67,9 +73,9 @@ source /cvmfs/des.opensciencegrid.org/eeups/startupcachejob21i.sh
 jobsub_submit_dag -G des file://parallel.dag
 ```
 
-#### Running Image Calibration with `BLISS-expCalib_Y3apass.py`  
+##### Running Astrometric Calibration Only with `BLISS-expCalib_Y3apass.py`  
 
-After the setup steps (above), you can also choose to run only the BLISS calibration script.  
+Astrometric Calibration is one step in the SE processing pipeline (above). After the setup steps (above), however, you can also choose to run only the BLISS calibration script instead of the full SE pipeline.  
 
 **Note:** `SE_job_mod.sh` executes the script `BLISS-expCalib_Y3apass.py`. Due to deprecated package versions (should be fixed soon!), the SE script calls the deprecated version of the BLISS script, `BLISS-expCalib_Y3apass-old.py`. When running the BLISS script on its own, however, use the new version, `BLISS-expCalib_Y3apass.py` as follows:  
 ```
@@ -88,3 +94,27 @@ After the setup steps (above), you can also choose to run only the BLISS calibra
 The following flags do not require arguments:
 
 * `debug`: Run in debug org
+
+#### Difference Imaging
+
+To run difference imaging, follow the same setup steps, then run the following:  
+```
+./RUN_DIFFIMG_PIPELINE.sh -E 668439 -r r4p5 -p dp60 -n 20170817 -b i -c 36 -d persistent -m gw
+```
+
+##### Flags
+Note that these vary significantly from the same letter in SE processing:  
+
+* `E`: Exposure number
+* `r`: RPNUM
+* `p`: Season number
+* `n`: Night
+* `b`: Band (`i`, `r`, `g`, `Y`, `z`, or `u`)
+* `c`: CCD number
+* `d`: Destination cache (`scratch` or `persistent`)
+* `m`: Schema (`gw` or `wsdiff`)
+* `v`: Diffimg version
+
+The following flags do not require arguments:  
+
+* `F`: fullcopy
