@@ -105,6 +105,8 @@ do case $opt in
             ;;
     t)
             TEMPLATE=true
+            shift
+            ;;
      V)
         SNVETO_NAME=$OPTARG
         shift 2
