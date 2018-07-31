@@ -294,9 +294,15 @@ echo "----------------"
 # see if wre going to be doing on-the-fly SNSTAR and SNVETO catalogs from the templates. Based on the content of  MAKESCRIPT_DIFFIMG_TEMPLATE.INPUT
 SNSTAR_OPTS=""
 SNVETO_OPTS=""
-SNSTAR_FILENAME=`egrep "^\s*SNSTAR_FILENAME" MAKESCRIPT_DIFFIMG_TEMPLATE.INPUT | cut -d ":" -f 2- | sed -r -e  "s/\#.*//" -e "s/^\ *//" -e "s/(\ )*$//" | sed -e "s/THEEXP/${EXPNUM}/" -e "s/THERNUM/${RNUM}/" -e "s/THEPNUM/${PNUM}/" -e "s/THECCDNUM/\${CCDNUM_LIST}/"`
-SNVETO_FILENAME=`egrep "^\s*SNVETO_FILENAME" MAKESCRIPT_DIFFIMG_TEMPLATE.INPUT | cut -d ":" -f 2- | sed -r -e  "s/\#.*//" -e "s/^\ *//" -e "s/(\ )*$//" | sed -e "s/THEEXP/${EXPNUM}/" -e "s/THERNUM/${RNUM}/" -e "s/THEPNUM/${PNUM}/" -e "s/THECCDNUM/\${CCDNUM_LIST}/"`
-if [ -z “$SNSTAR_FILENAME” ]; then unset SNSTAR_FILENAME ; fi
+#SNSTAR_FILENAME=`egrep "^\s*SNSTAR_FILENAME" MAKESCRIPT_DIFFIMG_TEMPLATE.INPUT | cut -d ":" -f 2- | sed -r -e  "s/\#.*//" -e "s/^\ *//" -e "s/(\ )*$//" | sed -e "s/THEEXP/${EXPNUM}/" -e "s/THERNUM/${RNUM}/" -e "s/THEPNUM/${PNUM}/" -e 's/THECCDNUM/`echo $(eval "echo $SNSTAR_FILENAME")`'` #'s/THECCDNUM/${CCDNUM_LIST}/'`
+SNSTAR_FILENAME=`egrep "^\s*SNSTAR_FILENAME" MAKESCRIPT_DIFFIMG_TEMPLATE.INPUT | cut -d ":" -f 2- | sed -r -e  "s/\#.*//" -e "s/^\ *//" -e "s/(\ )*$//" | sed -e "s/THEEXP/${EXPNUM}/" -e "s/THERNUM/${RNUM}/" -e "s/THEPNUM/${PNUM}/"`
+echo "SNSTAR_FILENAME $SNSTAR_FILENAME"
+SNSTAR_FILENAME=`echo $SNSTAR_FILENAME | sed -e 's/THECCDNUM/$(eval "echo $SNSTAR_FILENAME")/'`
+echo "SNSTAR_FILENAME $SNSTAR_FILENAME"
+SNVETO_FILENAME=`egrep "^\s*SNVETO_FILENAME" MAKESCRIPT_DIFFIMG_TEMPLATE.INPUT | cut -d ":" -f 2- | sed -r -e  "s/\#.*//" -e "s/^\ *//" -e "s/(\ )*$//" | sed -e "s/THEEXP/${EXPNUM}/" -e "s/THERNUM/${RNUM}/" -e "s/THEPNUM/${PNUM}/"`
+SNVETO_FILENAME=`echo $SNVETO_FILENAME | sed -e 's/THECCDNUM/$(eval "echo $SNVETO_FILENAME")/'`
+echo "SNVETO_FILENAME $SNVETO_FILENAME"
+if [ -z "$SNSTAR_FILENAME" ]; then unset SNSTAR_FILENAME ; fi
 ## Above line was added on 20171208 by Ken suggestion to fix an error in Francisco submission
 ### dummy job
 cat <<EOF > dummyjob.sh
@@ -432,6 +438,7 @@ echo "loop over the diff list of exposures"
 
 NOVERLAPS=$(awk '{print NF-2}' mytemp_${EXPNUM}/KH_diff.list1)
 # now loop over the diff list, get info about the overlaping exposures, and set the SE portion of the dag
+echo "NOVERLAPS $NOVERLAPS"
 for((i=1; i<=${NOVERLAPS}; i++)) 
 do
     # get expnum, nite info
@@ -517,8 +524,14 @@ do
 	ls /pnfs/des/${DESTCACHE}/${SCHEMA}/exp/${overlapnite}/${overlapnum}/${overlapnum}.out 
     else
 	# if all the fits files are there, try to produce the missing .out file quickly
+    echo "Before the if"
 	if [ $nfiles -ge 59 ] ; then
-	    ./getcorners.sh $EXPNUM $rpnum /pnfs/des/${DESTCACHE}/${SCHEMA}/exp/${overlapnite}/${overlapnum}
+        #echo "************* doing getcorners *****************"
+        #echo "$(which getcorners.sh)"
+        #echo "./getcorners.sh $EXPNUM $rpnum /pnfs/des/${DESTCACHE}/${SCHEMA}/exp/${overlapnite}/${overlapnum}"
+	    #./getcorners.sh $EXPNUM $rpnum /pnfs/des/${DESTCACHE}/${SCHEMA}/exp/${overlapnite}/${overlapnum}
+	    ./getcorners.sh $EXPNUM /pnfs/des/${DESTCACHE}/${SCHEMA}/exp/${overlapnite}/${overlapnum} .
+        ifdh cp -D ${overlapnum}.out /pnfs/des/${DESTCACHE}/${SCHEMA}/exp/${overlapnite}/${overlapnum}
 	    if [ $? -ne 0 ] ; then 
 		echo "Warning: Missing .out file: /pnfs/des/${DESTCACHE}/${SCHEMA}/exp/${overlapnite}/${overlapnum}/${overlapnum}.out" 
 		# assume something went wrong with the previous SE proc for this image. set nfiles=0 to force reprocessing
@@ -749,8 +762,8 @@ echo "jobsub -n --group=des --OS=SL6  --resource-provides=usage_model=$RESOURCES
 echo "</serial>" >> $outfile
 fi
 # edit the template files to match this exposure
-
-sed -e s/THENITE/$NITE/ -e s/THEBAND/${BAND}/ -e s/THEEXP/${EXPNUM}/ -e s/THEFIELD/${FIELD}/ -e s/THEPROCNUM/${procnum}/ -e s/THESEASON/${SEASON}/ -e s/THERNUM/${RNUM}/ -e s/THEPNUM/${PNUM}/ -e s/THECCDNUM/\${CCDNUM_LIST}/ MAKESCRIPT_DIFFIMG_TEMPLATE.INPUT > MAKE_DIFFIMG_DIRS_${EXPNUM}.INPUT
+#REALCCD='$(eval "echo $SNSTAR_FILENAME")'
+sed -e s/THENITE/$NITE/ -e s/THEBAND/${BAND}/ -e s/THEEXP/${EXPNUM}/ -e s/THEFIELD/${FIELD}/ -e s/THEPROCNUM/${procnum}/ -e s/THESEASON/${SEASON}/ -e s/THERNUM/${RNUM}/ -e s/THEPNUM/${PNUM}/ -e s/THECCDNUM/'$(eval\ "echo\ $SNSTAR_FILENAME")'/ MAKESCRIPT_DIFFIMG_TEMPLATE.INPUT > MAKE_DIFFIMG_DIRS_${EXPNUM}.INPUT
 
 sed -e s/THENITE/$NITE/ -e s/THEBAND/${BAND}/ -e s/THEEXP/${EXPNUM}/ -e s/THEFIELD/${FIELD}/ -e s/THETILE/${TILING}/ -e s/CCD2DIGIT/\$CCD/ -e "s/ALLEXP/${ALLEXPS}/" INTERNAL_INFO_TEMPLATE.DAT > INTERNAL_INFO_${EXPNUM}_tile${TILING}.DAT
 
