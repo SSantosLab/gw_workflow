@@ -12,7 +12,7 @@ get_corners ()
   echo Getting corner coordinates for exposure ${thisinfo[$ii]} ...
   rm -f ${CORNERDIR}/${e}.out
 
-  for f in ${DATADIR}/D00*immask.fits
+  for f in ${DATADIR}/D00*immask.fits.fz
   #for f in ${DATADIR}/DECam_${e}/DECam*[0-9][0-9].fits
   do
 
