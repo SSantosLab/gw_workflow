@@ -53,6 +53,7 @@ WSTemplates/
 # test directories
 diff*
 exp440/
+exp443/
 gaia-scamp/
 r4p6test/
 r4p7test/

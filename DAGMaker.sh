@@ -292,16 +292,20 @@ echo "MAX_NITE = $MAX_NITE"
 echo "----------------"
 
 # see if wre going to be doing on-the-fly SNSTAR and SNVETO catalogs from the templates. Based on the content of  MAKESCRIPT_DIFFIMG_TEMPLATE.INPUT
+# this writes to the RUN_DIFFIMG_PIPELINE $SNSTAR_FILENAME variable, which should be exported to the RUN02 script when it is called (and then RUN02 should do the eval of $SNSTAR_FILENAME since the $CCDNUM_LIST is finally known at that point)
 SNSTAR_OPTS=""
 SNVETO_OPTS=""
-#SNSTAR_FILENAME=`egrep "^\s*SNSTAR_FILENAME" MAKESCRIPT_DIFFIMG_TEMPLATE.INPUT | cut -d ":" -f 2- | sed -r -e  "s/\#.*//" -e "s/^\ *//" -e "s/(\ )*$//" | sed -e "s/THEEXP/${EXPNUM}/" -e "s/THERNUM/${RNUM}/" -e "s/THEPNUM/${PNUM}/" -e 's/THECCDNUM/`echo $(eval "echo $SNSTAR_FILENAME")`'` #'s/THECCDNUM/${CCDNUM_LIST}/'`
-SNSTAR_FILENAME=`egrep "^\s*SNSTAR_FILENAME" MAKESCRIPT_DIFFIMG_TEMPLATE.INPUT | cut -d ":" -f 2- | sed -r -e  "s/\#.*//" -e "s/^\ *//" -e "s/(\ )*$//" | sed -e "s/THEEXP/${EXPNUM}/" -e "s/THERNUM/${RNUM}/" -e "s/THEPNUM/${PNUM}/"`
+SNSTAR_FILENAME=`egrep "^\s*SNSTAR_FILENAME" MAKESCRIPT_DIFFIMG_TEMPLATE.INPUT | cut -d ":" -f 2- | sed -r -e  "s/\#.*//" -e "s/^\ *//" -e "s/(\ )*$//" | sed -e "s/THEEXP/${EXPNUM}/" -e "s/THERNUM/${RNUM}/" -e "s/THEPNUM/${PNUM}/" -e 's/THECCDNUM/${CCDNUM_LIST}/'`
+SNVETO_FILENAME=`egrep "^\s*SNVETO_FILENAME" MAKESCRIPT_DIFFIMG_TEMPLATE.INPUT | cut -d ":" -f 2- | sed -r -e  "s/\#.*//" -e "s/^\ *//" -e "s/(\ )*$//" | sed -e "s/THEEXP/${EXPNUM}/" -e "s/THERNUM/${RNUM}/" -e "s/THEPNUM/${PNUM}/" -e 's/THECCDNUM/${CCDNUM_LIST}/'`
 echo "SNSTAR_FILENAME $SNSTAR_FILENAME"
-SNSTAR_FILENAME=`echo $SNSTAR_FILENAME | sed -e 's/THECCDNUM/$(eval "echo $SNSTAR_FILENAME")/'`
-echo "SNSTAR_FILENAME $SNSTAR_FILENAME"
-SNVETO_FILENAME=`egrep "^\s*SNVETO_FILENAME" MAKESCRIPT_DIFFIMG_TEMPLATE.INPUT | cut -d ":" -f 2- | sed -r -e  "s/\#.*//" -e "s/^\ *//" -e "s/(\ )*$//" | sed -e "s/THEEXP/${EXPNUM}/" -e "s/THERNUM/${RNUM}/" -e "s/THEPNUM/${PNUM}/"`
-SNVETO_FILENAME=`echo $SNVETO_FILENAME | sed -e 's/THECCDNUM/$(eval "echo $SNVETO_FILENAME")/'`
 echo "SNVETO_FILENAME $SNVETO_FILENAME"
+
+#SNSTAR_FILENAME=`egrep "^\s*SNSTAR_FILENAME" MAKESCRIPT_DIFFIMG_TEMPLATE.INPUT | cut -d ":" -f 2- | sed -r -e  "s/\#.*//" -e "s/^\ *//" -e "s/(\ )*$//" | sed -e "s/THEEXP/${EXPNUM}/" -e "s/THERNUM/${RNUM}/" -e "s/THEPNUM/${PNUM}/"`
+#SNSTAR_FILENAME=`echo $SNSTAR_FILENAME | sed -e 's/THECCDNUM/$(eval\ "echo\ $SNSTAR_FILENAME")/'`
+#echo "SNSTAR_FILENAME $SNSTAR_FILENAME"
+#SNVETO_FILENAME=`egrep "^\s*SNVETO_FILENAME" MAKESCRIPT_DIFFIMG_TEMPLATE.INPUT | cut -d ":" -f 2- | sed -r -e  "s/\#.*//" -e "s/^\ *//" -e "s/(\ )*$//" | sed -e "s/THEEXP/${EXPNUM}/" -e "s/THERNUM/${RNUM}/" -e "s/THEPNUM/${PNUM}/"`
+#SNVETO_FILENAME=`echo $SNVETO_FILENAME | sed -e 's/THECCDNUM/$(eval\ "echo\ $SNVETO_FILENAME")/'`
+
 if [ -z "$SNSTAR_FILENAME" ]; then unset SNSTAR_FILENAME ; fi
 ## Above line was added on 20171208 by Ken suggestion to fix an error in Francisco submission
 ### dummy job
@@ -763,7 +767,8 @@ echo "</serial>" >> $outfile
 fi
 # edit the template files to match this exposure
 #REALCCD='$(eval "echo $SNSTAR_FILENAME")'
-sed -e s/THENITE/$NITE/ -e s/THEBAND/${BAND}/ -e s/THEEXP/${EXPNUM}/ -e s/THEFIELD/${FIELD}/ -e s/THEPROCNUM/${procnum}/ -e s/THESEASON/${SEASON}/ -e s/THERNUM/${RNUM}/ -e s/THEPNUM/${PNUM}/ -e s/THECCDNUM/'$(eval\ "echo\ $SNSTAR_FILENAME")'/ MAKESCRIPT_DIFFIMG_TEMPLATE.INPUT > MAKE_DIFFIMG_DIRS_${EXPNUM}.INPUT
+# this is written to MAKE_DIFFIMG_DIRS_${EXPNUM}.INPUT, where the variable is used to create the RUN02 makeStarcat options
+sed -e s/THENITE/$NITE/ -e s/THEBAND/${BAND}/ -e s/THEEXP/${EXPNUM}/ -e s/THEFIELD/${FIELD}/ -e s/THEPROCNUM/${procnum}/ -e s/THESEASON/${SEASON}/ -e s/THERNUM/${RNUM}/ -e s/THEPNUM/${PNUM}/ -e s/THECCDNUM/'${CCDNUM_LIST}'/ MAKESCRIPT_DIFFIMG_TEMPLATE.INPUT > MAKE_DIFFIMG_DIRS_${EXPNUM}.INPUT
 
 sed -e s/THENITE/$NITE/ -e s/THEBAND/${BAND}/ -e s/THEEXP/${EXPNUM}/ -e s/THEFIELD/${FIELD}/ -e s/THETILE/${TILING}/ -e s/CCD2DIGIT/\$CCD/ -e "s/ALLEXP/${ALLEXPS}/" INTERNAL_INFO_TEMPLATE.DAT > INTERNAL_INFO_${EXPNUM}_tile${TILING}.DAT
 

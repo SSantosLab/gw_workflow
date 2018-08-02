@@ -351,6 +351,7 @@ export TOPDIR_SNRUNS=${PWD}/data/SNruns
 
 # these vars are for the make pair function that we pulled out of makeWSTemplates.sh
 TOPDIR_WSDIFF=${TOPDIR_WSTEMPLATES}
+echo "TOPDIR_WSDIFF $TOPDIR_WSDIFF"
 DATADIR=${TOPDIR_WSDIFF}/data             # DECam_XXXXXX directories
 CORNERDIR=${TOPDIR_WSDIFF}/pairs          # output XXXXXX.out and XXXXXX-YYYYYY.out
 ETCDIR=${DIFFIMG_DIR}/etc                 # parameter files
@@ -592,6 +593,7 @@ ln -s /cvmfs/des.opensciencegrid.org/fnal/relativeZP ${TOPDIR_WSDIFF}/
 # copy over run scripts for steps 1-28, give x permissions
 echo "We are in $PWD"
 cp ${LOCDIR}/RUN* ${LOCDIR}/run* ./
+echo "LOCDIR for runs: $LOCDIR"
 chmod a+x RUN[0-9]* RUN_ALL* RUN*COMPRESS*
 # delete leftover logs from previous runs
 rm *.DONE *.LOG
@@ -620,8 +622,10 @@ ln -s ${LOCDIR}/INTERNAL*.DAT .
 ##### check whether SNSTAR catalog or SNVETO filenames are required. If so, make a symlink if they are in CVMFS. If they are not in CVMFS, copy from dCache directly.
 # if they are given, we are using our own starcat instead of the default one
 SNSTAR_FILENAME=`grep STARSOURCE_FILENAME RUN02_expose_makeStarCat | awk '{print $2}'`
+SNSTAR_FILENAME=`echo $(eval "echo $SNSTAR_FILENAME")`
 OUTFILE_STARCAT=`grep outFile_starCat RUN02_expose_makeStarCat | awk '{print $2}'`
 SNVETO_FILENAME=`grep inFile_veto RUN22_combined+expose_filterObj  | awk '{print $2}'`
+SNVETO_FILENAME=`echo $(eval "echo $SNVETO_FILENAME")`
 # if we are outside the footprint (then SNSTAR_FILENAME and SNVETO_FILENAME are set), we make our own starcat (with gaia), using the BLISS.py outputs
 if [ ! -z "$SNSTAR_FILENAME" ]; then
     cp ${DIFFIMG_DIR}/bin/makeWSTemplates.sh ./
@@ -790,6 +794,7 @@ sed -i -e "/MAXA/ s/1.5/2.0/" SN_cuts.filterObj
 
 echo "start pipeline"
 #### THIS IS THE PIPELINE!!! #####
+export CCDNUM_LIST
 ./RUN_ALL-${BAND}_`printf %02d ${CCDNUM_LIST}` $ARGS
 
 #eventually we want
