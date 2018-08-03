@@ -613,7 +613,7 @@ do
             continue
         fi
 
-        csvfiles="`ifdh ls ${templatedir}'allZP_D*'${tempexp}'_r'${RNUM}p${PNUM}'*.csv' | grep csv | grep fnal` `ifdh ls ${templatedir}'Zero_*'${tempexp}'_r'${RNUM}p${PNUM}'*.csv' | grep csv | grep fnal` `ifdh ls ${templatedir}'D*'${tempexp}'_r'${RNUM}p${PNUM}'*_ZP.csv' | grep csv | grep fnal`"
+        csvfiles="`ifdh ls ${templatedir}'allZP_D*'${tempexp}'*_r'${RNUM}p${PNUM}'*.csv' | grep csv | grep fnal` `ifdh ls ${templatedir}'Zero_*'${tempexp}'*_r'${RNUM}p${PNUM}'*.csv' | grep csv | grep fnal` `ifdh ls ${templatedir}'D*'${tempexp}'*_r'${RNUM}p${PNUM}'*_ZP.csv' | grep csv | grep fnal`"
         ncsv=`echo $csvfiles | wc -w`
         if [ $ncsv -lt 3 ]; then
             echo "Exposure $tempexp missing one or more required csv files. Editing copy_pairs_for_${EXPNUM}.sh and WS_diff.list to remove this exposure. Diffimg will not consider it as a template."
