@@ -87,6 +87,8 @@ if errct>0:
     print '-rootdir (root directory up to the nite dir where copypairs.sh lives for this exposure, like /pnfs/des/persistent/gw/exp/)'
     sys.exit()
 
+print "*** STARTING MAKESTARCAT ***"
+
 #copypairs=rootdir+str(nite)+'/'+str(expnum)+'/dp'+str(season)+'/input_files/'+'copy_pairs_for_'+str(expnum)+'.sh'
 copypairs='copy_pairs_for_'+str(expnum)+'.sh'
 
@@ -157,6 +159,7 @@ def create(band):
     CATALOG,RA,DEC = [],[],[]
     MAG, ERRMAG = [],[]  
     cc = 0
+    print "pathlist: %s" % pathlist
     for path in pathlist:
         cc=cc+1
         if path.split('/')[7]==str(expnum):
@@ -164,8 +167,9 @@ def create(band):
         else:
             psplit = path.split('/')
             exp = psplit[7]
-            filename = 'D00'+str(exp)+'_'+str(args.ccd)+'_r'+str(r)+'p'+str(p)+'_ZP.csv'
+            filename = 'D00'+str(exp)+'_r'+str(r)+'p'+str(p)+'_ZP.csv'
             filepath = path + filename
+            print filepath
             #filepath = filename
             #if os.path.isfile(filename):
             #    hey = 0
@@ -179,6 +183,7 @@ def create(band):
                 print str(exp), 'succeeded.'
             else:
                 print filepath, 'did not get copied.'        
+                continue
             
             ra360 = []
             if over0:    
@@ -191,7 +196,7 @@ def create(band):
                 ra360 = ra           
             
             for i in range(len(ra)):
-                #print "spread_model[i]<0.003: %s -- flags[i]==0: %s -- imaflags[i]==0: %s -- mag_psf[i]>12, <21.5: %s -- magerr_psf[i]>0, >=0.011: %s -- minra<=ra360<=maxra: %s<=%s<=%s -- mindec<=dec[i]<=maxdec: %s<=%s<=%s" % (spread_model[i], flags[i], imaflags[i], mag_psf[i], magerr_psf[i], minra, ra360[i], maxra, mindec, dec[i], maxdec)
+                print "spread_model[i]<0.003: %s -- flags[i]==0: %s -- imaflags[i]==0: %s -- mag_psf[i]>12, <21.5: %s -- magerr_psf[i]>0, >=0.011: %s -- minra<=ra360<=maxra: %s<=%s<=%s -- mindec<=dec[i]<=maxdec: %s<=%s<=%s" % (spread_model[i], flags[i], imaflags[i], mag_psf[i], magerr_psf[i], minra, ra360[i], maxra, mindec, dec[i], maxdec)
                 if spread_model[i]<0.003 and flags[i]==0 and imaflags[i]==0\
                 and mag_psf[i]>12 and mag_psf[i]<21.5 and magerr_psf[i]>0 and \
                 magerr_psf[i]<=0.011 and minra<=ra360[i]<=maxra and mindec<=dec[i]<=maxdec:
