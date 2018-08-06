@@ -58,7 +58,7 @@ After following the setup steps above, you can run the SE processing script. For
 * `c`: CCD number
 * `d`: Destination cache (`scratch` or `persistent`)
 * `m`: Schema (`gw` or `wsdiff`)
-* `S`: Season number
+* `S`: Season number (e.g. `dp59`)
 
 The following flags do not require arguments:
 
