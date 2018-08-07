@@ -1112,38 +1112,40 @@ for c in $ccdlist; do
                 echo "ZP file for the template is not available. We are leaving out this template."
                 #echo "ZP file for the template is not available. Running SE processing for it now."
                 #./SEdiff.sh -r $RNUM -p $PNUM -E $overlapexp -b $BAND -n $NITE -d $DESTCACHE -m $SCHEMA -C -O -c $overlapccd -S $procnum -t > ${overlapexp}SE-output 2>${overlapexp}SE-error
-            fi
-            echo "Making symlink to this CCD ZP file..."
-            currentdir=$(pwd)
-            cd $ZPdir
-            ln -s $ZPfilename D`printf %08d $overlapexp`_${rpnum}_ZP.csv
-            cd $currentdir
+            else
+                # if the ZP file for this CCD exists we will symlink it to the generic name and copy in fits files
+                echo "Making symlink to this CCD ZP file..."
+                currentdir=$(pwd)
+                cd $ZPdir
+                ln -s $ZPfilename D`printf %08d $overlapexp`_${rpnum}_ZP.csv
+                cd $currentdir
 
-            if [ -z "$file2copy" ] ; then
-                # backward compatibility
-                echo "WARNING: .fz file for $overlapexp CCD $overlapccd did not appear in ifdh ls and was thus not copied in. Could be a problem. Checking to see if an uncompressed (.fits) file is available."
-        #	    file2copy=$(ifdh ls /pnfs/des/${DESTCACHE}/${SCHEMA}/exp/${overlapnite}/${overlapexp}/D`printf %08d $overlapexp`_${BAND}_`printf %02d $overlapccd`_${rpnum}_immask.fits | grep fits)
-                file2copy="/pnfs/des/${DESTCACHE}/${SCHEMA}/exp/${overlapnite}/${overlapexp}/D`printf %08d $overlapexp`_${BAND}_`printf %02d $overlapccd`_${rpnum}_immask.fits"
                 if [ -z "$file2copy" ] ; then
-                    echo  "WARNING: .fits file for $overlapexp CCD $overlapccd did not appear in ifdh ls and was thus not copied in. There could be problems down the road."
+                    # backward compatibility
+                    echo "WARNING: .fz file for $overlapexp CCD $overlapccd did not appear in ifdh ls and was thus not copied in. Could be a problem. Checking to see if an uncompressed (.fits) file is available."
+            #	    file2copy=$(ifdh ls /pnfs/des/${DESTCACHE}/${SCHEMA}/exp/${overlapnite}/${overlapexp}/D`printf %08d $overlapexp`_${BAND}_`printf %02d $overlapccd`_${rpnum}_immask.fits | grep fits)
+                    file2copy="/pnfs/des/${DESTCACHE}/${SCHEMA}/exp/${overlapnite}/${overlapexp}/D`printf %08d $overlapexp`_${BAND}_`printf %02d $overlapccd`_${rpnum}_immask.fits"
+                    if [ -z "$file2copy" ] ; then
+                        echo  "WARNING: .fits file for $overlapexp CCD $overlapccd did not appear in ifdh ls and was thus not copied in. There could be problems down the road."
+                    else
+                        ifdh cp ${IFDHCP_OPT} -D $file2copy ${TOPDIR_WSDIFF}/data/DECam_${overlapexp}/ || echo "Error in ifdh cp ${IFDHCP_OPT} /pnfs/des/${DESTCACHE}/${SCHEMA}/exp/*/${overlapexp}/D`printf %08d $overlapexp`_${BAND}_`printf %02d $overlapccd`_${rpnum}_immask.fits WSTemplates/data/DECam_${overlapexp}/ !!!"
+                        cd  ${TOPDIR_WSDIFF}/data/DECam_${overlapexp}/
+                        ln -s D`printf %08d $overlapexp`_${BAND}_`printf %02d $overlapccd`_${rpnum}_immask.fits DECam_`printf %08d ${overlapexp}`_`printf %02d $overlapccd`.fits
+                        ln -s D`printf %08d $overlapexp`_${BAND}_`printf %02d $overlapccd`_${rpnum}_immask.fits DECam_`printf %06d ${overlapexp}`_`printf %02d $overlapccd`.fits
+                        fthedit  D`printf %08d $overlapexp`_${BAND}_`printf %02d $overlapccd`_${rpnum}_immask.fits[0] DOYT delete
+                    fi
+                # copy the ccd files over
                 else
                     ifdh cp ${IFDHCP_OPT} -D $file2copy ${TOPDIR_WSDIFF}/data/DECam_${overlapexp}/ || echo "Error in ifdh cp ${IFDHCP_OPT} /pnfs/des/${DESTCACHE}/${SCHEMA}/exp/*/${overlapexp}/D`printf %08d $overlapexp`_${BAND}_`printf %02d $overlapccd`_${rpnum}_immask.fits WSTemplates/data/DECam_${overlapexp}/ !!!"
+                    funpack -D ${TOPDIR_WSDIFF}/data/DECam_${overlapexp}/`basename $file2copy`
                     cd  ${TOPDIR_WSDIFF}/data/DECam_${overlapexp}/
+                    # make symlinks to fit naming convention to the expectation of the pipeline
                     ln -s D`printf %08d $overlapexp`_${BAND}_`printf %02d $overlapccd`_${rpnum}_immask.fits DECam_`printf %08d ${overlapexp}`_`printf %02d $overlapccd`.fits
                     ln -s D`printf %08d $overlapexp`_${BAND}_`printf %02d $overlapccd`_${rpnum}_immask.fits DECam_`printf %06d ${overlapexp}`_`printf %02d $overlapccd`.fits
                     fthedit  D`printf %08d $overlapexp`_${BAND}_`printf %02d $overlapccd`_${rpnum}_immask.fits[0] DOYT delete
                 fi
-            # copy the ccd files over
-            else
-                ifdh cp ${IFDHCP_OPT} -D $file2copy ${TOPDIR_WSDIFF}/data/DECam_${overlapexp}/ || echo "Error in ifdh cp ${IFDHCP_OPT} /pnfs/des/${DESTCACHE}/${SCHEMA}/exp/*/${overlapexp}/D`printf %08d $overlapexp`_${BAND}_`printf %02d $overlapccd`_${rpnum}_immask.fits WSTemplates/data/DECam_${overlapexp}/ !!!"
-                funpack -D ${TOPDIR_WSDIFF}/data/DECam_${overlapexp}/`basename $file2copy`
-                cd  ${TOPDIR_WSDIFF}/data/DECam_${overlapexp}/
-                # make symlinks to fit naming convention to the expectation of the pipeline
-                ln -s D`printf %08d $overlapexp`_${BAND}_`printf %02d $overlapccd`_${rpnum}_immask.fits DECam_`printf %08d ${overlapexp}`_`printf %02d $overlapccd`.fits
-                ln -s D`printf %08d $overlapexp`_${BAND}_`printf %02d $overlapccd`_${rpnum}_immask.fits DECam_`printf %06d ${overlapexp}`_`printf %02d $overlapccd`.fits
-                fthedit  D`printf %08d $overlapexp`_${BAND}_`printf %02d $overlapccd`_${rpnum}_immask.fits[0] DOYT delete
+                cd ../../../
             fi
-            cd ../../../
         done
     done
 
