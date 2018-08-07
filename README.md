@@ -64,11 +64,11 @@ source /cvmfs/des.opensciencegrid.org/eeups/startupcachejob21i.sh
 
 Before running the image processing pipeline, we need to run `DAGMaker.sh`, which sets some environmental variables and creates files and folders expected by the pipeline. This script reads the config file `dagmaker.rc`. Most likely, the only fields of interest are `RNUM`, `PNUM`, and `SEASON`. These are some counters that keep track of the processing version (the first two) and an arbitrary season counter. Once this file has been modified with the desired parameters, run
 ```
+# this reads config file dagmaker.rc (be sure the variables are set to the desired values before running)
 ./DAGMaker EXPNUM
 ```
 where `EXPNUM` is the exposure number you will do image processing on. `DAGMaker.sh` will do a quick overlap calculation to determine what template images correspond to this search exposure and check if they have been processed yet. Its end product is a file called `desgw_pipeline_EXPNUM.dag`. This is a directed acyclic graph (DAG) which describes the manner the necessary image processing scripts need to be run, i.e. process template images in parallel (if they have not yet been processed), then process the search image. (**NOTE:** as of August 7, 2018, this script has not yet been modified to account for the new combined pipeline layout. For now, you should not use a jobsub and run the steps manually as described in the next paragraph.) This plan can then be executed with jobsub as follows:
 ```
-source /cvmfs/des.opensciencegrid.org/eeups/startupcachejob21i.sh
 jobsub_submit_dag -G des file://desgw_pipeline_EXPNUM.dag
 ```
 
