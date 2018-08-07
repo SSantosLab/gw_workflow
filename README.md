@@ -54,6 +54,7 @@ export CONDA_DIR=/cvmfs/des.opensciencegrid.org/fnal/anaconda2
 source $CONDA_DIR/etc/profile.d/conda.sh
 conda activate des18a
 
+# ONLY RUN if you are not logged in as the desgw user
 kx509
 voms-proxy-init -rfc -noregen -voms des:/des/Role=Analysis -valid 24:00
 
@@ -74,7 +75,7 @@ jobsub_submit_dag -G des file://desgw_pipeline_EXPNUM.dag
 
 The steps contained in the DAG file (i.e. the image processing pipeline) can also be executed manually, for example:
 ```
-./SEdiff.sh -r 4 -p 7 -E 668443 -b i -n 20170817 -d persistent -m gw -C -O -c 33 -S dp67 -V SNVETO_668443_33_r4p7.LIST -T SNSTAR_668443_33_r4p7.LIST | tee SEdiffng-output 2>SEdiffng-error
+./SEdiff.sh -r 4 -p 7 -E 668443 -b i -n 20170817 -d persistent -m gw -C -O -c 33 -S dp67 -V SNVETO_668443_33_r4p7.LIST -T SNSTAR_668443_33_r4p7.LIST
 ```
 
 #### Flags
