@@ -2,10 +2,17 @@
 Image processing portion of the DES-GW pipeline. Currently consists of single-epoch (SE) processing and difference imaging. 
 
 * [Introduction](#introduction)  
+* [Background](#background)
+    * [Single-Epoch Processing](#single-epoch-se-processing)
+    * [Verification](#verification-steps)
+    * [Difference Imaging](#difference-imaging)
 * [Demo](#demo)  
     * [Setup](#setup)  
-    * [SE processing](#running-single-epoch-se-processing-se_job_modsh)   
-    * [Difference Imaging](#difference-imaging)  
+    * [Full Image Processing](#running-the-full-image-processing-pipeline-sediffsh)
+    * [Pipeline Subsets](#running-subsets-of-the-pipeline)  
+        * [SE processing](#running-single-epoch-se-processing-only-with-se_job_modsh)
+        * [Astrometric Calibration](#running-astrometric-calibration-only-with-bliss-expcalib_y3apasspy)
+        * [Difference Imaging](#running-difference-imaging-only-with-run_diffimg_pipelinesh)  
 
 ## Introduction
 
@@ -22,7 +29,7 @@ The goal of this project is to speed up the pipeline by about a factor of 10. So
 The image processing pipeline is a subset (shown in blue) of the full DES-GW pipeline below:
 ![DES-GW pipeline](./github-imgs/fullpipeline-key.jpg)
 
-### Single Epoch (SE) Processing
+### Single-Epoch (SE) Processing
 
 A flowchart detailing the SE processing steps is shown below:
 ![SE processing overview](./github-imgs/SEdetail-key.jpg)
@@ -99,7 +106,7 @@ The following flags do not require arguments:
 
 ### Running subsets of the pipeline
 
-#### Running Single Epoch (SE) Processing Only with `SE_job_mod.sh`
+#### Running Single-Epoch (SE) Processing Only with `SE_job_mod.sh`
 
 After following the setup steps above, you can run the SE processing script. For example, type:
 ```
@@ -110,7 +117,7 @@ After following the setup steps above, you can run the SE processing script. For
 ./SE_job_mod.sh -r 4 -p 5 -E 668439 -b i -n 20170817 -d persistent -m gw -C -O -S dp60 -c 1
 ```
 
-#### Flags
+##### Flags
 * `r`: RNUM
 * `p`: PNUM
 * `E`: Exposure number
@@ -133,7 +140,7 @@ The following flags do not require arguments:
 
 SE processing includes astrometric calibration, which you can run by itself as described in the following subsection.
 
-##### Running Astrometric Calibration Only with `BLISS-expCalib_Y3apass.py`  
+#### Running Astrometric Calibration Only with `BLISS-expCalib_Y3apass.py`  
 
 Astrometric Calibration is one step in the SE processing pipeline (above). After the setup steps (above), however, you can also choose to run only the BLISS calibration script instead of the full SE pipeline.  
 
@@ -142,7 +149,7 @@ Astrometric Calibration is one step in the SE processing pipeline (above). After
 ./BLISS-expCalib_Y3apass.py --expnum 668439 --reqnum 4 --attnum 5 --ccd 1
 ```
 
-###### Flags
+##### Flags
 * `expnum`: Exposure number
 * `reqnum`: RNUM
 * `attnum`: PNUM
