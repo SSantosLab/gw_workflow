@@ -7,7 +7,7 @@
 #
 RNUM=4
 #
-PNUM=6
+PNUM=7
 #
 #### PLEASE READ: A word on season numbers #######
 # Never use season numbers below 11; they are reserved for the SNe group
@@ -17,16 +17,14 @@ PNUM=6
 # Season 5000 is reserved for DES nightly difference imaging on the wide survey in Y5 (2017-2018)
 # Season 5500 is reserved for DES nightly difference imaging on the wide survey in Y5.5 (2018-2019)
 ##############
-SEASON=59
+SEASON=68
 #
 DIFFIMG_EUPS_VERSION=gw2
 #
 # WRITEDB should be off for initial testing, but on for any production running.
 WRITEDB=on
 #
-JOBSUB_OPTS=" --email-to=YOUR_EMAIL_ADDRESS@fnal.gov --disk=70GB"
-#
-JOBSUB_OPTS_SE="--memory=3600MB --disk=100GB --cpu=4 --expected-lifetime=5h"
+JOBSUB_OPTS="--memory=2500MB --disk=70GB --cpu=1 --expected-lifetime=5h --email-to=YOUR_EMAIL_ADDRESS@fnal.gov --disk=70GB"
 #
 RESOURCES="DEDICATED,OPPORTUNISTIC,OFFSITE"
 #
