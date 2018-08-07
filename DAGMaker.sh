@@ -235,10 +235,9 @@ if [ ! -f $optionalfile ] ; then echo "Warning: $optionalfile not found." ; fi
 RNUM="2"
 PNUM="01"
 SEASON="11"
-JOBSUB_OPTS="--mail_on_error --email-to=kherner@fnal.gov"
+JOBSUB_OPTS="--memory=3000MB --expected-lifetime=medium --cpu=4 --mail_on_error --email-to=kherner@fnal.gov"
 RESOURCES="DEDICATED,OPPORTUNISTIC,OFFSITE"
 DIFFIMG_EUPS_VERSION="gwdevel10"
-JOBSUB_OPTS_SE="--memory=3000MB --expected-lifetime=medium --cpu=4"
 WRITEDB="off"
 IGNORECALIB="false"
 DESTCACHE="persistent"
@@ -281,7 +280,6 @@ echo "RNUM = $RNUM , PNUM = $PNUM  => SE proc. version is $rpnum"
 echo "WRITEDB = $WRITEDB (default is WRITEDB=off; set WRITEDB=on if you want outputs in db)"  
 echo "IGNORECALIB = $IGNORECALIB (default is false)"
 echo "JOBSUB_OPTS = $JOBSUB_OPTS"
-echo "JOBSUB_OPTS_SE = $JOBSUB_OPTS_SE"
 echo "RESOURCES = $RESOURCES"
 echo "DIFFIMG_EUPS_VERSION = $DIFFIMG_EUPS_VERSION"
 echo "DESTCACHE = $DESTCACHE"
@@ -446,205 +444,234 @@ echo "NOVERLAPS $NOVERLAPS"
 for((i=1; i<=${NOVERLAPS}; i++)) 
 do
     # get expnum, nite info
+    echo get expnum, nite info
     overlapnum=$(awk "NR == $i {print \$1}" mytemp_${EXPNUM}/KH_diff.list2)
     overlapnite=$(awk "NR == $i {print \$2}" mytemp_${EXPNUM}/KH_diff.list2)
 
     # try to use this exposure 
+    echo try to use this exposure
     SKIP=false
 
     # check that exposure is 30 seconds or longer
+    echo check that exposure is 30 seconds or longer
     explength=$(egrep "^\s?${overlapnum}" exposures.list | awk '{print $7}')
     explength=$(echo $explength | sed -e 's/\.[0-9]*//' )
     if [ $explength -lt 30 ]; then SKIP=true ; fi
     
     # check that exposure's t_eff is greater than the cut for this band
+    echo check that exposure\'s t_eff is greater than the cut for this band
     if [ $i == 1 ]; then
 	echo "this is the search image; dont apply teff cuts"
     else  
 	teff=$(egrep "^\s?${overlapnum}" exposures.list | awk '{print $10}')
-	if [ "${teff}" == "NaN" ]; then
-	    SKIP=true
-	    echo "Invalid value for t_eff. We will not use this image."
-	elif [ $(echo "$teff < $TEFF_CUT" | bc ) -eq 1 ]; then 
-	    SKIP=true
-	    echo "This image has a t_eff of $teff, below the cut value of $TEFF_CUT. We will not use this image."
-	fi
+        if [ "${teff}" == "NaN" ]; then
+            SKIP=true
+            echo "Invalid value for t_eff. We will not use this image."
+        elif [ $(echo "$teff < $TEFF_CUT" | bc ) -eq 1 ]; then 
+            SKIP=true
+            echo "This image has a t_eff of $teff, below the cut value of $TEFF_CUT. We will not use this image."
+        fi
     fi
 
 # image failed quality tests ; try the next exposure in the list
     if [ "$SKIP" == "true" ] ; then 
+        echo image failed quality test, removing from diff.list1 file
         # we need to remove reference to this exp from the diff.list1 file 
         sed -i -e "s/${overlapnum}//"  mytemp_${EXPNUM}/KH_diff.list1
         # we also need to reduce the count in the first field of KH_diff.list1 by one
-	OLDCOUNT=`awk '{print $1}'  mytemp_${EXPNUM}/KH_diff.list1`
+        OLDCOUNT=`awk '{print $1}'  mytemp_${EXPNUM}/KH_diff.list1`
         NEWCOUNT=$((${OLDCOUNT}-1))
         sed -i -e s/${OLDCOUNT}/${NEWCOUNT}/  mytemp_${EXPNUM}/KH_diff.list1
-	continue
+        continue
     fi
 
     # the first image in the list is the search image itself
     if [ $i == 1 ]; then 
-	if [ "$SKIP" == "true" ] ; then echo "Cannot proceed without the search image!" ; exit 1 ; fi
-	NITE=$overlapnite  # capitalized NITE is the search image nite
-	SEARCHMJD=$(egrep "^\s?${overlapnum}" exposures.list | awk '{print $3}')
+        if [ "$SKIP" == "true" ] ; then echo "Cannot proceed without the search image!" ; exit 1 ; fi
+        NITE=$overlapnite  # capitalized NITE is the search image nite
+        SEARCHMJD=$(egrep "^\s?${overlapnum}" exposures.list | awk '{print $3}')
     else
-	overlapmjd=$(egrep "^\s?${overlapnum}" exposures.list | awk '{print $3}')
-	# skip if the overlap night is within one of the search exposure night
-	if ( [ $(echo "$SEARCHMJD - $overlapmjd < $TWINDOW" | bc ) -eq 1 ] && [ $(echo "$overlapmjd - $SEARCHMJD < $TWINDOW" | bc ) -eq 1 ] )  || [ $overlapnite -lt $MIN_NITE ]  || [ $overlapnite -gt $MAX_NITE ] ; then
-	    echo "Template $overlapnum is within $TWINDOW MJD of search image, before min night, or after max nite. Skipping this exposure."
-	    SKIP=true
-	    # we need to remove reference to this exp from the diff.list1 file
-	    sed -i -e "s/${overlapnum}//"  mytemp_${EXPNUM}/KH_diff.list1
-	    # we also need to reduce the count in the first field of KH_diff.list1 by one
-	    OLDCOUNT=`awk '{print $1}'  mytemp_${EXPNUM}/KH_diff.list1`
-	    NEWCOUNT=$((${OLDCOUNT}-1))
-	    sed -i -e s/${OLDCOUNT}/${NEWCOUNT}/  mytemp_${EXPNUM}/KH_diff.list1
-	    continue
-	fi
+        overlapmjd=$(egrep "^\s?${overlapnum}" exposures.list | awk '{print $3}')
+        # skip if the overlap night is within one of the search exposure night
+        if ( [ $(echo "$SEARCHMJD - $overlapmjd < $TWINDOW" | bc ) -eq 1 ] && [ $(echo "$overlapmjd - $SEARCHMJD < $TWINDOW" | bc ) -eq 1 ] )  || [ $overlapnite -lt $MIN_NITE ]  || [ $overlapnite -gt $MAX_NITE ] ; then
+            echo "Template $overlapnum is within $TWINDOW MJD of search image, before min night, or after max nite. Skipping this exposure."
+            SKIP=true
+            # we need to remove reference to this exp from the diff.list1 file
+            sed -i -e "s/${overlapnum}//"  mytemp_${EXPNUM}/KH_diff.list1
+            # we also need to reduce the count in the first field of KH_diff.list1 by one
+            OLDCOUNT=`awk '{print $1}'  mytemp_${EXPNUM}/KH_diff.list1`
+            NEWCOUNT=$((${OLDCOUNT}-1))
+            sed -i -e s/${OLDCOUNT}/${NEWCOUNT}/  mytemp_${EXPNUM}/KH_diff.list1
+            continue
+        fi
     fi
     
     
     #### at this point, the image passed basic quality cuts. let's now check if it was not already SE processed:
 
     echo -e "\noverlapnum = ${overlapnum} , overlapnite = ${overlapnite} , explength = $explength, teff = $teff"
+    echo checking if image has been SE processed already
 
     # ls in the dcache scratch area to see if images are already there
     nfiles=0    
     for file in `ls /pnfs/des/${DESTCACHE}/${SCHEMA}/exp/${overlapnite}/${overlapnum}/*_${rpnum}_immask.fits.fz`
     do
-	if [ `stat -c %s $file` -gt 0 ]; then nfiles=`expr $nfiles + 1` ; fi	
+        if [ `stat -c %s $file` -gt 0 ]; then nfiles=`expr $nfiles + 1` ; fi	
     done
 
     # ls in the dcache scratch area to see if sextractor files are already there
     mfiles=0    
     for file in `ls /pnfs/des/${DESTCACHE}/${SCHEMA}/exp/${overlapnite}/${overlapnum}/*_${rpnum}_fullcat.fits*`
     do
-	if [ `stat -c %s $file` -gt 0 ]; then mfiles=`expr $mfiles + 1` ;  fi	
+        if [ `stat -c %s $file` -gt 0 ]; then mfiles=`expr $mfiles + 1` ;  fi	
     done
 
  
     # check the .out file too
     if [ -e /pnfs/des/${DESTCACHE}/${SCHEMA}/exp/${overlapnite}/${overlapnum}/${overlapnum}.out ]; then
-	ls /pnfs/des/${DESTCACHE}/${SCHEMA}/exp/${overlapnite}/${overlapnum}/${overlapnum}.out 
+        ls /pnfs/des/${DESTCACHE}/${SCHEMA}/exp/${overlapnite}/${overlapnum}/${overlapnum}.out 
     else
 	# if all the fits files are there, try to produce the missing .out file quickly
-    echo "Before the if"
-	if [ $nfiles -ge 59 ] ; then
-        #echo "************* doing getcorners *****************"
-        #echo "$(which getcorners.sh)"
-        #echo "./getcorners.sh $EXPNUM $rpnum /pnfs/des/${DESTCACHE}/${SCHEMA}/exp/${overlapnite}/${overlapnum}"
-	    #./getcorners.sh $EXPNUM $rpnum /pnfs/des/${DESTCACHE}/${SCHEMA}/exp/${overlapnite}/${overlapnum}
-	    ./getcorners.sh $EXPNUM /pnfs/des/${DESTCACHE}/${SCHEMA}/exp/${overlapnite}/${overlapnum} .
-        ifdh cp -D ${overlapnum}.out /pnfs/des/${DESTCACHE}/${SCHEMA}/exp/${overlapnite}/${overlapnum}
-	    if [ $? -ne 0 ] ; then 
-		echo "Warning: Missing .out file: /pnfs/des/${DESTCACHE}/${SCHEMA}/exp/${overlapnite}/${overlapnum}/${overlapnum}.out" 
-		# assume something went wrong with the previous SE proc for this image. set nfiles=0 to force reprocessing
-		nfiles=0
-	    fi
-	fi
+        if [ $nfiles -ge 59 ] ; then
+            echo "************* doing getcorners *****************"
+            ./getcorners.sh $EXPNUM /pnfs/des/${DESTCACHE}/${SCHEMA}/exp/${overlapnite}/${overlapnum} .
+            ifdh cp -D ${overlapnum}.out /pnfs/des/${DESTCACHE}/${SCHEMA}/exp/${overlapnite}/${overlapnum}
+            if [ $? -ne 0 ] ; then 
+                echo "Warning: Missing .out file: /pnfs/des/${DESTCACHE}/${SCHEMA}/exp/${overlapnite}/${overlapnum}/${overlapnum}.out" 
+                # assume something went wrong with the previous SE proc for this image. set nfiles=0 to force reprocessing
+                nfiles=0
+            fi
+        fi
     fi
     # check if we need to run the calibration. If we don't have SNSTAR and SNVETO defined in the .INPUT file, then assume we don't
+    echo check if we need to run the calibration. If we don\'t have SNSTAR and SNVETO defined in the .INPUT file, then assume we don\'t
+    # we want to do calibration, and the SNSTAR and SNVETO names are defined
     if  [[ $SE_OPTS == *-C* ]] && ( [ ! -z "${SNSTAR_FILENAME}" ] || [ ! -z "${SNVETO_FILENAME}" ] ) ; then
-    # check if calibration outputs are present
-   # if number of reduced images and sextractor catalogs is not the same, something looks fishy. set nfiles=0 to force reprocessing 
-	if [ $mfiles -ne $nfiles ] ; then nfiles=0 ; fi 
-	JUMPTOEXPCALIBOPTION=""
-	if [ -e /pnfs/des/${DESTCACHE}/${SCHEMA}/exp/${overlapnite}/${overlapnum}/allZP_D`printf %08d ${overlapnum}`_${rpnum}.csv ] && [ -e /pnfs/des/${DESTCACHE}/${SCHEMA}/exp/${overlapnite}/${overlapnum}/Zero_D`printf %08d ${overlapnum}`_${rpnum}.csv ] && [ -e /pnfs/des/${DESTCACHE}/${SCHEMA}/exp/${overlapnite}/${overlapnum}/D`printf %08d ${overlapnum}`_${rpnum}_ZP.csv ]; then
-	    ls /pnfs/des/${DESTCACHE}/${SCHEMA}/exp/${overlapnite}/${overlapnum}/allZP_D`printf %08d ${overlapnum}`_${rpnum}.csv 
-	else
-        # if only the expCalib outputs are missing and we are not allowed to ignore them
+        # check if calibration outputs are present
+        # if number of reduced images and sextractor catalogs is not the same, something looks fishy. set nfiles=0 to force reprocessing 
+        if [ $mfiles -ne $nfiles ] ; then nfiles=0 ; fi 
+        JUMPTOEXPCALIBOPTION=""
+        if [ -e /pnfs/des/${DESTCACHE}/${SCHEMA}/exp/${overlapnite}/${overlapnum}/allZP_D`printf %08d ${overlapnum}`_${rpnum}.csv ] && [ -e /pnfs/des/${DESTCACHE}/${SCHEMA}/exp/${overlapnite}/${overlapnum}/Zero_D`printf %08d ${overlapnum}`_${rpnum}.csv ] && [ -e /pnfs/des/${DESTCACHE}/${SCHEMA}/exp/${overlapnite}/${overlapnum}/D`printf %08d ${overlapnum}`_${rpnum}_ZP.csv ]; then
+            ls /pnfs/des/${DESTCACHE}/${SCHEMA}/exp/${overlapnite}/${overlapnum}/allZP_D`printf %08d ${overlapnum}`_${rpnum}.csv 
+        else
+            # if only the expCalib outputs are missing and we are not allowed to ignore them
             if [ $nfiles -ge 59 ] && [ "$IGNORECALIB" == "true" ] ; then
-            # assume something went wrong with the previous SE proc for this image (set nfiles=0 to force reprocessing)
-		nfiles=0
-	    # but assume that only calibration step needs to be done for this exposure
-		JUMPTOEXPCALIBOPTION="-j"
-		echo "Warning: Missing outputs of expCalib. Will jump directly to the calibration step for this image."
+                # assume something went wrong with the previous SE proc for this image (set nfiles=0 to force reprocessing)
+                nfiles=0
+                # but assume that only calibration step needs to be done for this exposure
+                JUMPTOEXPCALIBOPTION="-j"
+                echo "Warning: Missing outputs of expCalib. Will jump directly to the calibration step for this image."
             fi
-	fi
+        fi
     fi
     # if there are 59+ files with non-zero size, a .out file, and expCalib outputs, then don't do the SE job again for that exposure     
     if [ $nfiles -ge 59 ] ; then
-	echo "SE proc. already complete for exposure $overlapnum"
+        echo "SE proc. already complete for exposure $overlapnum"
         echo "Add the .out file for this overlap image to the list to be copied"
-	DOTOUTFILES="${DOTOUTFILES} /pnfs/des/${DESTCACHE}/${SCHEMA}/exp/$overlapnite/$overlapnum/${overlapnum}.out"
-	if [ $i == 1 ]; then
-            echo "This is the search image so we need to make sure that the raw image is stil present." 
-	else 
-	    continue
-	fi
+        DOTOUTFILES="${DOTOUTFILES} /pnfs/des/${DESTCACHE}/${SCHEMA}/exp/$overlapnite/$overlapnum/${overlapnum}.out"
+        if [ $i == 1 ]; then
+                echo "This is the search image so we need to make sure that the raw image is stil present." 
+
+                # make sure that the directory for the raw image exists and has the appropriate permissions
+                if [ ! -d /pnfs/des/scratch/${SCHEMA}/dts/${overlapnite}/ ]; then
+                    mkdir /pnfs/des/scratch/${SCHEMA}/dts/${overlapnite}/
+                    chmod 775  /pnfs/des/scratch/${SCHEMA}/dts/${overlapnite}/
+                fi
+
+                if [ "${SKIP_INCOMPLETE_SE}" == "false" ]; then
+                    # check if the raw image is present so that the SE processing can run. If it isn't, try to pull it over from des30.b, des51.b, NCSA DESDM, NOAO archive		
+                    if [ -e /pnfs/des/scratch/${SCHEMA}/dts/${overlapnite}/DECam_`printf %08d ${overlapnum}`.fits.fz ]; then
+                        echo "Raw image present in dCache"
+                    else	    
+                        if [ -e /data/des30.b/data/DTS/src/${overlapnite}/src/DECam_`printf %08d ${overlapnum}`.fits.fz ]; then
+                            echo "Raw image not present in dcache; transferring from /data/des30.b"		
+                            $COPYCMD /data/des30.b/data/DTS/src/${overlapnite}/src/DECam_`printf %08d ${overlapnum}`.fits.fz /pnfs/des/scratch/${SCHEMA}/dts/${overlapnite}/DECam_`printf %08d ${overlapnum}`.fits.fz || { echo "cp failed!" ; exit 2 ; }
+                        else 
+                            if [ -e /data/des51.b/data/DTS/src/${overlapnite}/DECam_`printf %08d ${overlapnum}`.fits.fz ]; then
+                                echo "Raw image not present in dCache or /data/des30.b; trying from des51.b"
+                                $COPYCMD /data/des51.b/data/DTS/src/${overlapnite}/DECam_`printf %08d ${overlapnum}`.fits.fz /pnfs/des/scratch/${SCHEMA}/dts/${overlapnite}/DECam_`printf %08d ${overlapnum}`.fits.fz || { echo "cp failed!" ; exit 2 ; }
+                            else 
+                                echo " Raw image for exposure $overlapnum not in dcache and not in /data/des30.b or /data/des51.b. Try to tansfer from NCSA..."
+                                export WGETRC=$HOME/.wgetrc-desdm
+                                if [ ! -f $WGETRC ] ; then echo "Warning: Missing file $HOME/.wgetrc-desdm may cause wget authentication error." ; fi
+                                wget --no-check-certificate -nv https://desar2.cosmology.illinois.edu/DESFiles/desarchive/DTS/raw/${overlapnite}/DECam_`printf %08d ${overlapnum}`.fits.fz 
+                                if [ $? -eq 0 ] ; then
+                                    $COPYDCMD DECam_`printf %08d ${overlapnum}`.fits.fz /pnfs/des/scratch/${SCHEMA}/dts/${overlapnite}/ && rm DECam_`printf %08d ${overlapnum}`.fits.fz
+                                else
+                                    echo "wget failed! Will try to get image $overlapnum $overlapnite from NOAO."			
+                                    #fetch_noao
+                                    #if [ $? -ne 0 ]; then
+                                    #echo "Failure in fetching from NOAO!"
+                                    #if [ $i == 1 ] ; then echo "Cannot proceed without the search image!" ; exit 2 ; fi
+                                    SKIP=true
+                                    #echo "Unable to find raw image for overlapping exposure: $overlapnum ; will try to proceed without it."
+                        
+                                    ###### remove the overlap from the diff.list file
+                                    sed -i -e "s/${overlapnum}//"  mytemp_${EXPNUM}/KH_diff.list1
+                                    # we also need to reduce the count in the first field of KH_diff.list1 by one
+                                    OLDCOUNT=`awk '{print $1}'  mytemp_${EXPNUM}/KH_diff.list1`
+                                    NEWCOUNT=$((${OLDCOUNT}-1))
+                                    sed -i -e s/${OLDCOUNT}/${NEWCOUNT}/  mytemp_${EXPNUM}/KH_diff.list1 
+                                fi
+                            fi
+                        fi
+                    fi
+                fi
+        #else # this is not the search image so we don't check for the raw image
+        echo this is not the search image so we don\'t check for the raw image
+        #    continue
+        fi
+    fi
+    echo moving on to writing the dag
+
+
+    if [ ! -z "$SNSTAR_FILENAME" ]; then
+        SNSTAR_OPTS="-T $SNSTAR_FILENAME"
+    fi
+    if [ ! -z "$SNVETO_FILENAME" ]; then
+        SNVETO_OPTS="-V $SNVETO_FILENAME"
     fi
     
-    #### at this point we have determined that we need to run SE proc for this exposure. so let's add it to the dag:
-
-    # make sure that the directory for the raw image exists and has the appropriate permissions
-    if [ ! -d /pnfs/des/scratch/${SCHEMA}/dts/${overlapnite}/ ]; then
-	mkdir /pnfs/des/scratch/${SCHEMA}/dts/${overlapnite}/
-	chmod 775  /pnfs/des/scratch/${SCHEMA}/dts/${overlapnite}/
-    fi
-
-    if [ "${SKIP_INCOMPLETE_SE}" == "false" ]
-	then
-    # check if the raw image is present so that the SE processing can run. If it isn't, try to pull it over from des30.b, des51.b, NCSA DESDM, NOAO archive		
-	if [ -e /pnfs/des/scratch/${SCHEMA}/dts/${overlapnite}/DECam_`printf %08d ${overlapnum}`.fits.fz ]; then
-	    echo "Raw image present in dCache"
-	else	    
-	    if [ -e /data/des30.b/data/DTS/src/${overlapnite}/src/DECam_`printf %08d ${overlapnum}`.fits.fz ]; then
-		echo "Raw image not present in dcache; transferring from /data/des30.b"		
-		$COPYCMD /data/des30.b/data/DTS/src/${overlapnite}/src/DECam_`printf %08d ${overlapnum}`.fits.fz /pnfs/des/scratch/${SCHEMA}/dts/${overlapnite}/DECam_`printf %08d ${overlapnum}`.fits.fz || { echo "cp failed!" ; exit 2 ; }
-	    else 
-		if [ -e /data/des51.b/data/DTS/src/${overlapnite}/DECam_`printf %08d ${overlapnum}`.fits.fz ]; then
-		    echo "Raw image not present in dCache or /data/des30.b; trying from des51.b"
-		    $COPYCMD /data/des51.b/data/DTS/src/${overlapnite}/DECam_`printf %08d ${overlapnum}`.fits.fz /pnfs/des/scratch/${SCHEMA}/dts/${overlapnite}/DECam_`printf %08d ${overlapnum}`.fits.fz || { echo "cp failed!" ; exit 2 ; }
-		else 
-		    echo " Raw image for exposure $overlapnum not in dcache and not in /data/des30.b or /data/des51.b. Try to tansfer from NCSA..."
-		    export WGETRC=$HOME/.wgetrc-desdm
-		    if [ ! -f $WGETRC ] ; then echo "Warning: Missing file $HOME/.wgetrc-desdm may cause wget authentication error." ; fi
-		    wget --no-check-certificate -nv https://desar2.cosmology.illinois.edu/DESFiles/desarchive/DTS/raw/${overlapnite}/DECam_`printf %08d ${overlapnum}`.fits.fz 
-		    if [ $? -eq 0 ] ; then
-			$COPYDCMD DECam_`printf %08d ${overlapnum}`.fits.fz /pnfs/des/scratch/${SCHEMA}/dts/${overlapnite}/ && rm DECam_`printf %08d ${overlapnum}`.fits.fz
-		    else
-			echo "wget failed! Will try to get image $overlapnum $overlapnite from NOAO."			
-#		    fetch_noao
-#		    if [ $? -ne 0 ]; then
-#			echo "Failure in fetching from NOAO!"
-#			if [ $i == 1 ] ; then echo "Cannot proceed without the search image!" ; exit 2 ; fi
-			SKIP=true
-#			echo "Unable to find raw image for overlapping exposure: $overlapnum ; will try to proceed without it."
-#
-			###### remove the overlap from the diff.list file
-			sed -i -e "s/${overlapnum}//"  mytemp_${EXPNUM}/KH_diff.list1
-			# we also need to reduce the count in the first field of KH_diff.list1 by one
-			OLDCOUNT=`awk '{print $1}'  mytemp_${EXPNUM}/KH_diff.list1`
-			NEWCOUNT=$((${OLDCOUNT}-1))
-			sed -i -e s/${OLDCOUNT}/${NEWCOUNT}/  mytemp_${EXPNUM}/KH_diff.list1 
-			continue
-#		    fi
-		    fi
-		fi
-	    fi
-	fi
-fi
-
-    # add the SE_job to the dag, unless we set the skip option
-    
-    if [ $nfiles -lt 59 ]; then   
-	if [ "${SKIP_INCOMPLETE_SE}" == "true" ]
-	then
-	    SKIP=true
-	    ###### remove the overlap from the diff.list file
-	    sed -i -e "s/${overlapnum}//"  mytemp_${EXPNUM}/KH_diff.list1
-	    # we also need to reduce the count in the first field of KH_diff.list1 by one
-	    OLDCOUNT=`awk '{print $1}'  mytemp_${EXPNUM}/KH_diff.list1`
-	    NEWCOUNT=$((${OLDCOUNT}-1))
-	    sed -i -e s/${OLDCOUNT}/${NEWCOUNT}/  mytemp_${EXPNUM}/KH_diff.list1 
-	else
-	    echo "jobsub -n --group=des --OS=SL6 --resource-provides=usage_model=${RESOURCES} $JOBSUB_OPTS $JOBSUB_OPTS_SE  --append_condor_requirements='(TARGET.GLIDEIN_Site==\\\"FermiGrid\\\"||(TARGET.HAS_CVMFS_des_opensciencegrid_org==true&&TARGET.HAS_CVMFS_des_osgstorage_org==true))' file://SE_job.sh -r $RNUM -p $PNUM -E $overlapnum -b $BAND -n $overlapnite $JUMPTOEXPCALIBOPTION -d $DESTCACHE -m $SCHEMA $SE_OPTS" >> $outfile
-	# add the .out file for this overlap image to the list to be copied
-	    DOTOUTFILES="${DOTOUTFILES} /pnfs/des/${DESTCACHE}/${SCHEMA}/exp/$overlapnite/$overlapnum/${overlapnum}.out"
-	fi
-    fi
-done # end of loop over list of overlapping exposures
-
+    # add the SE+diff jobs to the dag
+    echo add the SE+diff jobs to the dag
+    #if [ $nfiles -lt 59 ]; then   
+        #echo incomplete SE
+        #echo SKIP_INCOMPLETE_SE $SKIP_INCOMPLETE_SE
+        #if [ "${SKIP_INCOMPLETE_SE}" == "true" ];
+        #then
+        #    SKIP=true
+            ###### remove the overlap from the diff.list file
+        #    echo "removing overlap $overlapnum from diff.list file"
+        #    sed -i -e "s/${overlapnum}//"  mytemp_${EXPNUM}/KH_diff.list1
+            # we also need to reduce the count in the first field of KH_diff.list1 by one
+        #    OLDCOUNT=`awk '{print $1}'  mytemp_${EXPNUM}/KH_diff.list1`
+        #    NEWCOUNT=$((${OLDCOUNT}-1))
+        #    sed -i -e s/${OLDCOUNT}/${NEWCOUNT}/  mytemp_${EXPNUM}/KH_diff.list1 
+        #else
+            if [ "$overlapnum"!="$EXPNUM" ]; then
+                echo "add template job for exp $overlapnum"
+                # template SE jobs (with -t option)
+                for (( ichip=1;ichip<63;ichip++ ))
+                do
+                if [ $ichip -ne 2 ] && [ $ichip -ne 31 ] && [ $ichip -ne 61 ] ; then
+                    echo "jobsub -n --group=des --OS=SL6 --resource-provides=usage_model=${RESOURCES} $JOBSUB_OPTS --append_condor_requirements='(TARGET.GLIDEIN_Site==\\\"FermiGrid\\\"||(TARGET.HAS_CVMFS_des_opensciencegrid_org==true&&TARGET.HAS_CVMFS_des_osgstorage_org==true))' file://SEdiff.sh -r $RNUM -p $PNUM -E $overlapnum -b $BAND -n $overlapnite $JUMPTOEXPCALIBOPTION -d $DESTCACHE -m $SCHEMA -t $SE_OPTS -c $ichip -S $procnum" >> $outfile
+                fi    
+                done
+            else
+                # search image (no -t option)
+                echo "add search job for exp $overlapnum"
+                for (( ichip=1;ichip<63;ichip++ ))
+                do
+                    if [ $ichip -ne 2 ] && [ $ichip -ne 31 ] && [ $ichip -ne 61 ] ; then
+                        echo "jobsub -n --group=des --OS=SL6 --resource-provides=usage_model=${RESOURCES} $JOBSUB_OPTS --append_condor_requirements='(TARGET.GLIDEIN_Site==\\\"FermiGrid\\\"||(TARGET.HAS_CVMFS_des_opensciencegrid_org==true&&TARGET.HAS_CVMFS_des_osgstorage_org==true))' file://SEdiff.sh -r $RNUM -p $PNUM -E $overlapnum -b $BAND -n $overlapnite $JUMPTOEXPCALIBOPTION -d $DESTCACHE -m $SCHEMA $SE_OPTS -c $ichip -S $procnum $SNSTAR_OPTS $SNVETO_OPTS" >> $outfile
+                    fi    
+                done
+            fi
+        # add the .out file for this overlap image to the list to be copied
+            DOTOUTFILES="${DOTOUTFILES} /pnfs/des/${DESTCACHE}/${SCHEMA}/exp/$overlapnite/$overlapnum/${overlapnum}.out"
+        #fi
+    #fi
+done
 echo "end of loop over list of overlapping exposures"
 
 # close the SE portion of the dag
@@ -653,34 +680,11 @@ echo "</parallel>" >> $outfile
 # write the full copy command for the .out files and other auxfiles
 echo "ifdh cp -D $DOTOUTFILES \$TOPDIR_WSTEMPLATES/pairs/" > $templatecopyfile
 
-if [ ! -z "$SNSTAR_FILENAME" ]; then
-    SNSTAR_OPTS="-T $SNSTAR_FILENAME"
-fi
-if [ ! -z "$SNVETO_FILENAME" ]; then
-    SNVETO_OPTS="-V $SNVETO_FILENAME"
+# check if there are templates or if diffimg will fail
+if [ $(awk '{print $1}' mytemp_${EXPNUM}/KH_diff.list1 ) -le 1 ]; then
+    echo "There appear to be no templates for this exposure $EXPNUM. Diffimg will fail."
 fi
 
-echo "<serial>" >> $outfile
-
-echo "jobsub -n --group=des --OS=SL6  --resource-provides=usage_model=${RESOURCES} --memory=1000MB --disk=5GB --expected-lifetime=3h $JOBSUB_OPTS --append_condor_requirements='(TARGET.GLIDEIN_Site==\\\"FermiGrid\\\"||TARGET.HAS_CVMFS_des_opensciencegrid_org==true)' file://verifySE.sh -r $RNUM -p $PNUM -E $EXPNUM -b $BAND -n $NITE $SE_OPTS -S $procnum -d ${DESTCACHE} -m $SCHEMA $SNSTAR_OPTS $SNVETO_OPTS"  >> $outfile
-echo "</serial>" >> $outfile
-
-if [ $(awk '{print $1}' mytemp_${EXPNUM}/KH_diff.list1 ) -gt 1 ]; then
-# start the diffimg portion of the dag
-    echo "<parallel>" >> $outfile
-    
-# One paraellel job for each of the chips in the new image
-    for (( ichip=1;ichip<63;ichip++ ))
-    do
-	if [ $ichip -ne 2 ] && [ $ichip -ne 31 ] && [ $ichip -ne 61 ] ; then
-	    echo "jobsub -n --group=des --OS=SL6  --resource-provides=usage_model=${RESOURCES} $JOBSUB_OPTS --expected-lifetime=5h --memory=1920MB --append_condor_requirements='(TARGET.GLIDEIN_Site==\\\"FermiGrid\\\"||(TARGET.HAS_CVMFS_des_opensciencegrid_org==true&&TARGET.HAS_CVMFS_des_osgstorage_org==true))' $STASHVER file://RUN_DIFFIMG_PIPELINE.sh -r $rpnum -p $procnum -E $EXPNUM -c $ichip -b $BAND -n $NITE -v $DIFFIMG_EUPS_VERSION -d $DESTCACHE -m $SCHEMA" >> $outfile
-	fi    
-    done
-    # close the diffimg portion of the dag
-    echo "</parallel>" >> $outfile
-else
-    echo "There appear to be no templates for this exposure $EXPNUM. I am not going to add diffimg jobs to the DAG because they are just going to fail."
-fi
 echo "run RUN_DIFFIMG_PIPELINE.pl with no nodelist to set up the directory structure and make the scripts"
 
 export DES_SERVICES=~/.desservices.ini
