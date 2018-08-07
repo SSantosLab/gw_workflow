@@ -29,9 +29,51 @@ FULLCOPY=false
 ##mkdir joblib-0.9.0b4
 ##ifdh cp -r  /pnfs/des/scratch/marcelle/joblib-0.9.0b4 ./joblib-0.9.0b4
 ##export PYTHONPATH=$PYTHONPATH:$PWD/joblib-0.9.0b4
+umask 002 
+
+#######################################
+###  Protection against dead nodes  ###
+if [ ! -f /cvmfs/fermilab.opensciencegrid.org/products/common/etc/setup ]; then
+   echo "Unable to find fermilab CVMFS repo setup file, so I assume the whole repo is missing."
+   echo "I will sleep for four hours to block the slot and then exit with an error."
+   sleep 14400
+   exit 1
+fi
+
+if [ ! -f /cvmfs/des.opensciencegrid.org/eeups/startupcachejob21i.sh ]; then
+   echo "Unable to find DES CVMFS repo startup file, so I assume the whole repo is missing."
+   echo "I will sleep for four hours to block the slot and then exit with an error."
+   sleep 14400
+   exit 1
+fi
+#######################################
+
+### Protection against wrong StashCache version ###
+if [ -n "${MIN_STASH_VERSION}" ]; then
+    echo "MIN_STASH_VERSION = $MIN_STASH_VERSION"
+    while [ $MIN_STASH_VERSION -gt $(attr -q -g revision /cvmfs/des.osgstorage.org) ]
+    do
+    echo "Revision of /cvmfs/des.osgstorage.org below minimum value of ${MIN_STASH_VER}. Sleeping 15 minutes to check next update."
+    sleep 900
+    done
+else 
+    echo "$MIN_STASH_VERSION not set. Continuing." 
+fi
+
+####################
 
 # get some worker node information
 echo "Worker node information: `uname -a`"
+
+OLDHOME=$HOME
+
+export HOME=$PWD
+
+### Force use of SLF6 versions for systems with 3.x kernels
+case `uname -r` in
+    3.*) export UPS_OVERRIDE="-H Linux64bit+2.6-2.12";;
+    4.*) export UPS_OVERRIDE="-H Linux64bit+2.6-2.12";;
+esac
 
 # check that xrdcp and uberftp are installed
 which xrdcp >/dev/null 2>&1
@@ -68,6 +110,15 @@ export IFDH_XROOTD_EXTRA="-f -N"
 # export IFDH_XROOTD_EXTRA="-S 4 -f -N" #TODO from verifySE.sh
 export XRD_REDIRECTLIMIT=255
 export IFDH_CP_UNLINK_ON_ERROR=1
+#for IFDH
+export EXPERIMENT=des
+export PATH=${PATH}:/cvmfs/fermilab.opensciencegrid.org/products/common/db/../prd/cpn/v1_7/NULL/bin:/cvmfs/fermilab.opensciencegrid.org/products/common/db/../prd/ifdhc/v2_1_0/Linux64bit-2-6-2-12/bin
+export PYTHONPATH=/cvmfs/fermilab.opensciencegrid.org/products/common/db/../prd/ifdhc/v2_1_0/Linux64bit-2-6-2-12/lib/python:${PYTHONPATH}
+export IFDH_NO_PROXY=1
+export IFDHC_LIB=/cvmfs/fermilab.opensciencegrid.org/products/common/prd/ifdhc/v2_1_0/Linux64bit-2-6-2-12/lib
+export IFDH_GRIDFTP_EXTRA="-st 1800"
+export XRD_REQUESTTIMEOUT=1200
+export IFDHC_CONFIG_DIR=/cvmfs/fermilab.opensciencegrid.org/products/common/prd/ifdhc_config/v2_1_0/NULL
 
 export CONDA_DIR=/cvmfs/des.opensciencegrid.org/fnal/anaconda2
 source $CONDA_DIR/etc/profile.d/conda.sh
@@ -689,78 +740,12 @@ setup extralibs
 
 # run make starcat ccd-by-ccd (in case of comma-separated ccd list)
 # in most cases, this list will only be 1 ccd long (and the 1-ccd runs will be run in parallel)
-echo before the ccd loop
 for c in $ccdlist; do
     c=$(printf "%02d" $c)
-    echo in the ccd loop
 
     export HOME=$OLDHOME
 
     ######## CODE FORMERLY IN RUN_DIFFIMG_PIPELINE.sh ##########
-
-    umask 002 
-
-    #######################################
-    ###  Protection against dead nodes  ###
-    if [ ! -f /cvmfs/fermilab.opensciencegrid.org/products/common/etc/setup ]; then
-       echo "Unable to find fermilab CVMFS repo setup file, so I assume the whole repo is missing."
-       echo "I will sleep for four hours to block the slot and then exit with an error."
-       sleep 14400
-       exit 1
-    fi
-
-    if [ ! -f /cvmfs/des.opensciencegrid.org/eeups/startupcachejob21i.sh ]; then
-       echo "Unable to find DES CVMFS repo startup file, so I assume the whole repo is missing."
-       echo "I will sleep for four hours to block the slot and then exit with an error."
-       sleep 14400
-       exit 1
-    fi
-    #######################################
-
-    ### Protection against wrong StashCache version ###
-    if [ -n "${MIN_STASH_VERSION}" ]; then
-        echo "MIN_STASH_VERSION = $MIN_STASH_VERSION"
-        while [ $MIN_STASH_VERSION -gt $(attr -q -g revision /cvmfs/des.osgstorage.org) ]
-        do
-        echo "Revision of /cvmfs/des.osgstorage.org below minimum value of ${MIN_STASH_VER}. Sleeping 15 minutes to check next update."
-        sleep 900
-        done
-    else 
-        echo "$MIN_STASH_VERSION not set. Continuing." 
-    fi
-
-    ####################
-
-    # check for an input argument
-
-    echo "Node information: `uname -a`"
-
-    OLDHOME=$HOME
-
-    export HOME=$PWD
-
-    ### Force use of SLF6 versions for systems with 3.x kernels
-    case `uname -r` in
-        3.*) export UPS_OVERRIDE="-H Linux64bit+2.6-2.12";;
-        4.*) export UPS_OVERRIDE="-H Linux64bit+2.6-2.12";;
-    esac
-
-    #set more environment variables
-    #for IFDH
-    export EXPERIMENT=des
-    export PATH=${PATH}:/cvmfs/fermilab.opensciencegrid.org/products/common/db/../prd/cpn/v1_7/NULL/bin:/cvmfs/fermilab.opensciencegrid.org/products/common/db/../prd/ifdhc/v2_1_0/Linux64bit-2-6-2-12/bin
-    export PYTHONPATH=/cvmfs/fermilab.opensciencegrid.org/products/common/db/../prd/ifdhc/v2_1_0/Linux64bit-2-6-2-12/lib/python:${PYTHONPATH}
-    export IFDH_NO_PROXY=1
-    export IFDHC_LIB=/cvmfs/fermilab.opensciencegrid.org/products/common/prd/ifdhc/v2_1_0/Linux64bit-2-6-2-12/lib
-    export IFDH_GRIDFTP_EXTRA="-st 1800"
-
-    export IFDH_CP_MAXRETRIES=3
-    export IFDH_XROOTD_EXTRA="-f -N"
-    export XRD_REDIRECTLIMIT=255
-    export XRD_REQUESTTIMEOUT=1200
-    export IFDH_CP_UNLINK_ON_ERROR=1
-    export IFDHC_CONFIG_DIR=/cvmfs/fermilab.opensciencegrid.org/products/common/prd/ifdhc_config/v2_1_0/NULL
-
 
     ### now we want to make the local directory structure by copying in 
 
