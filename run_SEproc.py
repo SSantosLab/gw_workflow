@@ -108,7 +108,8 @@ if __name__ == '__main__':
 #    Parallel(n_jobs=NPARALLEL)(delayed(run_stage_5)(ccd) for ccd in CCD)
 
 #create list of ccd corners (.out file)
-    os.system('bash getcorners.sh '+str(EXPNUM)+' . .')
+    for ccd in CCD:
+        os.system('bash getcorners.sh '+str(EXPNUM)+' . . '+str(ccd))
 # compress immask.fits files before copyback
     for immaskfile in glob.glob('*_immask.fits'):
         os.system('fpack -Y ' + str(immaskfile) )

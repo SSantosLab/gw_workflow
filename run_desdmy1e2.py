@@ -60,7 +60,9 @@ os.system('ifdh mkdir '+str(dir_nite) )
 
 dir_final = dir_nite+'/'+EXPNUM
 
-os.system('bash getcorners.sh '+str(EXPNUM)+' . .')
+for ccd in CCD:
+    # make a .out file per ccd
+    os.system('bash getcorners.sh '+str(EXPNUM)+' . . '+str(ccd)) 
 
 os.system('ifdh mkdir '+str(dir_final) )
 
