@@ -867,14 +867,14 @@ for c in $ccdlist; do
       rm -f ${outpair}
 
           # loop over search CCDs
-          nccd=`wc -l ${CORNERDIR}/${sexp}.out | ${AWK} '{print $1}'`
-          i=1
-          while [[ $i -le $nccd ]]
-          do
+          #nccd=`wc -l ${CORNERDIR}/${sexp}.out | ${AWK} '{print $1}'`
+          #i=1
+          #while [[ $i -le $nccd ]]
+          #do
             # find ccd corners 
-            sccd=`${AWK} '(NR=='$i'){print $3}' ${CORNERDIR}/${sexp}.out`
+            sccd=`${AWK} '(NR=='$i'){print $3}' ${CORNERDIR}/${sexp}_${CCDNUM_LIST}.out`
              # Search CCD RA Dec corner coordinates coverted to radians
-            info1=( `${AWK} '($3=='${sccd}'){printf "%10.7f %10.7f  %10.7f %10.7f  %10.7f %10.7f  %10.7f %10.7f\n",$4*"'"${dtorad}"'",$5*"'"${dtorad}"'",$6*"'"${dtorad}"'",$7*"'"${dtorad}"'",$8*"'"${dtorad}"'",$9*"'"${dtorad}"'",$10*"'"${dtorad}"'",$11*"'"${dtorad}"'"}' ${CORNERDIR}/${sexp}.out` )
+            info1=( `${AWK} '($3=='${sccd}'){printf "%10.7f %10.7f  %10.7f %10.7f  %10.7f %10.7f  %10.7f %10.7f\n",$4*"'"${dtorad}"'",$5*"'"${dtorad}"'",$6*"'"${dtorad}"'",$7*"'"${dtorad}"'",$8*"'"${dtorad}"'",$9*"'"${dtorad}"'",$10*"'"${dtorad}"'",$11*"'"${dtorad}"'"}' ${CORNERDIR}/${sexp}_${CCDNUM_LIST}.out` )
        
             rm -f tmp.tmp1
             touch tmp.tmp1
@@ -918,7 +918,7 @@ for c in $ccdlist; do
             fi
         rm -f ${texp}.{sides,dist} tmp.tmp1
             i=$[$i+1]
-          done #  sccd
+          #done #  sccd
       
          # determine if there is an overlap 
          if [[ -f ${outpair} ]]
@@ -957,6 +957,22 @@ for c in $ccdlist; do
     #make the DECam_$temp_empty directory by default and remove it later if we actually have an overlap for this CCD
     # the "_empty" indicates that there is no overlap
         mkdir  ${TOPDIR_WSDIFF}/data/DECam_${texp}_empty
+
+        # combine the template CCD .out files
+        echo check if we already have a combined texp.out file \(in the current directory\)
+        texpdotout="`ifdh ls ${texp}'.out' | grep out | grep fnal`"
+        ntexpdotout=`echo $texpdotout | wc -w`
+        if [ $ntexpdotout -lt 1 ]; then
+            echo we don\'t have a combined .out, need to generate it by combining the ccd .outs
+            ccdfiles=$(ls ${texp}_*.out)
+            touch ${texp}.out
+            for ccdfile in $ccdfiles
+            do
+                echo write $ccdfile contents to the .out
+                cat $ccdfile > ${texp}.out
+            done
+        fi
+        echo now that we have a combined .out, we can run create pairs with this template exposure number
         create_pairs
     done
 
@@ -991,7 +1007,7 @@ for c in $ccdlist; do
             if [ -z "$ZPfile" ] ; then
                 echo "ZP file for the template is not available. We are leaving out this template."
             else
-                # if the ZP file for this CCD exists we will symlink it to the generic name and copy in fits files
+                # if the ZP file for this CCD exists we will symlink it to the generic name, and then copy in fits files
                 echo "Making symlink to this CCD ZP file..."
                 currentdir=$(pwd)
                 cd $ZPdir
