@@ -32,7 +32,7 @@ The image processing pipeline is a subset (shown in blue) of the full DES-GW pip
 ### Single-Epoch (SE) Processing
 
 A flowchart detailing the SE processing steps is shown below:
-![SE processing overview](./github-imgs/SEdetail-key.jpg)
+![SE processing overview](./github-imgs/SEdetail-key.jpg)   
 Green indicates changes made since the O2 pipeline.
 
 ### Verification Steps
