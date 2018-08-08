@@ -239,6 +239,7 @@ JOBSUB_OPTS="--memory=3000MB --expected-lifetime=medium --cpu=4 --mail_on_error 
 RESOURCES="DEDICATED,OPPORTUNISTIC,OFFSITE"
 DIFFIMG_EUPS_VERSION="gwdevel10"
 WRITEDB="off"
+RM_MYTEMP="false"
 IGNORECALIB="false"
 DESTCACHE="persistent"
 SEARCH_OPTS=""
@@ -278,6 +279,7 @@ echo "----------------"
 echo "SEASON = $SEASON => DIFFIMG proc. version is $procnum"
 echo "RNUM = $RNUM , PNUM = $PNUM  => SE proc. version is $rpnum"
 echo "WRITEDB = $WRITEDB (default is WRITEDB=off; set WRITEDB=on if you want outputs in db)"  
+echo "RM_MYTEMP = $RM_MYTEMP"  
 echo "IGNORECALIB = $IGNORECALIB (default is false)"
 echo "JOBSUB_OPTS = $JOBSUB_OPTS"
 echo "RESOURCES = $RESOURCES"
@@ -288,6 +290,12 @@ echo "TWINDOW = $TWINDOW"
 echo "MIN_NITE = $MIN_NITE"
 echo "MAX_NITE = $MAX_NITE"
 echo "----------------"
+
+# if there is a pre-existing mytemp dir for this exposure AND the RM_MYTEMP flag is set, remove the dir
+if [ -d mytemp_$EXPNUM ]; then
+    echo "RM_MYTEMP flag was set, so we are deleting the pre-existing mytemp_$EXPNUM dir"
+    rm -r mytemp_$EXPNUM
+fi
 
 # see if wre going to be doing on-the-fly SNSTAR and SNVETO catalogs from the templates. Based on the content of  MAKESCRIPT_DIFFIMG_TEMPLATE.INPUT
 # this writes to the RUN_DIFFIMG_PIPELINE $SNSTAR_FILENAME variable, which should be exported to the RUN02 script when it is called (and then RUN02 should do the eval of $SNSTAR_FILENAME since the $CCDNUM_LIST is finally known at that point)
@@ -441,6 +449,7 @@ if [ -f $searchfile ]; then
     rm $searchfile # maybe we don't want to overwrite? think about that a bit
 fi
 touch $searchfile
+echo "<parallel>" >> $searchfile
 
 NOVERLAPS=$(awk '{print NF-2}' mytemp_${EXPNUM}/KH_diff.list1)
 # now loop over the diff list, get info about the overlaping exposures, and set the SE portion of the dag
@@ -685,11 +694,13 @@ do
     echo
 done
 echo "end of loop over list of overlapping exposures"
+# close the template portion of the dag
+echo "</parallel>" >> $outfile
+
+# close the search portion of the dag
+echo "</parallel>" >> $searchfile
 echo "appending search job after template jobs"
 cat $searchfile >> $outfile
-
-# close the SE portion of the dag
-echo "</parallel>" >> $outfile
 
 # write the full copy command for the .out files and other auxfiles
 echo "ifdh cp -D $DOTOUTFILES \$TOPDIR_WSTEMPLATES/pairs/" > $templatecopyfile
