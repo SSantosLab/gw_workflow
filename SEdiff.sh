@@ -1,11 +1,7 @@
 #!/bin/bash
 
 if [ $# -lt 1 ]; then
-    echo "usage: SE_job.sh -E EXPNUM -r RNUM -p PNUM -n NITE -b BAND -S procnum [-c CCDS] [-j] [-s] [-O] [-V SNVETO_NAME] [-T STARCAT_NAME] [-m SCHEMA (gw or wsdiff)] [-Y] [-C] [-d destcache]" 
-    exit 1
-fi
-if [ $# -lt 1 ]; then
-    echo "usage: RUN_DIFFIMG_PIPELINE.sh -E EXPNUM -r RPNUM -p DIFFPROCNUM -n NITE -b BAND -c CCDNUM [-v DIFFIMG_VERSION] [-d destcache] [-m SCHEMA (gw or wsdiff)]"
+    echo "usage: SEdiff.sh -E EXPNUM -r RNUM -p PNUM -n NITE -b BAND (i|r|g|Y|z|u) -S season (dpXX) [-c ccdlist] [-d destcache (scratch|persistent)] [-m SCHEMA (gw|wsdiff)] [-v diffimg_version] [-t] [-C] [-j] [-s] [-O] [-V SNVETO_NAME] [-T STARCAT_NAME] [-Y] [-F]" 
     exit 1
 fi
 
@@ -213,7 +209,7 @@ do case $opt in
 	    shift
 	    ;;
     h)
-	    echo "usage: SE_job_mod.sh -E EXPNUM -r RNUM -p PNUM -n NITE -b BAND [-c CCDS] [-j] [-s] [-S scratch|persistent] [ -m gw|wsdiff] [-Y] [-C] [-O]" 
+        echo "usage: SEdiff.sh -E EXPNUM -r RNUM -p PNUM -n NITE -b BAND (i|r|g|Y|z|u) -S season (dpXX) [-c ccdlist] [-d destcache (scratch|persistent)] [-m SCHEMA (gw|wsdiff)] [-v diffimg_version] [-t] [-C] [-j] [-s] [-O] [-V SNVETO_NAME] [-T STARCAT_NAME] [-Y] [-F]" 
 	    exit 1
             ;;
     c)

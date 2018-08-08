@@ -39,7 +39,7 @@ fi
 echo "Node information: `uname -a`"
 
 if [ $# -lt 1 ]; then
-echo "usage: RUN_DIFFIMG_PIPELINE.sh -E EXPNUM -r RPNUM -p DIFFPROCNUM -n NITE -b BAND -c CCDNUM [-v DIFFIMG_VERSION] [-d destcache] [-m SCHEMA (gw or wsdiff)]"
+echo "usage: RUN_DIFFIMG_PIPELINE.sh -E EXPNUM -r RPNUM -p season (dpXX) -n NITE -b BAND (i|r|g|Y|z|u) -c ccdlist [-v DIFFIMG_VERSION] [-d destcache (scratch|persistent)] [-m SCHEMA (gw|wsdiff)] [-F]"
 exit 1
 fi
 
