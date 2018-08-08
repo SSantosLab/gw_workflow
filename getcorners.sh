@@ -1,18 +1,38 @@
 #!/bin/bash 
 
-#call as:  getcorners.sh $EXPNUM $DATADIR $CORNERDIR
+#call as:  getcorners.sh $EXPNUM $DATADIR $CORNERDIR [ $CCDNUM ]
 
-CORNERDIR=$3
-DATADIR=$2
+if [ $# -eq 3 ]; then
+    echo "three arguments were passed; no ccdnum"
+
+    # assign arguments
+    CORNERDIR=$3
+    DATADIR=$2
+    e=$1
+
+    outfile=${e}.out
+    immaskfiles=${DATADIR}/D00*immask.fits.fz
+elif [ $# -eq 4 ]; then
+    echo "four arguments were passed; running with ccdnum"
+
+    # reassign arguments
+    CCD=$4
+    CORNERDIR=$3
+    DATADIR=$2
+    e=$1
+
+    outfile=${e}_${CCD}.out
+    immaskfiles=${DATADIR}/D00*_${CCD}_*immask.fits.fz
+fi
+
 AWK=/bin/awk
-e=$1
 
 get_corners ()
 {
   echo Getting corner coordinates for exposure ${thisinfo[$ii]} ...
-  rm -f ${CORNERDIR}/${e}.out
+  rm -f ${CORNERDIR}/$outfile
 
-  for f in ${DATADIR}/D00*immask.fits.fz
+  for f in $immaskfiles
   #for f in ${DATADIR}/DECam_${e}/DECam*[0-9][0-9].fits
   do
 
@@ -28,7 +48,7 @@ get_corners ()
     coord=( `${AWK} '{printf "%10.5f %10.5f  ",$1,$2}' tmp.tmp${e}` )
     # output = ( Expo Band CCD RA1 Dec1 RA2 Dec2 RA3 Dec3 RA4 Dec4 )
     echo ${e} ${filt} ${ccd} ${coord[0]} ${coord[1]} ${coord[2]} ${coord[3]} ${coord[4]} ${coord[5]} ${coord[6]} ${coord[7]} | \
-      ${AWK} '{printf "%6d   %s   %2d  %10.5f %10.5f  %10.5f %10.5f  %10.5f %10.5f  %10.5f %10.5f\n",$1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11}' >> ${CORNERDIR}/${e}.out
+      ${AWK} '{printf "%6d   %s   %2d  %10.5f %10.5f  %10.5f %10.5f  %10.5f %10.5f  %10.5f %10.5f\n",$1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11}' >> ${CORNERDIR}/$outfile
 
   done
   rm -f tmp.tmp${e}
