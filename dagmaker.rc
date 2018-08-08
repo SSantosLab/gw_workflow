@@ -24,6 +24,9 @@ DIFFIMG_EUPS_VERSION=gw2
 # WRITEDB should be off for initial testing, but on for any production running.
 WRITEDB=on
 #
+# When true, DAGMaker will delete a pre-existing mytemp dir for the exposure and rerun
+RM_MYTEMP=true
+#
 JOBSUB_OPTS="--memory=2500MB --disk=70GB --cpu=1 --expected-lifetime=5h --email-to=YOUR_EMAIL_ADDRESS@fnal.gov --disk=70GB"
 #
 RESOURCES="DEDICATED,OPPORTUNISTIC,OFFSITE"
