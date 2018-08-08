@@ -241,7 +241,7 @@ DIFFIMG_EUPS_VERSION="gwdevel10"
 WRITEDB="off"
 IGNORECALIB="false"
 DESTCACHE="persistent"
-SE_OPTS=""
+SEARCH_OPTS=""
 SCHEMA="gw"
 TWINDOW=30.0
 TEFF_CUT=0.0
@@ -295,8 +295,6 @@ SNSTAR_OPTS=""
 SNVETO_OPTS=""
 SNSTAR_FILENAME=`egrep "^\s*SNSTAR_FILENAME" MAKESCRIPT_DIFFIMG_TEMPLATE.INPUT | cut -d ":" -f 2- | sed -r -e  "s/\#.*//" -e "s/^\ *//" -e "s/(\ )*$//" | sed -e "s/THEEXP/${EXPNUM}/" -e "s/THERNUM/${RNUM}/" -e "s/THEPNUM/${PNUM}/" -e 's/THECCDNUM/${CCDNUM_LIST}/'`
 SNVETO_FILENAME=`egrep "^\s*SNVETO_FILENAME" MAKESCRIPT_DIFFIMG_TEMPLATE.INPUT | cut -d ":" -f 2- | sed -r -e  "s/\#.*//" -e "s/^\ *//" -e "s/(\ )*$//" | sed -e "s/THEEXP/${EXPNUM}/" -e "s/THERNUM/${RNUM}/" -e "s/THEPNUM/${PNUM}/" -e 's/THECCDNUM/${CCDNUM_LIST}/'`
-echo "SNSTAR_FILENAME $SNSTAR_FILENAME"
-echo "SNVETO_FILENAME $SNVETO_FILENAME"
 
 #SNSTAR_FILENAME=`egrep "^\s*SNSTAR_FILENAME" MAKESCRIPT_DIFFIMG_TEMPLATE.INPUT | cut -d ":" -f 2- | sed -r -e  "s/\#.*//" -e "s/^\ *//" -e "s/(\ )*$//" | sed -e "s/THEEXP/${EXPNUM}/" -e "s/THERNUM/${RNUM}/" -e "s/THEPNUM/${PNUM}/"`
 #SNSTAR_FILENAME=`echo $SNSTAR_FILENAME | sed -e 's/THECCDNUM/$(eval\ "echo\ $SNSTAR_FILENAME")/'`
@@ -437,6 +435,12 @@ DOTOUTFILES=""
 echo "loop over the diff list of exposures"
 #### make sure all images to be coadded are actually 
 
+# create a search command outfile (to append to the dag after the template jobs, after the upcoming loop)
+searchfile=search.dag
+if [ -f $searchfile ]; then
+    rm $searchfile # maybe we don't want to overwrite? think about that a bit
+fi
+touch $searchfile
 
 NOVERLAPS=$(awk '{print NF-2}' mytemp_${EXPNUM}/KH_diff.list1)
 # now loop over the diff list, get info about the overlaping exposures, and set the SE portion of the dag
@@ -546,7 +550,7 @@ do
     # check if we need to run the calibration. If we don't have SNSTAR and SNVETO defined in the .INPUT file, then assume we don't
     echo check if we need to run the calibration. If we don\'t have SNSTAR and SNVETO defined in the .INPUT file, then assume we don\'t
     # we want to do calibration, and the SNSTAR and SNVETO names are defined
-    if  [[ $SE_OPTS == *-C* ]] && ( [ ! -z "${SNSTAR_FILENAME}" ] || [ ! -z "${SNVETO_FILENAME}" ] ) ; then
+    if  [[ $SEARCH_OPTS == *-C* ]] && ( [ ! -z "${SNSTAR_FILENAME}" ] || [ ! -z "${SNVETO_FILENAME}" ] ) ; then
         # check if calibration outputs are present
         # if number of reduced images and sextractor catalogs is not the same, something looks fishy. set nfiles=0 to force reprocessing 
         if [ $mfiles -ne $nfiles ] ; then nfiles=0 ; fi 
@@ -618,7 +622,8 @@ do
                     fi
                 fi
         #else # this is not the search image so we don't check for the raw image
-        echo this is not the search image so we don\'t check for the raw image
+        else
+            echo this is not the search image so we don\'t check for the raw image
         #    continue
         fi
     fi
@@ -634,6 +639,8 @@ do
     
     # add the SE+diff jobs to the dag
     echo add the SE+diff jobs to the dag
+
+    
     #if [ $nfiles -lt 59 ]; then   
         #echo incomplete SE
         #echo SKIP_INCOMPLETE_SE $SKIP_INCOMPLETE_SE
@@ -648,31 +655,38 @@ do
         #    NEWCOUNT=$((${OLDCOUNT}-1))
         #    sed -i -e s/${OLDCOUNT}/${NEWCOUNT}/  mytemp_${EXPNUM}/KH_diff.list1 
         #else
-            if [ "$overlapnum"!="$EXPNUM" ]; then
-                echo "add template job for exp $overlapnum"
-                # template SE jobs (with -t option)
-                for (( ichip=1;ichip<63;ichip++ ))
-                do
-                if [ $ichip -ne 2 ] && [ $ichip -ne 31 ] && [ $ichip -ne 61 ] ; then
-                    echo "jobsub -n --group=des --OS=SL6 --resource-provides=usage_model=${RESOURCES} $JOBSUB_OPTS --append_condor_requirements='(TARGET.GLIDEIN_Site==\\\"FermiGrid\\\"||(TARGET.HAS_CVMFS_des_opensciencegrid_org==true&&TARGET.HAS_CVMFS_des_osgstorage_org==true))' file://SEdiff.sh -r $RNUM -p $PNUM -E $overlapnum -b $BAND -n $overlapnite $JUMPTOEXPCALIBOPTION -d $DESTCACHE -m $SCHEMA -t $SE_OPTS -c $ichip -S $procnum" >> $outfile
-                fi    
-                done
-            else
-                # search image (no -t option)
-                echo "add search job for exp $overlapnum"
-                for (( ichip=1;ichip<63;ichip++ ))
-                do
-                    if [ $ichip -ne 2 ] && [ $ichip -ne 31 ] && [ $ichip -ne 61 ] ; then
-                        echo "jobsub -n --group=des --OS=SL6 --resource-provides=usage_model=${RESOURCES} $JOBSUB_OPTS --append_condor_requirements='(TARGET.GLIDEIN_Site==\\\"FermiGrid\\\"||(TARGET.HAS_CVMFS_des_opensciencegrid_org==true&&TARGET.HAS_CVMFS_des_osgstorage_org==true))' file://SEdiff.sh -r $RNUM -p $PNUM -E $overlapnum -b $BAND -n $overlapnite $JUMPTOEXPCALIBOPTION -d $DESTCACHE -m $SCHEMA $SE_OPTS -c $ichip -S $procnum $SNSTAR_OPTS $SNVETO_OPTS" >> $outfile
-                    fi    
-                done
-            fi
+    if [ "$overlapnum" == "$EXPNUM" ]; then
+        # search image (no -t option)
+        # write to a different text file, then append that at the end (to ensure templates are done before the search)
+        echo "add search job for exp $overlapnum"
+        for (( ichip=1;ichip<63;ichip++ ))
+        do
+            if [ $ichip -ne 2 ] && [ $ichip -ne 31 ] && [ $ichip -ne 61 ] ; then
+                echo "jobsub -n --group=des --OS=SL6 --resource-provides=usage_model=${RESOURCES} $JOBSUB_OPTS --append_condor_requirements='(TARGET.GLIDEIN_Site==\\\"FermiGrid\\\"||(TARGET.HAS_CVMFS_des_opensciencegrid_org==true&&TARGET.HAS_CVMFS_des_osgstorage_org==true))' file://SEdiff.sh -r $RNUM -p $PNUM -E $overlapnum -b $BAND -n $overlapnite $JUMPTOEXPCALIBOPTION -d $DESTCACHE -m $SCHEMA $SEARCH_OPTS -c $ichip -S $procnum $SNSTAR_OPTS $SNVETO_OPTS" >> $searchfile
+                echo wrote chip $ichip to $searchfile
+            fi    
+        done
+        echo finished writing search exposure jobs to $searchfile:
+        cat $searchfile
+    else
+        echo "add template job for exp $overlapnum != $EXPNUM"
+        # template SE jobs (with -t option)
+        for (( ichip=1;ichip<63;ichip++ ))
+        do
+        if [ $ichip -ne 2 ] && [ $ichip -ne 31 ] && [ $ichip -ne 61 ] ; then
+            echo "jobsub -n --group=des --OS=SL6 --resource-provides=usage_model=${RESOURCES} $JOBSUB_OPTS --append_condor_requirements='(TARGET.GLIDEIN_Site==\\\"FermiGrid\\\"||(TARGET.HAS_CVMFS_des_opensciencegrid_org==true&&TARGET.HAS_CVMFS_des_osgstorage_org==true))' file://SEdiff.sh -r $RNUM -p $PNUM -E $overlapnum -b $BAND -n $overlapnite $JUMPTOEXPCALIBOPTION -d $DESTCACHE -m $SCHEMA -t $TEMP_OPTS -c $ichip -S $procnum" >> $outfile
+        fi    
+        done
+    fi
         # add the .out file for this overlap image to the list to be copied
             DOTOUTFILES="${DOTOUTFILES} /pnfs/des/${DESTCACHE}/${SCHEMA}/exp/$overlapnite/$overlapnum/${overlapnum}.out"
         #fi
     #fi
+    echo
 done
 echo "end of loop over list of overlapping exposures"
+echo "appending search job after template jobs"
+cat $searchfile >> $outfile
 
 # close the SE portion of the dag
 echo "</parallel>" >> $outfile

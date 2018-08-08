@@ -17,7 +17,7 @@ PNUM=7
 # Season 5000 is reserved for DES nightly difference imaging on the wide survey in Y5 (2017-2018)
 # Season 5500 is reserved for DES nightly difference imaging on the wide survey in Y5.5 (2018-2019)
 ##############
-SEASON=68
+SEASON=69
 #
 DIFFIMG_EUPS_VERSION=gw2
 #
@@ -32,8 +32,9 @@ IGNORECALIB=true
 #
 DESTCACHE=persistent
 #
-# optional additional arguments to SE_job.sh, off by default
-## SE_OPTS="-C"
+# optional additional arguments to SEdiff.sh, off by default
+## TEMP_OPTS="-C"
+SEARCH_OPTS="-C -O"
 ### SCHEMA is the naming schema for the output files, not the DB schema. Valid values are gw and wsdiff.
 SCHEMA="gw"
 #t_eff cuts for each filter
@@ -46,9 +47,9 @@ TEFF_CUT_u=0.2
 TWINDOW=2
 #
 #### ONLY use this option if you have nothing but late-time templates. It should be commented out for standard nightly diffim running.
-MIN_NITE=20170831
+#MIN_NITE=20170831
 #### Use only if you want to avoid using images taken after MAX_NITE as templates.
-MAX_NITE=20170901
+#MAX_NITE=20170901
 #this variable tells DAGMaker to remove as templates any images that it sees as missing SE output. This should only
 #only be used when you are certain you do not want to use any non-DES images and have already fetched all SE outputs from DESDM.
 SKIP_INCOMPLETE_SE=false
