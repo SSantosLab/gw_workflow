@@ -650,7 +650,7 @@ do
     echo add the SE+diff jobs to the dag
 
     
-    if [ $nfiles -lt 59 ]; then   
+    if [ $nfiles -lt 59 ] || [ $i -eq 1 ]; then   
         if [ "${SKIP_INCOMPLETE_SE}" == "true" ] && [ $i -ne 1 ]; # skip incomplete SE, but only for templates, if the flag is set
         then
             SKIP=true
