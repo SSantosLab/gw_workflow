@@ -11,7 +11,11 @@ if [ $# -eq 3 ]; then
     e=$1
 
     outfile=${e}.out
-    immaskfiles=${DATADIR}/D00*immask.fits.fz
+    immaskfiles=$(ls ${DATADIR}/D$(printf %08d ${e})*_immask.fits.fz)
+    # prefer .fz files, but if none found, try .fits file
+    if [ -z $immaskfiles ]; then
+	immaskfiles=$(ls ${DATADIR}/D$(printf %08d ${e})*_immask.fits)
+    fi
 elif [ $# -eq 4 ]; then
     echo "four arguments were passed; running with ccdnum"
 
@@ -22,7 +26,10 @@ elif [ $# -eq 4 ]; then
     e=$1
 
     outfile=${e}_${CCD}.out
-    immaskfiles=${DATADIR}/D00*_${CCD}_*immask.fits.fz
+    immaskfiles=$(ls ${DATADIR}/D$(printf %08d ${e})*_$(printf %02d ${CCD})*_immask.fits.fz)
+    if [ -z "$immaskfiles" ]; then
+	immaskfiles=$(ls ${DATADIR}/D$(printf %08d ${e})*_$(printf %02d ${CCD})*_immask.fits)
+    fi
 fi
 
 AWK=/bin/awk
