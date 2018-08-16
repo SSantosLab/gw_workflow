@@ -276,7 +276,7 @@ if [ "$SKIPSE" == "false" ] ; then # if statement allows SE to be skipped if SE 
     #TODO move all the necessary files into the tar.gz and into /pnfs/ so they don't have to be copied in here
     #ifdh cp -D /pnfs/des/persistent/desdm/code/desdmLiby1e2.py /pnfs/des/persistent/desdm/code/run_desdmy1e2.py /pnfs/des/persistent/desdm/code/run_SEproc.py  /pnfs/des/persistent/desdm/code/getcorners.sh /pnfs/des/persistent/kuropat/scripts/MySoft.tgz  /pnfs/des/scratch/gw/code/test_mysql_libs.tar.gz /pnfs/des/scratch/nglaeser/BLISS-expCalib_Y3apass-old.py /pnfs/des/scratch/nglaeser/Scamp_allCCD_r4p5.fits ./ || { echo "Error copying input files. Exiting." ; exit 2 ; }
     #ifdh cp -D /pnfs/des/resilient/gw/code/MySoft3.tar.gz  /pnfs/des/scratch/gw/code/test_mysql_libs.tar.gz /pnfs/des/scratch/nglaeser/Scamp_allCCD_r4p5.fits ./ || { echo "Error copying input files. Exiting." ; exit 2 ; }
-    ifdh cp -D /pnfs/des/resilient/gw/code/MySoft4.tar.gz  /pnfs/des/scratch/gw/code/test_mysql_libs.tar.gz ./ || { echo "Error copying input files. Exiting." ; exit 2 ; }
+    ifdh cp -D /pnfs/des/resilient/gw/code/MySoft4.tar.gz  /pnfs/des/resilient/gw/code/test_mysql_libs.tar.gz ./ || { echo "Error copying input files. Exiting." ; exit 2 ; }
     tar xzf ./MySoft4.tar.gz
 
     ifdh cp --force=xrootd /pnfs/des/persistent/${SCHEMA}/db-tools/desservices.ini ${HOME}/.desservices.ini
@@ -714,7 +714,7 @@ for c in $ccdlist; do
     # run_inputs.tar.gz for each exposure number, copies over all the scripts in order to run
     #### revised tar file 20180203
     filestocopy="/pnfs/des/resilient/${SCHEMA}/db-tools/desservices.ini /pnfs/des/${DESTCACHE}/${SCHEMA}/exp/${NITE}/${EXPNUM}/WS_diff.list /pnfs/des/${DESTCACHE}/${SCHEMA}/exp/${NITE}/${EXPNUM}/${procnum}/${EXPNUM}_run_inputs.tar.gz"
-    IFDH_DEBUG=1 ifdh cp ${IFDHCP_OPT} -D $filestocopy ./ || { echo "ifdh cp failed for SN_mon* and such" ; exit 1 ; }
+    ifdh cp ${IFDHCP_OPT} -D $filestocopy ./ || { echo "ifdh cp failed for SN_mon* and such" ; exit 1 ; }
     tar zxf ${EXPNUM}_run_inputs.tar.gz
 
     # set environment location
@@ -873,13 +873,21 @@ for c in $ccdlist; do
           #i=1
           #while [[ $i -le $nccd ]]
           #do
-            
+          
 	    #find ccd corners 
             #sccd=`${AWK} '(NR=='$i'){print $3}' ${CORNERDIR}/${sexp}_${CCDNUM_LIST}.out`
-	    sccd=`${AWK} '($3=='${CCDNUM_LIST}'){print $3}' ${CORNERDIR}/${sexp}.out`
+	    sexpfile=""
+	    if [ -s ${sexp}_${CCDNUM_LIST}.out ]; then
+		sexpfile=${sexp}_${CCDNUM_LIST}.out
+	    else
+		sexpfile=${CORNERDIR}/${sexp}.out	
+	    fi
+	    
+	    sccd=`${AWK} '($3=='${CCDNUM_LIST}'){print $3}' $sexpfile`
+
              # Search CCD RA Dec corner coordinates coverted to radians
-            info1=( `${AWK} '($3=='${CCDNUM_LIST}'){printf "%10.7f %10.7f  %10.7f %10.7f  %10.7f %10.7f  %10.7f %10.7f\n",$4*"'"${dtorad}"'",$5*"'"${dtorad}"'",$6*"'"${dtorad}"'",$7*"'"${dtorad}"'",$8*"'"${dtorad}"'",$9*"'"${dtorad}"'",$10*"'"${dtorad}"'",$11*"'"${dtorad}"'"}' ${CORNERDIR}/${sexp}.out` )
-       
+            info1=( `${AWK} '($3=='${CCDNUM_LIST}'){printf "%10.7f %10.7f  %10.7f %10.7f  %10.7f %10.7f  %10.7f %10.7f\n",$4*"'"${dtorad}"'",$5*"'"${dtorad}"'",$6*"'"${dtorad}"'",$7*"'"${dtorad}"'",$8*"'"${dtorad}"'",$9*"'"${dtorad}"'",$10*"'"${dtorad}"'",$11*"'"${dtorad}"'"}' $sexpfile` )
+	    
             rm -f tmp.tmp1
             touch tmp.tmp1
      
@@ -1078,7 +1086,7 @@ for c in $ccdlist; do
     # make sure that the files actually exist before we try to copy then. If makestarcat.py did not run, then we won't need to check.
         if [ -f $STARCAT_NAME ] && [ -f $SNVETO_NAME ]; then
         ifdh mkdir /pnfs/des/persistent/stash/${SCHEMA}/CATALOG_FILES/${NITE}
-        ifdh cp --force=xrootd -D ${IFDHCP_OPT} $STARCAT_NAME $SNVETO_NAME /pnfs/des/persistent/stash/${SCHEMA}/CATALOG_FILES/${NITE}/ || echo "ERROR: copy of $STARCAT_NAME and $SNVETO_NAME failed with status $?. You may see problems running diffimg jobs later."  
+        ifdh cp --force=xrootd -D $STARCAT_NAME $SNVETO_NAME /pnfs/des/persistent/stash/${SCHEMA}/CATALOG_FILES/${NITE}/ || echo "ERROR: copy of $STARCAT_NAME and $SNVETO_NAME failed with status $?. You may see problems running diffimg jobs later."  
         fi
     else
         if [ $MAKESTARCAT_RESULT -eq -1 ]; then
