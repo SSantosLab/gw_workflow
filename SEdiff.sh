@@ -233,15 +233,15 @@ rpnum="r${RNUM}p${PNUM}"
 ccdlist=(${CCDNUM_LIST//,/ })
 
 # get filenames
-immaskfiles="`ifdh ls  /pnfs/des/${DESTCACHE}/${SCHEMA}/exp/${NITE}/${EXPNUM}/'*_r'${RNUM}'p'${PNUM}'_immask.fits.fz' | grep fits | grep fnal`"
+immaskfiles="`ifdh ls  /pnfs/des/${DESTCACHE}/${SCHEMA}/exp/${NITE}/${EXPNUM}/'*_'$(printf %02d ${CCDNUM_LIST})'_r'${RNUM}'p'${PNUM}'_immask.fits.fz' | grep fits | grep fnal`"
 nimmask=`echo $immaskfiles | wc -w`
-if [ $nimmask -gt 59 ]; then
-    psffiles="`ifdh ls  /pnfs/des/${DESTCACHE}/${SCHEMA}/exp/${NITE}/${EXPNUM}/'*_r'${RNUM}'p'${PNUM}'_fullcat.fits' | grep fits | grep fnal`" 
+if [ $nimmask -ge 1 ]; then
+    psffiles="`ifdh ls  /pnfs/des/${DESTCACHE}/${SCHEMA}/exp/${NITE}/${EXPNUM}/'*_'$(printf %02d ${CCDNUM_LIST})'_r'${RNUM}'p'${PNUM}'_fullcat.fits' | grep fits | grep fnal`" 
     npsf=`echo $psffiles | wc -w`
-    if [ $npsf -gt 59 ]; then
+    if [ $npsf -ge 1 ]; then
 	csvfiles="`ifdh ls  /pnfs/des/${DESTCACHE}/${SCHEMA}/exp/${NITE}/${EXPNUM}/'allZP_D*'${tempexp}'_r'${RNUM}p${PNUM}'*.csv' | grep fnal` `ifdh ls  /pnfs/des/${DESTCACHE}/${SCHEMA}/exp/${NITE}/${EXPNUM}/'Zero_*'${tempexp}'_r'${RNUM}p${PNUM}'*.csv' | grep fnal` `ifdh ls  /pnfs/des/${DESTCACHE}/${SCHEMA}/exp/${NITE}/${EXPNUM}/'D*'${tempexp}'_r'${RNUM}p${PNUM}'*_ZP.csv' | grep fnal`" 
 	ncsv=`echo $csvfiles | wc -w`
-	if [ $ncsv -ge 3 ]; then
+	if [ $ncsv -ge 1 ]; then
 	    if [ "$OVERWRITE" == "false" ]; then
 		echo "All SE processing for $EXPNUM, r=$RNUM, p=$PNUM is complete. We will skip the SE step."
         SKIPSE=true
@@ -583,7 +583,7 @@ if [ "$DOCALIB" == "true" ]; then
     python ./make_red_catlist.py
     echo "make_red_catlist.py finished with exit status $?"
 
-    unset healpy astropy fitsio matplotlib six python # some attempted version fixing
+    unsetup healpy astropy fitsio matplotlib six python # some attempted version fixing
     export CONDA_DIR=/cvmfs/des.opensciencegrid.org/fnal/anaconda2
     source $CONDA_DIR/etc/profile.d/conda.sh
     conda activate des18a
@@ -883,10 +883,10 @@ for c in $ccdlist; do
 		sexpfile=${CORNERDIR}/${sexp}.out	
 	    fi
 	    
-	    sccd=`${AWK} '($3=='${CCDNUM_LIST}'){print $3}' $sexpfile`
+	    sccd=`${AWK} '($3=='${CCDNUM_LIST}'){print $3}' $sexpfile | head -1`
 
              # Search CCD RA Dec corner coordinates coverted to radians
-            info1=( `${AWK} '($3=='${CCDNUM_LIST}'){printf "%10.7f %10.7f  %10.7f %10.7f  %10.7f %10.7f  %10.7f %10.7f\n",$4*"'"${dtorad}"'",$5*"'"${dtorad}"'",$6*"'"${dtorad}"'",$7*"'"${dtorad}"'",$8*"'"${dtorad}"'",$9*"'"${dtorad}"'",$10*"'"${dtorad}"'",$11*"'"${dtorad}"'"}' $sexpfile` )
+            info1=( `${AWK} '($3=='${CCDNUM_LIST}'){printf "%10.7f %10.7f  %10.7f %10.7f  %10.7f %10.7f  %10.7f %10.7f\n",$4*"'"${dtorad}"'",$5*"'"${dtorad}"'",$6*"'"${dtorad}"'",$7*"'"${dtorad}"'",$8*"'"${dtorad}"'",$9*"'"${dtorad}"'",$10*"'"${dtorad}"'",$11*"'"${dtorad}"'"}' $sexpfile | head -1` )
 	    
             rm -f tmp.tmp1
             touch tmp.tmp1
@@ -965,14 +965,14 @@ for c in $ccdlist; do
     ### link necessary as of diffimg gwdevel7
         mkdir -p ${TOPDIR_WSDIFF}/pairs/$texp
         ln -s $dotoutfile   ${TOPDIR_WSDIFF}/pairs/$texp/
-        
+        ln -s $dotoutfile   .
     #make the DECam_$temp_empty directory by default and remove it later if we actually have an overlap for this CCD
     # the "_empty" indicates that there is no overlap
         mkdir  ${TOPDIR_WSDIFF}/data/DECam_${texp}_empty
 
         # combine the template CCD .out files
         echo check if we already have a combined texp.out file \(in the current directory\)
-        texpdotout="`ifdh ls ${texp}'.out' | grep out`"
+        texpdotout=$(ls ${texp}.out)
         ntexpdotout=`echo $texpdotout | wc -w`
         if [ $ntexpdotout -lt 1 ]; then
             echo we don\'t have a combined .out, need to generate it by combining the ccd .outs
@@ -992,7 +992,9 @@ for c in $ccdlist; do
     ls ${TOPDIR_WSDIFF}/pairs/
     # link necessary as of diffimg gwdevel7
     ln -s  ${TOPDIR_WSDIFF}/pairs/${EXPNUM}-*.out ${TOPDIR_WSDIFF}/pairs/${EXPNUM}-*.no ${TOPDIR_WSDIFF}/pairs/${EXPNUM}/
-
+    echo "files to loop over for ccd by ccd overlap :"
+    ls ${TOPDIR_WSDIFF}/pairs/${EXPNUM}-*.out
+    echo "-----"
     # determine overlap ccd by ccd
     for overlapfile in `ls ${TOPDIR_WSDIFF}/pairs/${EXPNUM}-*.out`
     do
@@ -1020,12 +1022,12 @@ for c in $ccdlist; do
                 echo "ZP file for the template is not available. We are leaving out this template."
             else
                 # if the ZP file for this CCD exists we will symlink it to the generic name, and then copy in fits files
-                echo "Making symlink to this CCD ZP file..."
-                currentdir=$(pwd)
-                cd $ZPdir
-                ln -s $ZPfilename D`printf %08d $overlapexp`_${rpnum}_ZP.csv
-                cd $currentdir
-
+           #     echo "Making symlink to this CCD ZP file..."
+           #     currentdir=$(pwd)
+           #     cd $ZPdir
+           #     ln -s $ZPfilename D`printf %08d $overlapexp`_${rpnum}_ZP.csv
+           #     cd $currentdir
+		
                 if [ -z "$file2copy" ] ; then
                     # backward compatibility
                     echo "WARNING: .fz file for $overlapexp CCD $overlapccd did not appear in ifdh ls and was thus not copied in. Could be a problem. Checking to see if an uncompressed (.fits) file is available."
