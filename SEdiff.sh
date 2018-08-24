@@ -239,17 +239,30 @@ if [ $nimmask -ge 1 ]; then
     psffiles="`ifdh ls  /pnfs/des/${DESTCACHE}/${SCHEMA}/exp/${NITE}/${EXPNUM}/'*_'$(printf %02d ${CCDNUM_LIST})'_r'${RNUM}'p'${PNUM}'_fullcat.fits' | grep fits | grep fnal`" 
     npsf=`echo $psffiles | wc -w`
     if [ $npsf -ge 1 ]; then
-	csvfiles="`ifdh ls  /pnfs/des/${DESTCACHE}/${SCHEMA}/exp/${NITE}/${EXPNUM}/'allZP_D*'${tempexp}'_r'${RNUM}p${PNUM}'*.csv' | grep fnal` `ifdh ls  /pnfs/des/${DESTCACHE}/${SCHEMA}/exp/${NITE}/${EXPNUM}/'Zero_*'${tempexp}'_r'${RNUM}p${PNUM}'*.csv' | grep fnal` `ifdh ls  /pnfs/des/${DESTCACHE}/${SCHEMA}/exp/${NITE}/${EXPNUM}/'D*'${tempexp}'_r'${RNUM}p${PNUM}'*_ZP.csv' | grep fnal`" 
+	csvfiles="`ifdh ls  /pnfs/des/${DESTCACHE}/${SCHEMA}/exp/${NITE}/${EXPNUM}/allZP_D$(printf %08d ${tempexp})_r${RNUM}p${PNUM}.csv | grep fnal` `ifdh ls  /pnfs/des/${DESTCACHE}/${SCHEMA}/exp/${NITE}/${EXPNUM}/Zero_D$(printf %08d ${tempexp})_r${RNUM}p${PNUM}.csv | grep fnal` `ifdh ls  /pnfs/des/${DESTCACHE}/${SCHEMA}/exp/${NITE}/${EXPNUM}/D$(printf %08d ${tempexp})_r${RNUM}p${PNUM}_ZP.csv | grep fnal`" 
 	ncsv=`echo $csvfiles | wc -w`
-	if [ $ncsv -ge 1 ]; then
+	if [ $ncsv -ge 3 ]; then
 	    if [ "$OVERWRITE" == "false" ]; then
 		echo "All SE processing for $EXPNUM, r=$RNUM, p=$PNUM is complete. We will skip the SE step."
-        SKIPSE=true
+		SKIPSE=true
 	    else
 		echo "All files are present, but the -O option was given, so we are continuing on with the job."
 	    fi
 	else
-	    echo "csv files not all present; continuing with the job."
+	    # we don't have the combined csv files for this exposure and rpnum. Let's check for the CCD-specific files now. 
+	    # If they are present, 
+	    ccdcsvfiles="`ifdh ls  /pnfs/des/${DESTCACHE}/${SCHEMA}/exp/${NITE}/${EXPNUM}/allZP_D$(printf %08d ${tempexp})_r${RNUM}p${PNUM}.csv | grep fnal` `ifdh ls  /pnfs/des/${DESTCACHE}/${SCHEMA}/exp/${NITE}/${EXPNUM}/Zero_D$(printf %08d ${tempexp})_$(printf %02d $CCDNUM_LIST)_r${RNUM}p${PNUM}.csv | grep fnal` `ifdh ls  /pnfs/des/${DESTCACHE}/${SCHEMA}/exp/${NITE}/${EXPNUM}/D$(printf %08d ${tempexp})_$(printf %02d $CCDNUM_LIST)_r${RNUM}p${PNUM}_ZP.csv | grep fnal`" 
+	    nccdcsv=`echo $ccdcsvfiles | wc -w`
+	    if [ $nccdcsv -ge 2 ]; then
+		if [ "$OVERWRITE" == "false" ]; then
+		    echo "All SE processing for $EXPNUM, r=$RNUM, p=$PNUM is complete. We will skip the SE step."
+		    SKIPSE=true
+		else
+		    echo "All files are present, but the -O option was given, so we are continuing on with the job."
+		fi
+	    else
+	    	echo "csv files not all present; continuing with the job."
+	    fi
 	fi
     else
 	echo "fullcat files not all present; continuing with the job."
@@ -268,34 +281,34 @@ if [ "$SKIPSE" == "false" ] ; then # if statement allows SE to be skipped if SE 
         echo "This SE job will use calib info from the DB."
         filestorm="`ifdh ls /pnfs/des/${DESTCACHE}/${SCHEMA}/exp/${NITE}/${EXPNUM}/'*_r'${RNUM}p${PNUM}'_fullcat.fits' | grep fits | grep fnal` `ifdh ls /pnfs/des/${DESTCACHE}/${SCHEMA}/exp/${NITE}/${EXPNUM}/'*_r'${RNUM}p${PNUM}'*csv*' | grep csv | grep fnal`"
         if [ ! -z "${filestorm}" ]; then
-        ifdh rm $filestorm
+            ifdh rm $filestorm
         fi
     fi
-
+    
     #### add other code here from Nikolay's area
     #TODO move all the necessary files into the tar.gz and into /pnfs/ so they don't have to be copied in here
     #ifdh cp -D /pnfs/des/persistent/desdm/code/desdmLiby1e2.py /pnfs/des/persistent/desdm/code/run_desdmy1e2.py /pnfs/des/persistent/desdm/code/run_SEproc.py  /pnfs/des/persistent/desdm/code/getcorners.sh /pnfs/des/persistent/kuropat/scripts/MySoft.tgz  /pnfs/des/scratch/gw/code/test_mysql_libs.tar.gz /pnfs/des/scratch/nglaeser/BLISS-expCalib_Y3apass-old.py /pnfs/des/scratch/nglaeser/Scamp_allCCD_r4p5.fits ./ || { echo "Error copying input files. Exiting." ; exit 2 ; }
     #ifdh cp -D /pnfs/des/resilient/gw/code/MySoft3.tar.gz  /pnfs/des/scratch/gw/code/test_mysql_libs.tar.gz /pnfs/des/scratch/nglaeser/Scamp_allCCD_r4p5.fits ./ || { echo "Error copying input files. Exiting." ; exit 2 ; }
     ifdh cp -D /pnfs/des/resilient/gw/code/MySoft4.tar.gz  /pnfs/des/resilient/gw/code/test_mysql_libs.tar.gz ./ || { echo "Error copying input files. Exiting." ; exit 2 ; }
     tar xzf ./MySoft4.tar.gz
-
+    
     ifdh cp --force=xrootd /pnfs/des/persistent/${SCHEMA}/db-tools/desservices.ini ${HOME}/.desservices.ini
-
+    
     tar xzfm ./test_mysql_libs.tar.gz
-
-
+    
+    
 #    ifdh cp -D /pnfs/des/scratch/nglaeser/BLISS-expCalib_Y3apass-old.py ./ || { echo "Error copying BLISS-old.py file. Exiting." ; exit 2; }
 #    ifdh cp -D /pnfs/des/scratch/nglaeser/BLISS-expCalib_Y3apass.py ./ || { echo "Error copying BLISS.py file. Exiting." ; exit 2; }
 #    ifdh cp -D /pnfs/des/scratch/nglaeser/run_SEproc.py /pnfs/des/scratch/nglaeser/run_desdmy1e2.py /pnfs/des/scratch/nglaeser/desdmLiby1e2.py ./ || { echo "Error copying run_SEproc.py and run_desdmy1e2.py. Exiting." ; exit 2; }
 #    ifdh cp -D /pnfs/des/scratch/nglaeser/desdmLiby1e2.py ./ || { echo "Error copying desdmLiby1e2.py. Exiting." ; exit 2; }
 #    ifdh cp -D /pnfs/des/scratch/nglaeser/make_red_catlist.py ./ || { echo "Error copying make_red_catlist.py Exiting." ; exit 2; }
-
+    
     export DES_SERVICES=${HOME}/.desservices.ini
     chmod 600 ${HOME}/.desservices.ini
     chmod +x make_red_catlist.py BLISS-expCalib_Y3apass.py BLISS-expCalib_Y3apass-old.py getcorners.sh
-
+    
     rm -f confFile
-
+    
     # Automatically determine year and epoch based on exposure number
     #  NAME MINNITE  MAXNITE   MINEXPNUM  MAXEXPNUM
     # -------------------------------- -------- -------- ---------- ----------
@@ -307,8 +320,8 @@ if [ "$SKIPSE" == "false" ] ; then # if statement allows SE to be skipped if SE 
     # Y2E2 20141205 20150518 383751 438346
     # Y3   20150731 20160212 459984 516846
     #######################################333
-
-
+    
+    
     # need to implement here handling of different "epochs" within the same year
 
     # need lso the "if not special option to use Y4E1 numbers"
@@ -439,9 +452,9 @@ if [ "$SKIPSE" == "false" ] ; then # if statement allows SE to be skipped if SE 
         #conf_dir="/pnfs/des/persistent/desdm/config/"
 	conf_dir="/pnfs/des/persistent/stash/desdm/config/"
     fi
-
+    
 # write to confFile
-cat <<EOF >> confFile
+    cat <<EOF >> confFile
 [General]
 nite: 20141229
 expnum: 393047
@@ -507,115 +520,118 @@ starflat = $starflatfile
 configfile = configse.psfex
 
 EOF
-
-sed -i -e "/^nite\:/ s/nite\:.*/nite\: ${NITE}/" -e "/^expnum\:/ s/expnum\:.*/expnum\: ${EXPNUM}/" -e "/^filter\:/ s/filter:.*/filter\: ${BAND}/" -e "/^r\:/ s/r:.*/r\: ${RNUM}/" -e "/^p\:/ s/p:.*/p\: ${PNUM}/" confFile
-
-setup fitscombine yanny
+    
+    sed -i -e "/^nite\:/ s/nite\:.*/nite\: ${NITE}/" -e "/^expnum\:/ s/expnum\:.*/expnum\: ${EXPNUM}/" -e "/^filter\:/ s/filter:.*/filter\: ${BAND}/" -e "/^r\:/ s/r:.*/r\: ${RNUM}/" -e "/^p\:/ s/p:.*/p\: ${PNUM}/" confFile
+    
+    setup fitscombine yanny
 # first cut of y2 something else is needed for Y4 images as of Nov 2016
-if [ "${YEAR}" == "y4" ]; then
-    setup firstcut Y4N+1
+    if [ "${YEAR}" == "y4" ]; then
+	setup firstcut Y4N+1
 #    setup finalcut Y4A1dev+3
 #    setup finalcut Y4A1+3
-else
-    setup finalcut Y2A1+4
-fi
-setup ftools v6.17
-setup scamp 2.6.10+0
-setup tcl 8.5.17+0
-setup extralibs 1.0
-setup wcstools 3.8.7.1+2
+    else
+	setup finalcut Y2A1+4
+    fi
+    setup ftools v6.17
+    setup scamp 2.6.10+0
+    setup tcl 8.5.17+0
+    setup extralibs 1.0
+    setup wcstools 3.8.7.1+2
 #to parallelize the ccd loops 
-setup joblib 0.8.4+3
-export MPLCONFIGDIR=$PWD/matplotlib
-mkdir $MPLCONFIGDIR
-mkdir qa
-setup healpy
-setup pandas
-setup astropy 0.4.2+6
-setup scikitlearn 0.14.1+9
-
-export LD_LIBRARY_PATH=${LD_LIBRARY_PATH}:${PWD}/usr/lib64/mysql
-
+    setup joblib 0.8.4+3
+    export MPLCONFIGDIR=$PWD/matplotlib
+    mkdir $MPLCONFIGDIR
+    mkdir qa
+    setup healpy
+    setup pandas
+    setup astropy 0.4.2+6
+    setup scikitlearn 0.14.1+9
+    
+    export LD_LIBRARY_PATH=${LD_LIBRARY_PATH}:${PWD}/usr/lib64/mysql
+    
 # in case single epoch processing was already done, skip that step
-if [ "$JUMPTOEXPCALIB" == "true" ] ; then
-    echo "jumping to the calibration step..."
-    nfiles=`ls *_r${RNUM}p${PNUM}_fullcat.fits *_r${RNUM}p${PNUM}_immask.fits.fz | wc -l`
-    nccds=`grep chiplist confFile | awk -F ':' '{print $2}' | sed 's/,/ /g' | wc -w`
-    nccds2=`expr $nccds \* 2`
-    if [  $nfiles -ne $nccds2 ] ; then
-	echo "copying fits files from Dcache"
-
-    for c in $ccdlist; do
+    if [ "$JUMPTOEXPCALIB" == "true" ] ; then
+	echo "jumping to the calibration step..."
+	nfiles=`ls *_r${RNUM}p${PNUM}_fullcat.fits *_r${RNUM}p${PNUM}_immask.fits.fz | wc -l`
+	nccds=`grep chiplist confFile | awk -F ':' '{print $2}' | sed 's/,/ /g' | wc -w`
+	nccds2=`expr $nccds \* 2`
+	if [  $nfiles -ne $nccds2 ] ; then
+	    echo "copying fits files from Dcache"
+	    
+	    for c in $ccdlist; do
         # copies all ccds
-        c=$(printf "%02d" $c)
-        filestocopy1="`ifdh ls /pnfs/des/${DESTCACHE}/${SCHEMA}/exp/${NITE}/${EXPNUM}/'*_'$c'_r'${RNUM}'p'${PNUM}'_fullcat.fits' | grep fnal | grep fits`"
-        echo "filestocopy1: $filestocopy1"
-        filestocopy2="`ifdh ls /pnfs/des/${DESTCACHE}/${SCHEMA}/exp/${NITE}/${EXPNUM}/'*_'$c'_r'${RNUM}'p'${PNUM}'_immask.fits.fz' | grep fnal | grep fits`"
-        echo "filestocopy2: $filestocopy2"
-        ifdh cp --force=xrootd -D $filestocopy1 $filestocopy2 .
-    done
-	for file in $(ls *_immask.fits.fz)
-	do
-	    funpack -D $file
-	done
-    fi
-else
-    if [ "$SINGLETHREAD" == "true" ] ; then
-	python run_desdmy1e2.py confFile 
+		c=$(printf "%02d" $c)
+		filestocopy1="`ifdh ls /pnfs/des/${DESTCACHE}/${SCHEMA}/exp/${NITE}/${EXPNUM}/'*_'$c'_r'${RNUM}'p'${PNUM}'_fullcat.fits' | grep fnal | grep fits`"
+		echo "filestocopy1: $filestocopy1"
+		filestocopy2="`ifdh ls /pnfs/des/${DESTCACHE}/${SCHEMA}/exp/${NITE}/${EXPNUM}/'*_'$c'_r'${RNUM}'p'${PNUM}'_immask.fits.fz' | grep fnal | grep fits`"
+		echo "filestocopy2: $filestocopy2"
+		ifdh cp --force=xrootd -D $filestocopy1 $filestocopy2 .
+	    done
+	    for file in $(ls *_immask.fits.fz)
+	    do
+		funpack -D $file
+	    done
+	fi
     else
-	python run_SEproc.py confFile 
-    fi
-    RESULT=$?
-    if [ $RESULT -ne 0 ] ; then
-	echo "ERROR: Main SE processing has exited abnormally with status $RESULT. The rest of the script will now terminate."
+	if [ "$SINGLETHREAD" == "true" ] ; then
+	    python run_desdmy1e2.py confFile 
+	else
+	    python run_SEproc.py confFile 
+	fi
+	RESULT=$?
+	if [ $RESULT -ne 0 ] ; then
+	    echo "ERROR: Main SE processing has exited abnormally with status $RESULT. The rest of the script will now terminate."
 	# cleanup if we are in a grid job (defined as having the GRID_USER environment variable set) to avoid potential timeouts on exit
-	if [ -n "$GRID_USER" ] ; then rm -f *.fits *.fits.fz *.ps *.psf *.xml full_1.cat *.head ; fi
-	exit
+	    if [ -n "$GRID_USER" ] ; then rm -f *.fits *.fits.fz *.ps *.psf *.xml full_1.cat *.head ; fi
+	    exit
+	fi
     fi
-fi
-
-if [ "$DOCALIB" == "true" ]; then 
-
-    setup expCalib
-
-    setup python 2.7.9+1
     
-    python ./make_red_catlist.py
-    echo "make_red_catlist.py finished with exit status $?"
+    if [ "$DOCALIB" == "true" ]; then 
+	
+	setup expCalib
+	
+	setup python 2.7.9+1
+	
+	python ./make_red_catlist.py
+	echo "make_red_catlist.py finished with exit status $?"
+	
+# doing this unsetup bit seems to break the BLISS old script. Commenting out for now	
+#	for prodlist in healpy astropy  fitsio  matplotlib six python ; do unsetup $prodlist ; done # some attempted version fixing
 
-    unsetup healpy astropy fitsio matplotlib six python # some attempted version fixing
-    export CONDA_DIR=/cvmfs/des.opensciencegrid.org/fnal/anaconda2
-    source $CONDA_DIR/etc/profile.d/conda.sh
-    conda activate des18a
-    
+	export CONDA_DIR=/cvmfs/des.opensciencegrid.org/fnal/anaconda2
+	source $CONDA_DIR/etc/profile.d/conda.sh
+	conda activate des18a
+	
 #    ./BLISS-expCalib_Y3apass.py --expnum $EXPNUM --reqnum $RNUM --attnum $PNUM --ccd $CCDNUM_LIST
-    ./BLISS-expCalib_Y3apass-old.py --expnum $EXPNUM --reqnum $RNUM --attnum $PNUM --ccd $CCDNUM_LIST
-
-    RESULT=$? 
-    echo "BLISS-expCalib_Y3pass-old.py exited with status $RESULT"
-    
-    files2cp=`ls allZP*r${RNUM}*p${PNUM}*.csv Zero*r${RNUM}*p${PNUM}*.csv D*${EXPNUM}*_ZP.csv D*${EXPNUM}*CCDsvsZPs.png D*${EXPNUM}*NumClipstar.png D*${EXPNUM}*ZP.png`
-    if [ "x${files2cp}" = "x" ]; then
-        echo "Error, no calibration files to copy!"
-    else
-        ifdh cp --force=xrootd -D $files2cp /pnfs/des/${DESTCACHE}/${SCHEMA}/exp/${NITE}/${EXPNUM} || echo "ifdh cp of calibration csv and png files failed. There could be problems with Diffimg down the road when using this exposure."
+	./BLISS-expCalib_Y3apass-old.py --expnum $EXPNUM --reqnum $RNUM --attnum $PNUM --ccd $CCDNUM_LIST
+	
+	RESULT=$? 
+	echo "BLISS-expCalib_Y3pass-old.py exited with status $RESULT"
+	
+	files2cp=`ls allZP*r${RNUM}*p${PNUM}*.csv Zero*r${RNUM}*p${PNUM}*.csv D*${EXPNUM}*_ZP.csv D*${EXPNUM}*CCDsvsZPs.png D*${EXPNUM}*NumClipstar.png D*${EXPNUM}*ZP.png`
+	if [ "x${files2cp}" = "x" ]; then
+            echo "Error, no calibration files to copy!"
+	else
+            ifdh cp --force=xrootd -D $files2cp /pnfs/des/${DESTCACHE}/${SCHEMA}/exp/${NITE}/${EXPNUM} || echo "ifdh cp of calibration csv and png files failed. There could be problems with Diffimg down the road when using this exposure."
+	fi
     fi
-fi
-
-du -sh .
-
+    
+    du -sh .
+    
 # cleanup if we are in a grid job (defined as having the GRID_USER environment variable set) to avoid potential timeouts on exit
-if [ -n "$GRID_USER" ] ; then rm -f *.fits *.fits.fz *.ps *.psf *.xml full_1.cat *.head ; fi
+    if [ -n "$GRID_USER" ] ; then rm -f *.fits *.fits.fz *.ps *.psf *.xml full_1.cat *.head ; fi
 #rm *.csv *.png
-
-export HOME=$OLDHOME
+    
+    export HOME=$OLDHOME
+fi # end the if statement that skips SE processing    
 
 # exit now if SE processing a template
 if [ "$TEMPLATE" == "true" ]; then
     echo "Finished SE processing template image; exiting before verifySE steps"
     exit 0
 fi
-fi # end the if statement that skips SE processing
+
 
 ######## CODE FORMERLY IN verifySE.sh ##########
 echo "***** BEGIN VERIFYSE *****"
@@ -633,13 +649,14 @@ TEMPLATEPATHS=`cat copy_pairs_for_${EXPNUM}.sh | sed -r -e "s/ifdh\ cp\ (\-\-for
 
 for templatedir in $TEMPLATEPATHS
 do
-
+    
     tempexp=`echo $templatedir | egrep -o "\/[0-9]{6}\/$" | tr -d "/"`
-
+    echo "Checking exposure $tempexp"
+    
 # note that $templatedir has a trailing slash already
-
+    
 # check for all of the necessary files
-
+    
 # first check immask because if they aren't there, we know it's a failure and there's no point doing the rest of it
     immaskfiles="`ifdh ls ${templatedir}'*_r'${RNUM}'p'${PNUM}'_immask.fits.fz' | grep fits | grep fnal`"
     nimmask=`echo $immaskfiles | wc -w`
@@ -656,10 +673,10 @@ do
             echo ".fits files are present. It is a good idea to run fpack on these files and save them in their compressed state in dCache to save space."
         fi
     fi
-
+    
 #ok, now check the psf and csv files, but only if we need them
-    if [ "$DOCALIB" == "true" ] && ( [ "${STARCAT_NAME}" != "" ] || [ "${SNVETO_NAME}" != "" ] ); then
-
+    if [ "$DOCALIB" == "true" ]; then
+	
         psffiles="`ifdh ls ${templatedir}'*_r'${RNUM}'p'${PNUM}'_fullcat.fits' | grep fullcat | grep fnal`"
         npsf=`echo $psffiles | wc -w`
         if [ $npsf -lt 59 ]; then
@@ -667,11 +684,13 @@ do
             sed -i -e "s:${templatedir}${tempexp}.out::" copy_pairs_for_${EXPNUM}.sh
             FAILEDEXPS="$FAILEDEXPS $tempexp"
             continue
-        fi
-
+        fi	
+    fi
+    
+    if [ "${STARCAT_NAME}" != "" ] || [ "${SNVETO_NAME}" != "" ] ; then
         csvfiles="`ifdh ls ${templatedir}'allZP_D*'${tempexp}'*_r'${RNUM}p${PNUM}'*.csv' | grep csv | grep fnal` `ifdh ls ${templatedir}'Zero_*'${tempexp}'*_r'${RNUM}p${PNUM}'*.csv' | grep csv | grep fnal` `ifdh ls ${templatedir}'D*'${tempexp}'*_r'${RNUM}p${PNUM}'*_ZP.csv' | grep csv | grep fnal`"
         ncsv=`echo $csvfiles | wc -w`
-        if [ $ncsv -lt 3 ]; then
+if [ $ncsv -lt 3 ]; then
             echo "Exposure $tempexp missing one or more required csv files. Editing copy_pairs_for_${EXPNUM}.sh and WS_diff.list to remove this exposure. Diffimg will not consider it as a template."
             sed -i -e "s:${templatedir}${tempexp}.out::" copy_pairs_for_${EXPNUM}.sh
             FAILEDEXPS="$FAILEDEXPS $tempexp"
@@ -679,12 +698,20 @@ do
         else
             ifdh cp ${IFDHCP_OPT} -D $csvfiles ./ || echo "WARNING: Copy of csv files for exposure ${tempexp} failed with status $?"
         fi
+	# We also need to see if these are per-CCD csv files that we need to combine for makestarcat.py. Namely, the D*_ZP.csv files
+	if [ ! -s D${tempexp}_r${RNUM}p${PNUM}_ZP.csv ]; then
+	    echo "Combining D${tempexp}_CCD_r${RNUM}p${PNUM}_ZP.csv files..."
+	    echo "ID,EXPNUM,CCDNUM,NUMBER,ALPHAWIN_J2000,DELTAWIN_J2000,FLUX_AUTO,FLUXERR_AUTO,FLUX_PSF,FLUXERR_PSF,MAG_AUTO,MAGERR_AUTO,MAG_PSF,MAGERR_PSF,SPREAD_MODEL,SPREADERR_MODEL,FWHM_WORLD,FWHMPSF_IMAGE,FWHMPSF_WORLD,CLASS_STAR,FLAGS,IMAFLAGS_ISO,ZeroPoint,ZeroPoint_rms,ZeroPoint_FLAGS" > D${tempexp}_r${RNUM}p${PNUM}_ZP.csv
+	    for csvfile in $(ls  D${tempexp}_[0-6][0-9]_r${RNUM}p${PNUM}_ZP.csv)
+	    do 
+		awk '(NR>1) { print $0 }' $csvfile >>  D${tempexp}_r${RNUM}p${PNUM}_ZP.csv
+	    done
     fi
-done
-
+    done
+    
 # if any of them failed remove them from WS_diff.list
-for failedexp in $FAILEDEXPS
-do
+    for failedexp in $FAILEDEXPS
+    do
     sed -i -e "s/${failedexp}//"  ./WS_diff.list
     OLDCOUNT=`awk '{print $1}'  WS_diff.list`
     NEWCOUNT=$((${OLDCOUNT}-1))

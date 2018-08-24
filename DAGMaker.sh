@@ -479,10 +479,10 @@ do
 	teff=$(egrep "^\s?${overlapnum}" exposures.list | awk '{print $10}')
         if [ "${teff}" == "NaN" ]; then
             SKIP=true
-            echo "Invalid value for t_eff. We will not use this image."
+            echo "Invalid t_eff value for ${overlapnum}. We will not use this image."
         elif [ $(echo "$teff < $TEFF_CUT" | bc ) -eq 1 ]; then 
             SKIP=true
-            echo "This image has a t_eff of $teff, below the cut value of $TEFF_CUT. We will not use this image."
+            echo "Exposure ${overlapnum} has a t_eff of $teff, below the cut value of $TEFF_CUT. We will not use this image."
         fi
     fi
 
@@ -497,7 +497,7 @@ do
         sed -i -e s/${OLDCOUNT}/${NEWCOUNT}/  mytemp_${EXPNUM}/KH_diff.list1
         continue
     fi
-
+    
     # the first image in the list is the search image itself
     if [ $i == 1 ]; then 
         if [ "$SKIP" == "true" ] ; then echo "Cannot proceed without the search image!" ; exit 1 ; fi
@@ -521,25 +521,25 @@ do
     
     
     #### at this point, the image passed basic quality cuts. let's now check if it was not already SE processed:
-
+    
     echo -e "\noverlapnum = ${overlapnum} , overlapnite = ${overlapnite} , explength = $explength, teff = $teff"
     echo checking if image has been SE processed already
-
+    
     # ls in the dcache scratch area to see if images are already there
     nfiles=0    
     for file in `ls /pnfs/des/${DESTCACHE}/${SCHEMA}/exp/${overlapnite}/${overlapnum}/*_${rpnum}_immask.fits.fz`
     do
         if [ `stat -c %s $file` -gt 0 ]; then nfiles=`expr $nfiles + 1` ; fi	
     done
-
+    
     # ls in the dcache scratch area to see if sextractor files are already there
     mfiles=0    
     for file in `ls /pnfs/des/${DESTCACHE}/${SCHEMA}/exp/${overlapnite}/${overlapnum}/*_${rpnum}_fullcat.fits*`
     do
         if [ `stat -c %s $file` -gt 0 ]; then mfiles=`expr $mfiles + 1` ;  fi	
     done
-
- 
+    
+    
     # check the .out file too
     if [ -e /pnfs/des/${DESTCACHE}/${SCHEMA}/exp/${overlapnite}/${overlapnum}/${overlapnum}.out ]; then
         ls /pnfs/des/${DESTCACHE}/${SCHEMA}/exp/${overlapnite}/${overlapnum}/${overlapnum}.out 
@@ -582,70 +582,69 @@ do
         echo "SE proc. already complete for exposure $overlapnum"
         echo "Add the .out file for this overlap image to the list to be copied"
         DOTOUTFILES="${DOTOUTFILES} /pnfs/des/${DESTCACHE}/${SCHEMA}/exp/$overlapnite/$overlapnum/${overlapnum}.out"
-        if [ $i == 1 ]; then
-                echo "This is the search image so we need to make sure that the raw image is stil present." 
-
+    fi
+    if [ $nfiles -lt 59 ] || [ $i == 1 ]; then
+	if [ $i == 1 ]; then echo "This is the search image so we need to make sure that the raw image is stil present." ; fi
+	
                 # make sure that the directory for the raw image exists and has the appropriate permissions
-                if [ ! -d /pnfs/des/scratch/${SCHEMA}/dts/${overlapnite}/ ]; then
-                    mkdir /pnfs/des/scratch/${SCHEMA}/dts/${overlapnite}/
-                    chmod 775  /pnfs/des/scratch/${SCHEMA}/dts/${overlapnite}/
-                fi
-
-                if [ "${SKIP_INCOMPLETE_SE}" == "false" ]; then
+        if [ ! -d /pnfs/des/scratch/${SCHEMA}/dts/${overlapnite}/ ]; then
+            mkdir /pnfs/des/scratch/${SCHEMA}/dts/${overlapnite}/
+            chmod 775  /pnfs/des/scratch/${SCHEMA}/dts/${overlapnite}/
+        fi
+	
+        if [ "${SKIP_INCOMPLETE_SE}" == "false" ]; then
                     # check if the raw image is present so that the SE processing can run. If it isn't, try to pull it over from des30.b, des51.b, NCSA DESDM, NOAO archive		
-                    if [ -e /pnfs/des/scratch/${SCHEMA}/dts/${overlapnite}/DECam_`printf %08d ${overlapnum}`.fits.fz ]; then
-                        echo "Raw image present in dCache"
-                    else	    
-                        if [ -e /data/des30.b/data/DTS/src/${overlapnite}/src/DECam_`printf %08d ${overlapnum}`.fits.fz ]; then
-                            echo "Raw image not present in dcache; transferring from /data/des30.b"		
-                            $COPYCMD /data/des30.b/data/DTS/src/${overlapnite}/src/DECam_`printf %08d ${overlapnum}`.fits.fz /pnfs/des/scratch/${SCHEMA}/dts/${overlapnite}/DECam_`printf %08d ${overlapnum}`.fits.fz || { echo "cp failed!" ; exit 2 ; }
-                        else 
-                            if [ -e /data/des51.b/data/DTS/src/${overlapnite}/DECam_`printf %08d ${overlapnum}`.fits.fz ]; then
-                                echo "Raw image not present in dCache or /data/des30.b; trying from des51.b"
-                                $COPYCMD /data/des51.b/data/DTS/src/${overlapnite}/DECam_`printf %08d ${overlapnum}`.fits.fz /pnfs/des/scratch/${SCHEMA}/dts/${overlapnite}/DECam_`printf %08d ${overlapnum}`.fits.fz || { echo "cp failed!" ; exit 2 ; }
-                            else 
-                                echo " Raw image for exposure $overlapnum not in dcache and not in /data/des30.b or /data/des51.b. Try to tansfer from NCSA..."
-                                export WGETRC=$HOME/.wgetrc-desdm
-                                if [ ! -f $WGETRC ] ; then echo "Warning: Missing file $HOME/.wgetrc-desdm may cause wget authentication error." ; fi
-                                wget --no-check-certificate -nv https://desar2.cosmology.illinois.edu/DESFiles/desarchive/DTS/raw/${overlapnite}/DECam_`printf %08d ${overlapnum}`.fits.fz 
-                                if [ $? -eq 0 ] ; then
-                                    $COPYDCMD DECam_`printf %08d ${overlapnum}`.fits.fz /pnfs/des/scratch/${SCHEMA}/dts/${overlapnite}/ && rm DECam_`printf %08d ${overlapnum}`.fits.fz
-                                else
-                                    echo "wget failed! Will try to get image $overlapnum $overlapnite from NOAO."			
+            if [ -e /pnfs/des/scratch/${SCHEMA}/dts/${overlapnite}/DECam_`printf %08d ${overlapnum}`.fits.fz ]; then
+                echo "Raw image present in dCache"
+            else	    
+                if [ -e /data/des30.b/data/DTS/src/${overlapnite}/src/DECam_`printf %08d ${overlapnum}`.fits.fz ]; then
+                    echo "Raw image not present in dcache; transferring from /data/des30.b"		
+                    $COPYCMD /data/des30.b/data/DTS/src/${overlapnite}/src/DECam_`printf %08d ${overlapnum}`.fits.fz /pnfs/des/scratch/${SCHEMA}/dts/${overlapnite}/DECam_`printf %08d ${overlapnum}`.fits.fz || { echo "cp failed!" ; exit 2 ; }
+                else 
+                    if [ -e /data/des51.b/data/DTS/src/${overlapnite}/DECam_`printf %08d ${overlapnum}`.fits.fz ]; then
+                        echo "Raw image not present in dCache or /data/des30.b; trying from des51.b"
+                        $COPYCMD /data/des51.b/data/DTS/src/${overlapnite}/DECam_`printf %08d ${overlapnum}`.fits.fz /pnfs/des/scratch/${SCHEMA}/dts/${overlapnite}/DECam_`printf %08d ${overlapnum}`.fits.fz || { echo "cp failed!" ; exit 2 ; }
+                    else 
+                        echo " Raw image for exposure $overlapnum not in dcache and not in /data/des30.b or /data/des51.b. Try to tansfer from NCSA..."
+                        export WGETRC=$HOME/.wgetrc-desdm
+                        if [ ! -f $WGETRC ] ; then echo "Warning: Missing file $HOME/.wgetrc-desdm may cause wget authentication error." ; fi
+                        wget --no-check-certificate -nv https://desar2.cosmology.illinois.edu/DESFiles/desarchive/DTS/raw/${overlapnite}/DECam_`printf %08d ${overlapnum}`.fits.fz 
+                        if [ $? -eq 0 ] ; then
+                            $COPYDCMD DECam_`printf %08d ${overlapnum}`.fits.fz /pnfs/des/scratch/${SCHEMA}/dts/${overlapnite}/ && rm DECam_`printf %08d ${overlapnum}`.fits.fz
+                        else
+                            echo "wget failed! Will try to get image $overlapnum $overlapnite from NOAO."			
                                     #fetch_noao
                                     #if [ $? -ne 0 ]; then
                                     #echo "Failure in fetching from NOAO!"
                                     #if [ $i == 1 ] ; then echo "Cannot proceed without the search image!" ; exit 2 ; fi
-                                    SKIP=true
+                            SKIP=true
                                     #echo "Unable to find raw image for overlapping exposure: $overlapnum ; will try to proceed without it."
-                        
+                            
                                     ###### remove the overlap from the diff.list file
-                                    sed -i -e "s/${overlapnum}//"  mytemp_${EXPNUM}/KH_diff.list1
+                            sed -i -e "s/${overlapnum}//"  mytemp_${EXPNUM}/KH_diff.list1
                                     # we also need to reduce the count in the first field of KH_diff.list1 by one
-                                    OLDCOUNT=`awk '{print $1}'  mytemp_${EXPNUM}/KH_diff.list1`
-                                    NEWCOUNT=$((${OLDCOUNT}-1))
-                                    sed -i -e s/${OLDCOUNT}/${NEWCOUNT}/  mytemp_${EXPNUM}/KH_diff.list1 
-                                fi
-                            fi
-                        fi
-                    fi
-                fi
+                            OLDCOUNT=`awk '{print $1}'  mytemp_${EXPNUM}/KH_diff.list1`
+                            NEWCOUNT=$((${OLDCOUNT}-1))
+                            sed -i -e s/${OLDCOUNT}/${NEWCOUNT}/  mytemp_${EXPNUM}/KH_diff.list1 
+                        fi # if [ $? -eq 0 ]
+                    fi # /data/des51.b
+                fi # /data/des30
+            fi # in dCache
+        fi #incomplete SE
         #else # this is not the search image so we don't check for the raw image
-        else
-            echo this is not the search image so we don\'t check for the raw image
         #    continue
-        fi
-    fi
+	
+    fi # nfile -ge 59
     echo moving on to writing the dag
-
-
+    
+    
     if [ ! -z "$SNSTAR_FILENAME" ]; then
         SNSTAR_OPTS="-T $SNSTAR_FILENAME"
     fi
     if [ ! -z "$SNVETO_FILENAME" ]; then
         SNVETO_OPTS="-V $SNVETO_FILENAME" 
     fi
-
+    
     # add the SE+diff jobs to the dag
     echo add the SE+diff jobs to the dag
 
@@ -670,11 +669,11 @@ do
                 do
                     if [ $ichip -ne 2 ] && [ $ichip -ne 31 ] && [ $ichip -ne 61 ] ; then
                         echo "jobsub -n --group=des --OS=SL6 --resource-provides=usage_model=${RESOURCES} $JOBSUB_OPTS --append_condor_requirements='(TARGET.GLIDEIN_Site==\\\"FermiGrid\\\"||(TARGET.HAS_CVMFS_des_opensciencegrid_org==true&&TARGET.HAS_CVMFS_des_osgstorage_org==true))' file://SEdiff.sh -r $RNUM -p $PNUM -E $overlapnum -b $BAND -n $overlapnite $JUMPTOEXPCALIBOPTION -d $DESTCACHE -m $SCHEMA $SEARCH_OPTS -c $ichip -S $procnum $(echo $SNSTAR_OPTS | sed -e "s/\${CCDNUM_LIST}/${ichip}/") $(echo $SNVETO_OPTS | sed -e "s/\${CCDNUM_LIST}/${ichip}/")" >> $searchfile
-                        echo wrote chip $ichip to $searchfile
+ #                       echo wrote chip $ichip to $searchfile
                     fi    
                 done
                 echo finished writing search exposure jobs to $searchfile:
-                cat $searchfile
+#                cat $searchfile
             else
                 echo "add template job for exp $overlapnum != $EXPNUM"
                 # template SE jobs (with -t option)
