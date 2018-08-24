@@ -238,10 +238,10 @@ nimmask=`echo $immaskfiles | wc -w`
 if [ $nimmask -ge 1 ]; then
     psffiles="`ifdh ls  /pnfs/des/${DESTCACHE}/${SCHEMA}/exp/${NITE}/${EXPNUM}/'*_'$(printf %02d ${CCDNUM_LIST})'_r'${RNUM}'p'${PNUM}'_fullcat.fits' | grep fits | grep fnal`" 
     npsf=`echo $psffiles | wc -w`
-    if [ $npsf -ge 1 ]; then
+    if [ $npsf -ge 1 ] || [ "$DOCALIB" == "false" ]; then
 	csvfiles="`ifdh ls  /pnfs/des/${DESTCACHE}/${SCHEMA}/exp/${NITE}/${EXPNUM}/allZP_D$(printf %08d ${tempexp})_r${RNUM}p${PNUM}.csv | grep fnal` `ifdh ls  /pnfs/des/${DESTCACHE}/${SCHEMA}/exp/${NITE}/${EXPNUM}/Zero_D$(printf %08d ${tempexp})_r${RNUM}p${PNUM}.csv | grep fnal` `ifdh ls  /pnfs/des/${DESTCACHE}/${SCHEMA}/exp/${NITE}/${EXPNUM}/D$(printf %08d ${tempexp})_r${RNUM}p${PNUM}_ZP.csv | grep fnal`" 
 	ncsv=`echo $csvfiles | wc -w`
-	if [ $ncsv -ge 3 ]; then
+	if [ $ncsv -ge 3 ] || [ "$DOCALIB" == "false" ]; then
 	    if [ "$OVERWRITE" == "false" ]; then
 		echo "All SE processing for $EXPNUM, r=$RNUM, p=$PNUM is complete. We will skip the SE step."
 		SKIPSE=true
