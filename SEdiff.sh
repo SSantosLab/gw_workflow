@@ -239,7 +239,7 @@ if [ $nimmask -ge 1 ]; then
     psffiles="`ifdh ls  /pnfs/des/${DESTCACHE}/${SCHEMA}/exp/${NITE}/${EXPNUM}/'*_'$(printf %02d ${CCDNUM_LIST})'_r'${RNUM}'p'${PNUM}'_fullcat.fits' | grep fits | grep fnal`" 
     npsf=`echo $psffiles | wc -w`
     if [ $npsf -ge 1 ] || [ "$DOCALIB" == "false" ]; then
-	csvfiles="`ifdh ls  /pnfs/des/${DESTCACHE}/${SCHEMA}/exp/${NITE}/${EXPNUM}/allZP_D$(printf %08d ${tempexp})_r${RNUM}p${PNUM}.csv | grep fnal` `ifdh ls  /pnfs/des/${DESTCACHE}/${SCHEMA}/exp/${NITE}/${EXPNUM}/Zero_D$(printf %08d ${tempexp})_r${RNUM}p${PNUM}.csv | grep fnal` `ifdh ls  /pnfs/des/${DESTCACHE}/${SCHEMA}/exp/${NITE}/${EXPNUM}/D$(printf %08d ${tempexp})_r${RNUM}p${PNUM}_ZP.csv | grep fnal`" 
+	csvfiles="`ifdh ls  /pnfs/des/${DESTCACHE}/${SCHEMA}/exp/${NITE}/${EXPNUM}/allZP_D$(printf %08d ${EXPNUM})_r${RNUM}p${PNUM}.csv | grep fnal` `ifdh ls  /pnfs/des/${DESTCACHE}/${SCHEMA}/exp/${NITE}/${EXPNUM}/Zero_D$(printf %08d ${EXPNUM})_r${RNUM}p${PNUM}.csv | grep fnal` `ifdh ls  /pnfs/des/${DESTCACHE}/${SCHEMA}/exp/${NITE}/${EXPNUM}/D$(printf %08d ${EXPNUM})_r${RNUM}p${PNUM}_ZP.csv | grep fnal`" 
 	ncsv=`echo $csvfiles | wc -w`
 	if [ $ncsv -ge 3 ] || [ "$DOCALIB" == "false" ]; then
 	    if [ "$OVERWRITE" == "false" ]; then
@@ -598,7 +598,7 @@ EOF
 	
 # doing this unsetup bit seems to break the BLISS old script. Commenting out for now	
 #	for prodlist in healpy astropy  fitsio  matplotlib six python ; do unsetup $prodlist ; done # some attempted version fixing
-
+	
 	export CONDA_DIR=/cvmfs/des.opensciencegrid.org/fnal/anaconda2
 	source $CONDA_DIR/etc/profile.d/conda.sh
 	conda activate des18a
@@ -650,7 +650,7 @@ TEMPLATEPATHS=`cat copy_pairs_for_${EXPNUM}.sh | sed -r -e "s/ifdh\ cp\ (\-\-for
 for templatedir in $TEMPLATEPATHS
 do
     
-    tempexp=`echo $templatedir | egrep -o "\/[0-9]{6}\/$" | tr -d "/"`
+    tempexp=$(echo $templatedir | egrep -o "\/[0-9]{6}\/$" | tr -d "/")
     echo "Checking exposure $tempexp"
     
 # note that $templatedir has a trailing slash already
@@ -658,11 +658,11 @@ do
 # check for all of the necessary files
     
 # first check immask because if they aren't there, we know it's a failure and there's no point doing the rest of it
-    immaskfiles="`ifdh ls ${templatedir}'*_r'${RNUM}'p'${PNUM}'_immask.fits.fz' | grep fits | grep fnal`"
+    immaskfiles="$(ifdh ls ${templatedir}'*_r'${RNUM}'p'${PNUM}'_immask.fits.fz' | grep fits | grep fnal)"
     nimmask=`echo $immaskfiles | wc -w`
     if [ $nimmask -lt 59 ]; then
         ### OK, we're missing the .fz files. Maybe there are uncompressed (.fits) files. Let's check for those too.
-        immaskfiles="`ifdh ls ${templatedir}'*_r'${RNUM}'p'${PNUM}'_immask.fits' | grep fits | grep fnal`"
+        immaskfiles="$(ifdh ls ${templatedir}'*_r'${RNUM}'p'${PNUM}'_immask.fits' | grep fits | grep fnal)"
         nimmask=`echo $immaskfiles | wc -w`
         if [ $nimmask -lt 59 ]; then
             echo "Exposure $tempexp missing one or more immask.fits files. Editing copy_pairs_for_${EXPNUM}.sh and WS_diff.list to remove this exposure. Diffimg will not consider it as a template."
@@ -677,8 +677,8 @@ do
 #ok, now check the psf and csv files, but only if we need them
     if [ "$DOCALIB" == "true" ]; then
 	
-        psffiles="`ifdh ls ${templatedir}'*_r'${RNUM}'p'${PNUM}'_fullcat.fits' | grep fullcat | grep fnal`"
-        npsf=`echo $psffiles | wc -w`
+	psffiles="$(ifdh ls ${templatedir}'*_r'${RNUM}p${PNUM}_fullcat.fits | grep fullcat | grep fnal)"
+	npsf=`echo $psffiles | wc -w`
         if [ $npsf -lt 59 ]; then
             echo "Exposure $tempexp missing one or more fullcat.fits files. Editing copy_pairs_for_${EXPNUM}.sh and WS_diff.list to remove this exposure. Diffimg will not consider it as a template."
             sed -i -e "s:${templatedir}${tempexp}.out::" copy_pairs_for_${EXPNUM}.sh
@@ -687,18 +687,19 @@ do
         fi	
     fi
     
-    if [ "${STARCAT_NAME}" != "" ] || [ "${SNVETO_NAME}" != "" ] ; then
-        csvfiles="`ifdh ls ${templatedir}'allZP_D*'${tempexp}'*_r'${RNUM}p${PNUM}'*.csv' | grep csv | grep fnal` `ifdh ls ${templatedir}'Zero_*'${tempexp}'*_r'${RNUM}p${PNUM}'*.csv' | grep csv | grep fnal` `ifdh ls ${templatedir}'D*'${tempexp}'*_r'${RNUM}p${PNUM}'*_ZP.csv' | grep csv | grep fnal`"
-        ncsv=`echo $csvfiles | wc -w`
-if [ $ncsv -lt 3 ]; then
-            echo "Exposure $tempexp missing one or more required csv files. Editing copy_pairs_for_${EXPNUM}.sh and WS_diff.list to remove this exposure. Diffimg will not consider it as a template."
-            sed -i -e "s:${templatedir}${tempexp}.out::" copy_pairs_for_${EXPNUM}.sh
-            FAILEDEXPS="$FAILEDEXPS $tempexp"
-            continue
-        else
-            ifdh cp ${IFDHCP_OPT} -D $csvfiles ./ || echo "WARNING: Copy of csv files for exposure ${tempexp} failed with status $?"
-        fi
-	# We also need to see if these are per-CCD csv files that we need to combine for makestarcat.py. Namely, the D*_ZP.csv files
+    if [ "${STARCAT_NAME}" != "" ] || [ "${SNVETO_NAME}" != "" ]; then
+	csvfiles="$(ifdh ls ${templatedir}'allZP_D*'${tempexp}'*_r'${RNUM}p${PNUM}'*.csv' | grep csv | grep fnal) $(ifdh ls ${templatedir}'Zero_*'${tempexp}'*_r'${RNUM}p${PNUM}'*.csv' | grep csv | grep fnal) $(ifdh ls ${templatedir}'D*'${tempexp}'*_r'${RNUM}p${PNUM}'*_ZP.csv' | grep csv | grep fnal)"
+	
+	ncsv=`echo $csvfiles | wc -w`
+	if [ $ncsv -lt 3 ]; then
+	    echo "Exposure $tempexp missing one or more required csv files. Editing copy_pairs_for_${EXPNUM}.sh and WS_diff.list to remove this exposure. Diffimg will not consider it as a template."
+	    sed -i -e "s:${templatedir}${tempexp}.out::" copy_pairs_for_${EXPNUM}.sh
+	    FAILEDEXPS="$FAILEDEXPS $tempexp"
+	    continue
+	else
+	    ifdh cp ${IFDHCP_OPT} -D $csvfiles ./ || echo "WARNING: Copy of csv files for exposure ${tempexp} failed with status $?"
+	fi
+#	# We also need to see if these are per-CCD csv files that we need to combine for makestarcat.py. Namely, the D*_ZP.csv files
 	if [ ! -s D${tempexp}_r${RNUM}p${PNUM}_ZP.csv ]; then
 	    echo "Combining D${tempexp}_CCD_r${RNUM}p${PNUM}_ZP.csv files..."
 	    echo "ID,EXPNUM,CCDNUM,NUMBER,ALPHAWIN_J2000,DELTAWIN_J2000,FLUX_AUTO,FLUXERR_AUTO,FLUX_PSF,FLUXERR_PSF,MAG_AUTO,MAGERR_AUTO,MAG_PSF,MAGERR_PSF,SPREAD_MODEL,SPREADERR_MODEL,FWHM_WORLD,FWHMPSF_IMAGE,FWHMPSF_WORLD,CLASS_STAR,FLAGS,IMAFLAGS_ISO,ZeroPoint,ZeroPoint_rms,ZeroPoint_FLAGS" > D${tempexp}_r${RNUM}p${PNUM}_ZP.csv
@@ -706,12 +707,14 @@ if [ $ncsv -lt 3 ]; then
 	    do 
 		awk '(NR>1) { print $0 }' $csvfile >>  D${tempexp}_r${RNUM}p${PNUM}_ZP.csv
 	    done
+	fi
     fi
-    done
+done
+    
     
 # if any of them failed remove them from WS_diff.list
-    for failedexp in $FAILEDEXPS
-    do
+for failedexp in $FAILEDEXPS
+do
     sed -i -e "s/${failedexp}//"  ./WS_diff.list
     OLDCOUNT=`awk '{print $1}'  WS_diff.list`
     NEWCOUNT=$((${OLDCOUNT}-1))
@@ -727,15 +730,15 @@ setup extralibs
 # in most cases, this list will only be 1 ccd long (and the 1-ccd runs will be run in parallel)
 for c in $ccdlist; do
     c=$(printf "%02d" $c)
-
+    
     export HOME=$OLDHOME
-
+    
     ######## CODE FORMERLY IN RUN_DIFFIMG_PIPELINE.sh ##########
-
+    
     ### now we want to make the local directory structure by copying in 
-
+    
     #copy some of the top dir list files and such
-
+    
     # .ini sets up database access (with passwords)
     # WS_diff.list created by dagmaker
     # run_inputs.tar.gz for each exposure number, copies over all the scripts in order to run
@@ -743,7 +746,7 @@ for c in $ccdlist; do
     filestocopy="/pnfs/des/resilient/${SCHEMA}/db-tools/desservices.ini /pnfs/des/${DESTCACHE}/${SCHEMA}/exp/${NITE}/${EXPNUM}/WS_diff.list /pnfs/des/${DESTCACHE}/${SCHEMA}/exp/${NITE}/${EXPNUM}/${procnum}/${EXPNUM}_run_inputs.tar.gz"
     ifdh cp ${IFDHCP_OPT} -D $filestocopy ./ || { echo "ifdh cp failed for SN_mon* and such" ; exit 1 ; }
     tar zxf ${EXPNUM}_run_inputs.tar.gz
-
+    
     # set environment location
     LOCDIR="${procnum}/${BAND}_`printf %02d $CCDNUM_LIST`"
 
@@ -754,28 +757,28 @@ for c in $ccdlist; do
         inputfiles=$(ifdh ls /pnfs/des/${DESTCACHE}/${SCHEMA}/exp/${NITE}/${EXPNUM}/${procnum}/input_files/ )
         for ifile in $inputfiles 
         do
-        basefile=`basename $ifile`
-        if [ "${basefile}" == "input_files" ] || [ -z "$basefile" ]; then
-            echo "skipping dir itself"
-        else
-            ifdh cp ${IFDHCP_OPT} -D /pnfs/des/${DESTCACHE}/${SCHEMA}/exp/${NITE}/${EXPNUM}/${procnum}/input_files/${basefile} ./${procnum}/input_files/ || exit 2
-        fi
+            basefile=`basename $ifile`
+            if [ "${basefile}" == "input_files" ] || [ -z "$basefile" ]; then
+		echo "skipping dir itself"
+            else
+		ifdh cp ${IFDHCP_OPT} -D /pnfs/des/${DESTCACHE}/${SCHEMA}/exp/${NITE}/${EXPNUM}/${procnum}/input_files/${basefile} ./${procnum}/input_files/ || exit 2
+            fi
         done  
     fi
-
+    
     # make symlinks to these files
     ln -s ${procnum}/input_files/* .
-
+    
     # make some local directories expected by the diffimg pipeline
     mkdir ${LOCDIR}/headers ${LOCDIR}/ingest ${LOCDIR}/$(basename $(ifdh ls  /pnfs/des/${DESTCACHE}/${SCHEMA}/exp/${NITE}/${EXPNUM}/${LOCDIR}/stamps* 0 | head -1))
     ln -s ${LOCDIR}/ingest ${LOCDIR}/stamps* ${LOCDIR}/headers .
-
+    
     /cvmfs/grid.cern.ch/util/cvmfs-uptodate /cvmfs/des.opensciencegrid.org # make sure we have new version of cvmfs
-
+    
     # setup scripts
     source /cvmfs/des.opensciencegrid.org/2015_Q2/eeups/SL6/eups/desdm_eups_setup.sh
     export EUPS_PATH=/cvmfs/des.opensciencegrid.org/eeups/fnaleups:$EUPS_PATH
-
+    
     # setup a specific version of perl so that we know what we're getting
     setup perl 5.18.1+6 || exit 134
 
