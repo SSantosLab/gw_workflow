@@ -1240,9 +1240,9 @@ echo "***** BEGINNING DIFFIMG *****"
     #make a tar file of our logs
     TARFILES=""
     if [ $FULLCOPY == "true" ]; then
-        TARFILES=$(ls ./RUN[0-9]* *.cat *out *LIST *xml STARCAT*LIST ./RUN_ALL.LOG *psf *numList *_ORIG *.lis *.head INTENAL*.DAT ${PACKEDFILES})
+        TARFILES=$(ls RUN[0-9]* *.cat *out *LIST *xml STARCAT*LIST RUN_ALL.LOG *psf *numList *_ORIG *.lis *.head INTENAL*.DAT ${PACKEDFILES})
     else
-        TARFILES=$(ls ./RUN[0-9]* *.cat *out *LIST *xml STARCAT*LIST ./RUN_ALL.LOG *psf ${PACKEDFILES})
+        TARFILES=$(ls RUN[0-9]* *.cat *out *LIST *xml STARCAT*LIST RUN_ALL.LOG *psf ${PACKEDFILES})
     fi
 
     echo "Files to tar: $TARFILES"
