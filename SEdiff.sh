@@ -233,10 +233,10 @@ rpnum="r${RNUM}p${PNUM}"
 ccdlist=(${CCDNUM_LIST//,/ })
 
 # get filenames
-immaskfiles="`ifdh ls  /pnfs/des/${DESTCACHE}/${SCHEMA}/exp/${NITE}/${EXPNUM}/'*_'$(printf %02d ${CCDNUM_LIST})'_r'${RNUM}'p'${PNUM}'_immask.fits.fz' | grep fits | grep fnal`"
+immaskfiles="`ifdh ls  /pnfs/des/${DESTCACHE}/${SCHEMA}/exp/${NITE}/${EXPNUM}/D$(printf %08d ${EXPNUM})_${BAND}_$(printf %02d ${CCDNUM_LIST})_r${RNUM}p${PNUM}_immask.fits.fz | grep fits | grep fnal`"
 nimmask=`echo $immaskfiles | wc -w`
 if [ $nimmask -ge 1 ]; then
-    psffiles="`ifdh ls  /pnfs/des/${DESTCACHE}/${SCHEMA}/exp/${NITE}/${EXPNUM}/'*_'$(printf %02d ${CCDNUM_LIST})'_r'${RNUM}'p'${PNUM}'_fullcat.fits' | grep fits | grep fnal`" 
+    psffiles="`ifdh ls  /pnfs/des/${DESTCACHE}/${SCHEMA}/exp/${NITE}/${EXPNUM}/'D$(printf %08d ${EXPNUM})_${BAND}_$(printf %02d ${CCDNUM_LIST})_r${RNUM}p${PNUM}_fullcat.fits | grep fits | grep fnal`" 
     npsf=`echo $psffiles | wc -w`
     if [ $npsf -ge 1 ] || [ "$DOCALIB" == "false" ]; then
 	csvfiles="`ifdh ls  /pnfs/des/${DESTCACHE}/${SCHEMA}/exp/${NITE}/${EXPNUM}/allZP_D$(printf %08d ${EXPNUM})_r${RNUM}p${PNUM}.csv | grep fnal` `ifdh ls  /pnfs/des/${DESTCACHE}/${SCHEMA}/exp/${NITE}/${EXPNUM}/Zero_D$(printf %08d ${EXPNUM})_r${RNUM}p${PNUM}.csv | grep fnal` `ifdh ls  /pnfs/des/${DESTCACHE}/${SCHEMA}/exp/${NITE}/${EXPNUM}/D$(printf %08d ${EXPNUM})_r${RNUM}p${PNUM}_ZP.csv | grep fnal`" 
@@ -1019,7 +1019,7 @@ for c in $ccdlist; do
     done
 
     # now we have the searchexp-overlapexp.out files in the pairs directory so we parse them to see which template/CCD files we actually need in this job
-    ls ${TOPDIR_WSDIFF}/pairs/
+
     # link necessary as of diffimg gwdevel7
     ln -s  ${TOPDIR_WSDIFF}/pairs/${EXPNUM}-*.out ${TOPDIR_WSDIFF}/pairs/${EXPNUM}-*.no ${TOPDIR_WSDIFF}/pairs/${EXPNUM}/
     echo "files to loop over for ccd by ccd overlap :"
@@ -1028,11 +1028,11 @@ for c in $ccdlist; do
     # determine overlap ccd by ccd
     for overlapfile in `ls ${TOPDIR_WSDIFF}/pairs/${EXPNUM}-*.out`
     do
-        echo "Starting overlap file $overlapfile:"
-        cat $overlapfile
+
         overlapexp=`basename $overlapfile | sed -e s/${EXPNUM}\-// -e s/\.out//`
         overlapnite=$(egrep -o /pnfs/des/${DESTCACHE}/${SCHEMA}/exp/[0-9]{8}/${overlapexp}/${overlapexp}.out ${procnum}/input_files/copy_pairs_for_${EXPNUM}.sh | sed -r -e "s/.*\/([0-9]{8})\/.*/\1/")
-        overlapccds=`awk '$2=='${CCDNUM_LIST}'{ for( f=5; f<=NF; f++) print $f}' $overlapfile`
+        overlapccds=`awk '($2=='${CCDNUM_LIST}') { for( f=5; f<=NF; f++) print $f}' $overlapfile`
+
         for overlapccd in $overlapccds
         do
         
@@ -1065,7 +1065,7 @@ for c in $ccdlist; do
                     if [ -z "$file2copy" ] ; then
                         echo  "WARNING: .fits file for $overlapexp CCD $overlapccd did not appear in ifdh ls and was thus not copied in. There could be problems down the road."
                     else
-                        ifdh cp ${IFDHCP_OPT} -D $file2copy ${TOPDIR_WSDIFF}/data/DECam_${overlapexp}/ || echo "Error in ifdh cp ${IFDHCP_OPT} /pnfs/des/${DESTCACHE}/${SCHEMA}/exp/*/${overlapexp}/D`printf %08d $overlapexp`_${BAND}_`printf %02d $overlapccd`_${rpnum}_immask.fits WSTemplates/data/DECam_${overlapexp}/ !!!"
+                        ifdh cp ${IFDHCP_OPT} -D $file2copy ${TOPDIR_WSDIFF}/data/DECam_${overlapexp}/ || echo "Error in ifdh cp ${IFDHCP_OPT} /pnfs/des/${DESTCACHE}/${SCHEMA}/exp/${overlapnite}/${overlapexp}/D`printf %08d $overlapexp`_${BAND}_`printf %02d $overlapccd`_${rpnum}_immask.fits WSTemplates/data/DECam_${overlapexp}/ !!!"
                         cd  ${TOPDIR_WSDIFF}/data/DECam_${overlapexp}/
                         ln -s D`printf %08d $overlapexp`_${BAND}_`printf %02d $overlapccd`_${rpnum}_immask.fits DECam_`printf %08d ${overlapexp}`_`printf %02d $overlapccd`.fits
                         ln -s D`printf %08d $overlapexp`_${BAND}_`printf %02d $overlapccd`_${rpnum}_immask.fits DECam_`printf %06d ${overlapexp}`_`printf %02d $overlapccd`.fits
@@ -1073,7 +1073,7 @@ for c in $ccdlist; do
                     fi
                 # copy the ccd files over
                 else
-                    ifdh cp ${IFDHCP_OPT} -D $file2copy ${TOPDIR_WSDIFF}/data/DECam_${overlapexp}/ || echo "Error in ifdh cp ${IFDHCP_OPT} /pnfs/des/${DESTCACHE}/${SCHEMA}/exp/*/${overlapexp}/D`printf %08d $overlapexp`_${BAND}_`printf %02d $overlapccd`_${rpnum}_immask.fits WSTemplates/data/DECam_${overlapexp}/ !!!"
+                    ifdh cp ${IFDHCP_OPT} -D $file2copy ${TOPDIR_WSDIFF}/data/DECam_${overlapexp}/ || echo "Error in ifdh cp ${IFDHCP_OPT} /pnfs/des/${DESTCACHE}/${SCHEMA}/exp/${overlapnite}/${overlapexp}/D`printf %08d $overlapexp`_${BAND}_`printf %02d $overlapccd`_${rpnum}_immask.fits WSTemplates/data/DECam_${overlapexp}/ !!!"
                     funpack -D ${TOPDIR_WSDIFF}/data/DECam_${overlapexp}/`basename $file2copy`
                     cd  ${TOPDIR_WSDIFF}/data/DECam_${overlapexp}/
                     # make symlinks to fit naming convention to the expectation of the pipeline
