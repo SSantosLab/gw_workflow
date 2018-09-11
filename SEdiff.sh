@@ -233,13 +233,13 @@ rpnum="r${RNUM}p${PNUM}"
 ccdlist=(${CCDNUM_LIST//,/ })
 
 # get filenames
-immaskfiles="`ifdh ls  /pnfs/des/${DESTCACHE}/${SCHEMA}/exp/${NITE}/${EXPNUM}/D$(printf %08d ${EXPNUM})_${BAND}_$(printf %02d ${CCDNUM_LIST})_r${RNUM}p${PNUM}_immask.fits.fz | grep fits | grep fnal`"
+immaskfiles="$(ifdh ls  /pnfs/des/${DESTCACHE}/${SCHEMA}/exp/${NITE}/${EXPNUM}/D$(printf %08d ${EXPNUM})_${BAND}_$(printf %02d ${CCDNUM_LIST})_r${RNUM}p${PNUM}_immask.fits.fz | grep -v "/$")"
 nimmask=`echo $immaskfiles | wc -w`
 if [ $nimmask -ge 1 ]; then
-    psffiles="`ifdh ls  /pnfs/des/${DESTCACHE}/${SCHEMA}/exp/${NITE}/${EXPNUM}/'D$(printf %08d ${EXPNUM})_${BAND}_$(printf %02d ${CCDNUM_LIST})_r${RNUM}p${PNUM}_fullcat.fits | grep fits | grep fnal`" 
+    psffiles="$(ifdh ls  /pnfs/des/${DESTCACHE}/${SCHEMA}/exp/${NITE}/${EXPNUM}/D$(printf %08d ${EXPNUM})_${BAND}_$(printf %02d ${CCDNUM_LIST})_r${RNUM}p${PNUM}_fullcat.fits | grep -v "/$")" 
     npsf=`echo $psffiles | wc -w`
     if [ $npsf -ge 1 ] || [ "$DOCALIB" == "false" ]; then
-	csvfiles="`ifdh ls  /pnfs/des/${DESTCACHE}/${SCHEMA}/exp/${NITE}/${EXPNUM}/allZP_D$(printf %08d ${EXPNUM})_r${RNUM}p${PNUM}.csv | grep fnal` `ifdh ls  /pnfs/des/${DESTCACHE}/${SCHEMA}/exp/${NITE}/${EXPNUM}/Zero_D$(printf %08d ${EXPNUM})_r${RNUM}p${PNUM}.csv | grep fnal` `ifdh ls  /pnfs/des/${DESTCACHE}/${SCHEMA}/exp/${NITE}/${EXPNUM}/D$(printf %08d ${EXPNUM})_r${RNUM}p${PNUM}_ZP.csv | grep fnal`" 
+	csvfiles="`ifdh ls  /pnfs/des/${DESTCACHE}/${SCHEMA}/exp/${NITE}/${EXPNUM}/allZP_D$(printf %08d ${EXPNUM})_r${RNUM}p${PNUM}.csv | grep -v "/$"` `ifdh ls  /pnfs/des/${DESTCACHE}/${SCHEMA}/exp/${NITE}/${EXPNUM}/Zero_D$(printf %08d ${EXPNUM})_r${RNUM}p${PNUM}.csv | grep -v "/$"` `ifdh ls  /pnfs/des/${DESTCACHE}/${SCHEMA}/exp/${NITE}/${EXPNUM}/D$(printf %08d ${EXPNUM})_r${RNUM}p${PNUM}_ZP.csv | grep -v "/$"`" 
 	ncsv=`echo $csvfiles | wc -w`
 	if [ $ncsv -ge 3 ] || [ "$DOCALIB" == "false" ]; then
 	    if [ "$OVERWRITE" == "false" ]; then
