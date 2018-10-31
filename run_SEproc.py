@@ -26,8 +26,8 @@ def run_stage_2(ccd):
     ccdstring= "%02d"%int(ccd)
 
     #use the entire image to get astrometry solution
-    scamp('D00'+str(EXPNUM)+'_i_'+ccdstring+'_r4p5_sextractor.fits')
-    change_head('D00'+str(EXPNUM)+'_i_'+ccdstring+'_r4p5_sextractor.head', 'sextractor', 'detrend', 'wcs', CCD, **args)
+    scamp('D00'+str(EXPNUM)+'_'+FILTER+'_'+ccdstring+'_r'+rRun+'p'+pRun+'_sextractor.fits')
+    change_head('D00'+str(EXPNUM)+'_'+FILTER+'_'+ccdstring+'_r'+rRun+'p'+pRun+'_sextractor.head', 'sextractor', 'detrend', 'wcs', CCD, **args)
 
     bleedmask(ccdstring,'wcs','bleedmasked',**args)
     skycompress(ccdstring,'bleedmasked','bleedmask-mini',**args)
@@ -119,6 +119,6 @@ if __name__ == '__main__':
     dir_final = dir_nite+'/'+EXPNUM
     os.system('ifdh mkdir '+str(dir_nite) )
     os.system('ifdh mkdir '+str(dir_final) )
-    cmd = 'ifdh cp --force=xrootd -D *.out *fullcat* *_immask.fits.fz D*_ZP.fits ' +str(dir_final)
+    cmd = 'ifdh cp --force=xrootd -D *.out *fullcat* *_immask.fits.fz ' +str(dir_final)
     print cmd
     os.system(cmd)
