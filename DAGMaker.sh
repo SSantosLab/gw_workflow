@@ -547,7 +547,8 @@ do
 	# if all the fits files are there, try to produce the missing .out file quickly
         if [ $nfiles -ge 59 ] ; then
             echo "************* doing getcorners *****************"
-            ./getcorners.sh $EXPNUM /pnfs/des/${DESTCACHE}/${SCHEMA}/exp/${overlapnite}/${overlapnum} .
+            #./getcorners.sh $EXPNUM /pnfs/des/${DESTCACHE}/${SCHEMA}/exp/${overlapnite}/${overlapnum} .
+	    ./getcorners.sh $overlapnum /pnfs/des/${DESTCACHE}/${SCHEMA}/exp/${overlapnite}/${overlapnum} .
             ifdh cp -D ${overlapnum}.out /pnfs/des/${DESTCACHE}/${SCHEMA}/exp/${overlapnite}/${overlapnum}
             if [ $? -ne 0 ] ; then 
                 echo "Warning: Missing .out file: /pnfs/des/${DESTCACHE}/${SCHEMA}/exp/${overlapnite}/${overlapnum}/${overlapnum}.out" 
