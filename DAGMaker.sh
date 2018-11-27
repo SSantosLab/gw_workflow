@@ -270,7 +270,7 @@ fi
 procnum="dp$SEASON"
 rpnum="r"$RNUM"p"$PNUM
 if [ ! -z "$STASHVER" ]; then
-    STASHVER="-e MIN_STASH_VERSION=${STASHVER}"
+    STASHVER="&&(TARGET.CVMFS_des_osgstorage_org_REVISION>=${STASHVER})"
 fi
 echo $STASHVER
 
@@ -337,15 +337,21 @@ setup diffimg $DIFFIMG_EUPS_VERSION
 
 setup ftools v6.17
 export HEADAS=$FTOOLS_DIR
+setup wcstools
 setup autoscan
 setup astropy
+setup numpy 1.9.1+8
+setup despydb 2.0.0+4
+
 export DIFFIMG_HOST=FNAL
 #for IFDH
 export EXPERIMENT=des
-export PATH=${PATH}:/cvmfs/fermilab.opensciencegrid.org/products/common/db/../prd/cpn/v1_7/NULL/bin:/cvmfs/fermilab.opensciencegrid.org/products/common/prd/ifdhc/v1_8_11/Linux64bit-2-6-2-12/bin
-export PYTHONPATH=${PYTHONPATH}:/cvmfs/fermilab.opensciencegrid.org/products/common/prd/ifdhc/v1_8_11/Linux64bit-2-6-2-12/lib/python
+export PATH=${PATH}:/cvmfs/fermilab.opensciencegrid.org/products/common/db/../prd/cpn/v1_7/NULL/bin:/cvmfs/fermilab.opensciencegrid.org/products/common/prd/ifdhc/v2_3_8/Linux64bit-2-6-2-12/bin
+export PYTHONPATH=${PYTHONPATH}:/cvmfs/fermilab.opensciencegrid.org/products/common/prd/ifdhc/v2_3_8/Linux64bit-2-6-2-12/lib/python
+export IFDHC_CONFIG_DIR=/cvmfs/fermilab.opensciencegrid.org/products/common/prd/ifdhc_config/v2_3_8/NULL
 export IFDH_NO_PROXY=1
 export IFDH_CP_UNLINK_ON_ERROR=1
+export IFDH_CP_MAXRETRIES=2
 
 if [ ! -d syspfiles_$$ ]; then
     mkdir syspfiles_$$
@@ -524,7 +530,12 @@ do
     
     echo -e "\noverlapnum = ${overlapnum} , overlapnite = ${overlapnite} , explength = $explength, teff = $teff"
     echo checking if image has been SE processed already
-    
+
+    # go ahead and run copy_DESDM.sh anyway. If it detects everything is already there, then it will just return quickly.
+    echo $overlapnum > tempoverlap.list
+#    ./copy_DESDM.sh tempoverlap.list
+    rm tempoverlap.list
+
     # ls in the dcache scratch area to see if images are already there
     nfiles=0    
     for file in `ls /pnfs/des/${DESTCACHE}/${SCHEMA}/exp/${overlapnite}/${overlapnum}/*_${rpnum}_immask.fits.fz`
@@ -547,8 +558,7 @@ do
 	# if all the fits files are there, try to produce the missing .out file quickly
         if [ $nfiles -ge 59 ] ; then
             echo "************* doing getcorners *****************"
-            #./getcorners.sh $EXPNUM /pnfs/des/${DESTCACHE}/${SCHEMA}/exp/${overlapnite}/${overlapnum} .
-	    ./getcorners.sh $overlapnum /pnfs/des/${DESTCACHE}/${SCHEMA}/exp/${overlapnite}/${overlapnum} .
+            ./getcorners.sh $overlapnum /pnfs/des/${DESTCACHE}/${SCHEMA}/exp/${overlapnite}/${overlapnum} .
             ifdh cp -D ${overlapnum}.out /pnfs/des/${DESTCACHE}/${SCHEMA}/exp/${overlapnite}/${overlapnum}
             if [ $? -ne 0 ] ; then 
                 echo "Warning: Missing .out file: /pnfs/des/${DESTCACHE}/${SCHEMA}/exp/${overlapnite}/${overlapnum}/${overlapnum}.out" 
@@ -569,7 +579,8 @@ do
             ls /pnfs/des/${DESTCACHE}/${SCHEMA}/exp/${overlapnite}/${overlapnum}/allZP_D`printf %08d ${overlapnum}`_${rpnum}.csv 
         else
             # if only the expCalib outputs are missing and we are not allowed to ignore them
-            if [ $nfiles -ge 59 ] && [ "$IGNORECALIB" == "true" ] ; then
+	    ncsv=$(ls /pnfs/des/${DESTCACHE}/${SCHEMA}/exp/${overlapnite}/${overlapnum}/D`printf %08d ${overlapnum}`_[0-6][0-9]_${rpnum}_ZP.csv | wc -w 2>/dev/null) 
+            if [ $ncsv -lt 59 ] && [ $nfiles -ge 59 ] && [ "$IGNORECALIB" == "true" ] ; then
                 # assume something went wrong with the previous SE proc for this image (set nfiles=0 to force reprocessing)
                 nfiles=0
                 # but assume that only calibration step needs to be done for this exposure
@@ -662,6 +673,7 @@ do
             NEWCOUNT=$((${OLDCOUNT}-1))
             sed -i -e s/${OLDCOUNT}/${NEWCOUNT}/  mytemp_${EXPNUM}/KH_diff.list1 
         else
+            EXPLIST=$(echo ${ALLEXPS// /,})
             if [ "$overlapnum" == "$EXPNUM" ]; then
                 # search image (no -t option)
                 # write to a different text file, then append that at the end (to ensure templates are done before the search)
@@ -669,7 +681,9 @@ do
                 for (( ichip=1;ichip<63;ichip++ ))
                 do
                     if [ $ichip -ne 2 ] && [ $ichip -ne 31 ] && [ $ichip -ne 61 ] ; then
-                        echo "jobsub -n --group=des --OS=SL6 --resource-provides=usage_model=${RESOURCES} $JOBSUB_OPTS --append_condor_requirements='(TARGET.GLIDEIN_Site==\\\"FermiGrid\\\"||(TARGET.HAS_CVMFS_des_opensciencegrid_org==true&&TARGET.HAS_CVMFS_des_osgstorage_org==true))' file://SEdiff.sh -r $RNUM -p $PNUM -E $overlapnum -b $BAND -n $overlapnite $JUMPTOEXPCALIBOPTION -d $DESTCACHE -m $SCHEMA $SEARCH_OPTS -c $ichip -S $procnum $(echo $SNSTAR_OPTS | sed -e "s/\${CCDNUM_LIST}/${ichip}/") $(echo $SNVETO_OPTS | sed -e "s/\${CCDNUM_LIST}/${ichip}/")" >> $searchfile
+			# CHANGE 11-20-18 TO RUN SEDiff ON ALL EXPOSURES
+                        echo "jobsub -n --group=des --OS=SL6 --resource-provides=usage_model=${RESOURCES} $JOBSUB_OPTS --append_condor_requirements='(TARGET.GLIDEIN_Site==\\\"FermiGrid\\\"||(TARGET.HAS_CVMFS_des_opensciencegrid_org==true&&TARGET.HAS_CVMFS_des_osgstorage_org==true)${STASHVER})' file://SEdiff.sh -r $RNUM -p $PNUM -E $EXPLIST -b $BAND -n $overlapnite $JUMPTOEXPCALIBOPTION -d $DESTCACHE -m $SCHEMA $SEARCH_OPTS -c $ichip -S $procnum $(echo $SNSTAR_OPTS | sed -e "s/\${CCDNUM_LIST}/${ichip}/") $(echo $SNVETO_OPTS | sed -e "s/\${CCDNUM_LIST}/${ichip}/")" >> $searchfile
+                        #echo "jobsub -n --group=des --OS=SL6 --resource-provides=usage_model=${RESOURCES} $JOBSUB_OPTS --append_condor_requirements='(TARGET.GLIDEIN_Site==\\\"FermiGrid\\\"||(TARGET.HAS_CVMFS_des_opensciencegrid_org==true&&TARGET.HAS_CVMFS_des_osgstorage_org==true)${STASHVER})' file://SEdiff.sh -r $RNUM -p $PNUM -E $overlapnum -b $BAND -n $overlapnite $JUMPTOEXPCALIBOPTION -d $DESTCACHE -m $SCHEMA $SEARCH_OPTS -c $ichip -S $procnum $(echo $SNSTAR_OPTS | sed -e "s/\${CCDNUM_LIST}/${ichip}/") $(echo $SNVETO_OPTS | sed -e "s/\${CCDNUM_LIST}/${ichip}/")" >> $searchfile
  #                       echo wrote chip $ichip to $searchfile
                     fi    
                 done
@@ -680,8 +694,11 @@ do
                 # template SE jobs (with -t option)
                 for (( ichip=1;ichip<63;ichip++ ))
                 do
-                if [ $ichip -ne 2 ] && [ $ichip -ne 31 ] && [ $ichip -ne 61 ] ; then
-                    echo "jobsub -n --group=des --OS=SL6 --resource-provides=usage_model=${RESOURCES} $JOBSUB_OPTS --append_condor_requirements='(TARGET.GLIDEIN_Site==\\\"FermiGrid\\\"||(TARGET.HAS_CVMFS_des_opensciencegrid_org==true&&TARGET.HAS_CVMFS_des_osgstorage_org==true))' file://SEdiff.sh -r $RNUM -p $PNUM -E $overlapnum -b $BAND -n $overlapnite $JUMPTOEXPCALIBOPTION -d $DESTCACHE -m $SCHEMA -t $TEMP_OPTS -c $ichip -S $procnum" >> $outfile
+#                if [ $ichip -ne 2 ] && [ $ichip -ne 31 ] && [ $ichip -ne 61 ] ; then
+                if [ $ichip -ne 2 ] && [ $ichip -ne 61 ] ; then
+		    # CHANGE 11-20-18 TO RUN SEDiff ON ALL EXPOSURES
+                    echo "jobsub -n --group=des --OS=SL6 --resource-provides=usage_model=${RESOURCES} $JOBSUB_OPTS --append_condor_requirements='(TARGET.GLIDEIN_Site==\\\"FermiGrid\\\"||(TARGET.HAS_CVMFS_des_opensciencegrid_org==true&&TARGET.HAS_CVMFS_des_osgstorage_org==true))' file://SEdiff.sh -r $RNUM -p $PNUM -E $EXPLIST -b $BAND -n $overlapnite $JUMPTOEXPCALIBOPTION -d $DESTCACHE -m $SCHEMA -t $TEMP_OPTS -c $ichip -S $procnum" >> $outfile
+                    #echo "jobsub -n --group=des --OS=SL6 --resource-provides=usage_model=${RESOURCES} $JOBSUB_OPTS --append_condor_requirements='(TARGET.GLIDEIN_Site==\\\"FermiGrid\\\"||(TARGET.HAS_CVMFS_des_opensciencegrid_org==true&&TARGET.HAS_CVMFS_des_osgstorage_org==true))' file://SEdiff.sh -r $RNUM -p $PNUM -E $overlapnum -b $BAND -n $overlapnite $JUMPTOEXPCALIBOPTION -d $DESTCACHE -m $SCHEMA -t $TEMP_OPTS -c $ichip -S $procnum" >> $outfile
                 fi    
                 done
             fi
