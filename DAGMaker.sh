@@ -893,6 +893,22 @@ do
 	    sed -i -e '/ifdh cp\s.*\s'$nicelink'/a funpack -D '$mylink'\n ln -sf '$mylink' JOBDIR' ./${procnum}/${BAND}_`printf %02d ${iccd}`/RUN01_expose_prepData
 	    sed -i -e '/ln -sf/ s/.fz//' ./${procnum}/${BAND}_`printf %02d ${iccd}`/RUN01_expose_prepData
 	done
+
+	#move the funpack -D and ln -sf lines to after the if statement in RUN01
+        #assuming its always written the same, the first funpack is on line 6, the rest 9 lines after. 
+        #For the funpack line to go after the if statement, line 6 moves down 6 lines
+        # ie. lines 6,7 --> 12,13, lines 15,16 --> 21,22, etc
+        length=`cat ./${procnum}/${BAND}_\`printf %02d ${iccd}\`/RUN01_expose_prepData | wc -l`
+        for ((i=6;i<=$length;i=i+9));
+        do
+            j=$(($i+1))
+            k=$(($i+6))
+            l=$(($i+7))
+            if [ $j -le $length ] || [ $k -le $length ] || [ $l -le $length ]; then
+                ex -s -c ${i},${j}m${k},${l} -c w -c q RUN01_expose_prepData
+            fi
+        done
+
     fi
 done
 
