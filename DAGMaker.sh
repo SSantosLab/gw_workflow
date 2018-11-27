@@ -898,17 +898,16 @@ do
         #assuming its always written the same, the first funpack is on line 6, the rest 9 lines after. 
         #For the funpack line to go after the if statement, line 6 moves down 6 lines
         # ie. lines 6,7 --> 12,13, lines 15,16 --> 21,22, etc
-        length=`cat ./${procnum}/${BAND}_\`printf %02d ${iccd}\`/RUN01_expose_prepData | wc -l`
-        for ((i=6;i<=$length;i=i+9));
-        do
-            j=$(($i+1))
-            k=$(($i+6))
+	length=`cat ./${procnum}/${BAND}_\`printf %02d ${iccd}\`/RUN01_expose_prepData | wc -l`
+	for ((i=6;i<=$length;i=i+9));
+	do
+	    m=$(($i+1))
+            n=$(($i+6))
             l=$(($i+7))
-            if [ $j -le $length ] || [ $k -le $length ] || [ $l -le $length ]; then
-                ex -s -c ${i},${j}m${k},${l} -c w -c q RUN01_expose_prepData
+            if [ $m -le $length ] || [ $n -le $length ] || [ $l -le $length ]; then
+		ex -s -c ${i},${m}m${n},${l} -c w -c q ./${procnum}/${BAND}_`printf %02d ${iccd}`/RUN01_expose_prepData
             fi
-        done
-
+	done
     fi
 done
 
