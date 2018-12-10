@@ -50,7 +50,7 @@ TWINDOW=15
 
 #### ONLY use this option if you have nothing but late-time templates. It should be commented out for standard nightly diffim running.
 #MIN_NITE=20170831
-MIN_NITE=20100101
+#MIN_NITE=20100101
 
 #### Use only if you want to avoid using images taken after MAX_NITE as templates.
 MAX_NITE=20170901
