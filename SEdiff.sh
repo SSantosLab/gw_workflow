@@ -733,12 +733,13 @@ do
 	    ifdh cp ${IFDHCP_OPT} -D $csvfiles ./ || echo "WARNING: Copy of csv files for exposure ${tempexp} failed with status $?"
 	fi
 #	# We also need to see if these are per-CCD csv files that we need to combine for makestarcat.py. Namely, the D*_ZP.csv files
-	if [ ! -s D${tempexp}_r${RNUM}p${PNUM}_ZP.csv ]; then
-	    echo "Combining D${tempexp}_CCD_r${RNUM}p${PNUM}_ZP.csv files..."
+	tempexp8=$(printf %08d $tempexp)
+	if [ ! -s D${tempexp8}_r${RNUM}p${PNUM}_ZP.csv ]; then
+	    echo "Combining D${tempexp8}_CCD_r${RNUM}p${PNUM}_ZP.csv files..."
 	    echo "ID,EXPNUM,CCDNUM,NUMBER,ALPHAWIN_J2000,DELTAWIN_J2000,FLUX_AUTO,FLUXERR_AUTO,FLUX_PSF,FLUXERR_PSF,MAG_AUTO,MAGERR_AUTO,MAG_PSF,MAGERR_PSF,SPREAD_MODEL,SPREADERR_MODEL,FWHM_WORLD,FWHMPSF_IMAGE,FWHMPSF_WORLD,CLASS_STAR,FLAGS,IMAFLAGS_ISO,ZeroPoint,ZeroPoint_rms,ZeroPoint_FLAGS" > D${tempexp}_r${RNUM}p${PNUM}_ZP.csv
-	    for csvfile in $(ls  D${tempexp}_[0-6][0-9]_r${RNUM}p${PNUM}_ZP.csv)
+	    for csvfile in $(ls  D${tempexp8}_[0-6][0-9]_r${RNUM}p${PNUM}_ZP.csv)
 	    do 
-		awk '(NR>1) { print $0 }' $csvfile >>  D${tempexp}_r${RNUM}p${PNUM}_ZP.csv
+		awk '(NR>1) { print $0 }' $csvfile >>  D${tempexp8}_r${RNUM}p${PNUM}_ZP.csv
 	    done
 	fi
     fi
