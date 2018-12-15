@@ -675,8 +675,10 @@ do
     
 # check for all of the necessary files
     tempfiles=$(ifdh ls ${templatedir})
-    
-
+    immaskfiles=""
+    immaskfitsfiles=""
+    psffiles=""
+    csvfiles=""
     for tempfile in $tempfiles
     do
 	if   [[ $tempfile == *_r${RNUM}p${PNUM}_immask.fits.fz ]]; then
