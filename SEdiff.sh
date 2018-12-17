@@ -310,8 +310,6 @@ if [ "$SKIPSE" == "false" ] ; then # if statement allows SE to be skipped if SE 
     ifdh cp -D /pnfs/des/resilient/gw/code/MySoft4.tar.gz  /pnfs/des/resilient/gw/code/test_mysql_libs.tar.gz ./ || { echo "Error copying input files. Exiting." ; exit 2 ; }
     tar xzf ./MySoft4.tar.gz
     
-    ifdh cp --force=xrootd /pnfs/des/persistent/${SCHEMA}/db-tools/desservices.ini ${HOME}/.desservices.ini
-    
     tar xzfm ./test_mysql_libs.tar.gz
     
     
@@ -321,8 +319,7 @@ if [ "$SKIPSE" == "false" ] ; then # if statement allows SE to be skipped if SE 
 #    ifdh cp -D /pnfs/des/scratch/nglaeser/desdmLiby1e2.py ./ || { echo "Error copying desdmLiby1e2.py. Exiting." ; exit 2; }
 #    ifdh cp -D /pnfs/des/scratch/nglaeser/make_red_catlist.py ./ || { echo "Error copying make_red_catlist.py Exiting." ; exit 2; }
     
-    export DES_SERVICES=${HOME}/.desservices.ini
-    chmod 600 ${HOME}/.desservices.ini
+   
     chmod +x make_red_catlist.py BLISS-expCalib_Y3apass.py BLISS-expCalib_Y3apass-old.py getcorners.sh
     
     rm -f confFile
@@ -674,77 +671,78 @@ do
 # note that $templatedir has a trailing slash already
     
 # check for all of the necessary files
-    tempfiles=$(ifdh ls ${templatedir})
-    immaskfiles=""
-    immaskfitsfiles=""
-    psffiles=""
-    csvfiles=""
-    for tempfile in $tempfiles
-    do
-	if   [[ $tempfile == *_r${RNUM}p${PNUM}_immask.fits.fz ]]; then
-	    immaskfiles="$immaskfiles $tempfile"
-	elif [[ $tempfile == *_r${RNUM}p${PNUM}_immask.fits ]]; then
-	    immaskfitsfiles="$immaskfitsfiles $tempfile"
-	elif [[ $tempfile == *_r${RNUM}p${PNUM}_fullcat.fits ]]; then
-	    psffiles="$psffiles $tempfile"
-	elif [[ $tempfile == ${templatedir}allZP_D$(printf %08d ${tempexp})_r${RNUM}p${PNUM}.csv ]] || [[ $tempfile == ${templatedir}Zero_$(printf %08d ${tempexp})_${BAND}_*_r${RNUM}p${PNUM}.csv ]] || [[ $tempfile == ${templatedir}D*${tempexp}*_r${RNUM}p${PNUM}_ZP.csv ]] ; then
-	    csvfiles="$csvfiles $tempfile"
-	fi
-    done
-
-# first check immask because if they aren't there, we know it's a failure and there's no point doing the rest of it
-#    immaskfiles="$(ifdh ls ${templatedir}'*_r'${RNUM}'p'${PNUM}'_immask.fits.fz' | grep fits | grep fnal)"
-    nimmask=`echo $immaskfiles | wc -w`
-    if [ $nimmask -lt 59 ]; then
-        ### OK, we're missing the .fz files. Maybe there are uncompressed (.fits) files. Let's check for those too.
-#        immaskfiles="$(ifdh ls ${templatedir}'*_r'${RNUM}'p'${PNUM}'_immask.fits' | grep fits | grep fnal)"
-        nimmask=`echo $immaskfitsfiles | wc -w`
-        if [ $nimmask -lt 59 ]; then
-            echo "Exposure $tempexp missing one or more immask.fits files. Editing copy_pairs_for_${EXPNUM}.sh and WS_diff.list to remove this exposure. Diffimg will not consider it as a template."
-            sed -i -e "s:${templatedir}${tempexp}.out::" copy_pairs_for_${EXPNUM}.sh
-            FAILEDEXPS="$FAILEDEXPS $tempexp"
-            continue
-        else
-            echo ".fits files are present. It is a good idea to run fpack on these files and save them in their compressed state in dCache to save space."
-        fi
-    fi
+##    tempfiles=$(ifdh ls ${templatedir})
+##    immaskfiles=""
+##    immaskfitsfiles=""
+##    psffiles=""
+##    csvfiles=""
+##    for tempfile in $tempfiles
+##    do
+##	if   [[ $tempfile == *_r${RNUM}p${PNUM}_immask.fits.fz ]]; then
+##	    immaskfiles="$immaskfiles $tempfile"
+##	elif [[ $tempfile == *_r${RNUM}p${PNUM}_immask.fits ]]; then
+##	    immaskfitsfiles="$immaskfitsfiles $tempfile"
+##	elif [[ $tempfile == *_r${RNUM}p${PNUM}_fullcat.fits ]]; then
+##	    psffiles="$psffiles $tempfile"
+##	elif [[ $tempfile == ${templatedir}allZP_D$(printf %08d ${tempexp})_r${RNUM}p${PNUM}.csv ]] || [[ $tempfile == ${templatedir}Zero_$(printf %08d ${tempexp})_${BAND}_*_r${RNUM}p${PNUM}.csv ]] || [[ $tempfile == ${templatedir}D*${tempexp}*_r${RNUM}p${PNUM}_ZP.csv ]] ; then
+##	    csvfiles="$csvfiles $tempfile"
+##	fi
+##    done
+##
+### first check immask because if they aren't there, we know it's a failure and there's no point doing the rest of it
+###    immaskfiles="$(ifdh ls ${templatedir}'*_r'${RNUM}'p'${PNUM}'_immask.fits.fz' | grep fits | grep fnal)"
+##    nimmask=`echo $immaskfiles | wc -w`
+##    if [ $nimmask -lt 59 ]; then
+##        ### OK, we're missing the .fz files. Maybe there are uncompressed (.fits) files. Let's check for those too.
+###        immaskfiles="$(ifdh ls ${templatedir}'*_r'${RNUM}'p'${PNUM}'_immask.fits' | grep fits | grep fnal)"
+##        nimmask=`echo $immaskfitsfiles | wc -w`
+##        if [ $nimmask -lt 59 ]; then
+##            echo "Exposure $tempexp missing one or more immask.fits files. Editing copy_pairs_for_${EXPNUM}.sh and WS_diff.list to remove this exposure. Diffimg will not consider it as a template."
+##            sed -i -e "s:${templatedir}${tempexp}.out::" copy_pairs_for_${EXPNUM}.sh
+##            FAILEDEXPS="$FAILEDEXPS $tempexp"
+##            continue
+##        else
+##            echo ".fits files are present. It is a good idea to run fpack on these files and save them in their compressed state in dCache to save space."
+##        fi
+##    fi
+##    
+###ok, now check the psf and csv files, but only if we need them
+##    if [ "$DOCALIB" == "true" ]; then
+##	
+###	psffiles="$(ifdh ls ${templatedir}'*_r'${RNUM}p${PNUM}_fullcat.fits | grep fullcat | grep fnal)"
+##	npsf=`echo $psffiles | wc -w`
+##        if [ $npsf -lt 59 ]; then
+##            echo "Exposure $tempexp missing one or more fullcat.fits files. Editing copy_pairs_for_${EXPNUM}.sh and WS_diff.list to remove this exposure. Diffimg will not consider it as a template."
+##            sed -i -e "s:${templatedir}${tempexp}.out::" copy_pairs_for_${EXPNUM}.sh
+##            FAILEDEXPS="$FAILEDEXPS $tempexp"
+##            continue
+##        fi	
+##    fi
     
-#ok, now check the psf and csv files, but only if we need them
-    if [ "$DOCALIB" == "true" ]; then
-	
-#	psffiles="$(ifdh ls ${templatedir}'*_r'${RNUM}p${PNUM}_fullcat.fits | grep fullcat | grep fnal)"
-	npsf=`echo $psffiles | wc -w`
-        if [ $npsf -lt 59 ]; then
-            echo "Exposure $tempexp missing one or more fullcat.fits files. Editing copy_pairs_for_${EXPNUM}.sh and WS_diff.list to remove this exposure. Diffimg will not consider it as a template."
-            sed -i -e "s:${templatedir}${tempexp}.out::" copy_pairs_for_${EXPNUM}.sh
-            FAILEDEXPS="$FAILEDEXPS $tempexp"
-            continue
-        fi	
-    fi
-    
-    if [ "${STARCAT_NAME}" != "" ] || [ "${SNVETO_NAME}" != "" ]; then
-#	csvfiles="$(ifdh ls ${templatedir}allZP_D$(printf %08d ${tempexp})_r'${RNUM}p${PNUM}'.csv' | grep csv | grep fnal) $(ifdh ls ${templatedir}Zero_$(printf %08d ${tempexp})_${BAND_'*_r'${RNUM}p${PNUM}.csv | grep csv | grep fnal) $(ifdh ls ${templatedir}'D*'${tempexp}'*_r'${RNUM}p${PNUM}'*_ZP.csv' | grep csv | grep fnal)"
-	
-	ncsv=`echo $csvfiles | wc -w`
-	if [ $ncsv -lt 3 ]; then
-	    echo "Exposure $tempexp missing one or more required csv files. Editing copy_pairs_for_${EXPNUM}.sh and WS_diff.list to remove this exposure. Diffimg will not consider it as a template."
-	    sed -i -e "s:${templatedir}${tempexp}.out::" copy_pairs_for_${EXPNUM}.sh
-	    FAILEDEXPS="$FAILEDEXPS $tempexp"
-	    continue
-	else
-	    ifdh cp ${IFDHCP_OPT} -D $csvfiles ./ || echo "WARNING: Copy of csv files for exposure ${tempexp} failed with status $?"
-	fi
+##    if [ "${STARCAT_NAME}" != "" ] || [ "${SNVETO_NAME}" != "" ]; then
+###	csvfiles="$(ifdh ls ${templatedir}allZP_D$(printf %08d ${tempexp})_r'${RNUM}p${PNUM}'.csv' | grep csv | grep fnal) $(ifdh ls ${templatedir}Zero_$(printf %08d ${tempexp})_${BAND_'*_r'${RNUM}p${PNUM}.csv | grep csv | grep fnal) $(ifdh ls ${templatedir}'D*'${tempexp}'*_r'${RNUM}p${PNUM}'*_ZP.csv' | grep csv | grep fnal)"
+##	
+##	ncsv=`echo $csvfiles | wc -w`
+##	if [ $ncsv -lt 3 ]; then
+##	    echo "Exposure $tempexp missing one or more required csv files. Editing copy_pairs_for_${EXPNUM}.sh and WS_diff.list to remove this exposure. Diffimg will not consider it as a template."
+##	    sed -i -e "s:${templatedir}${tempexp}.out::" copy_pairs_for_${EXPNUM}.sh
+##	    FAILEDEXPS="$FAILEDEXPS $tempexp"
+##	    continue
+### KRH 20181216
+###	else
+###	    ifdh cp ${IFDHCP_OPT} -D $csvfiles ./ || echo "WARNING: Copy of csv files for exposure ${tempexp} failed with status $?"
+##	fi
 #	# We also need to see if these are per-CCD csv files that we need to combine for makestarcat.py. Namely, the D*_ZP.csv files
-	tempexp8=$(printf %08d $tempexp)
-	if [ ! -s D${tempexp8}_r${RNUM}p${PNUM}_ZP.csv ]; then
-	    echo "Combining D${tempexp8}_CCD_r${RNUM}p${PNUM}_ZP.csv files..."
-	    echo "ID,EXPNUM,CCDNUM,NUMBER,ALPHAWIN_J2000,DELTAWIN_J2000,FLUX_AUTO,FLUXERR_AUTO,FLUX_PSF,FLUXERR_PSF,MAG_AUTO,MAGERR_AUTO,MAG_PSF,MAGERR_PSF,SPREAD_MODEL,SPREADERR_MODEL,FWHM_WORLD,FWHMPSF_IMAGE,FWHMPSF_WORLD,CLASS_STAR,FLAGS,IMAFLAGS_ISO,ZeroPoint,ZeroPoint_rms,ZeroPoint_FLAGS" > D${tempexp}_r${RNUM}p${PNUM}_ZP.csv
-	    for csvfile in $(ls  D${tempexp8}_[0-6][0-9]_r${RNUM}p${PNUM}_ZP.csv)
-	    do 
-		awk '(NR>1) { print $0 }' $csvfile >>  D${tempexp8}_r${RNUM}p${PNUM}_ZP.csv
-	    done
-	fi
-    fi
+#	tempexp8=$(printf %08d $tempexp)
+#	if [ ! -s D${tempexp8}_r${RNUM}p${PNUM}_ZP.csv ]; then
+#	    echo "Combining D${tempexp8}_CCD_r${RNUM}p${PNUM}_ZP.csv files..."
+#	    echo "ID,EXPNUM,CCDNUM,NUMBER,ALPHAWIN_J2000,DELTAWIN_J2000,FLUX_AUTO,FLUXERR_AUTO,FLUX_PSF,FLUXERR_PSF,MAG_AUTO,MAGERR_AUTO,MAG_PSF,MAGERR_PSF,SPREAD_MODEL,SPREADERR_MODEL,FWHM_WORLD,FWHMPSF_IMAGE,FWHMPSF_WORLD,CLASS_STAR,FLAGS,IMAFLAGS_ISO,ZeroPoint,ZeroPoint_rms,ZeroPoint_FLAGS" > D${tempexp8}_r${RNUM}p${PNUM}_ZP.csv
+#	    for csvfile in $(ls  D${tempexp8}_[0-6][0-9]_r${RNUM}p${PNUM}_ZP.csv)
+#	    do 
+#		awk '(NR>1) { print $0 }' $csvfile >>  D${tempexp8}_r${RNUM}p${PNUM}_ZP.csv
+#	    done
+#	fi
+#    fi
 done
     
     
@@ -783,6 +781,8 @@ for c in $ccdlist; do
     ifdh cp ${IFDHCP_OPT} -D $filestocopy ./ || { echo "ifdh cp failed for SN_mon* and such" ; exit 1 ; }
     tar zxf ${EXPNUM}_run_inputs.tar.gz
     
+    chmod 600 ${HOME}/desservices.ini
+
     # set environment location
     LOCDIR="${procnum}/${BAND}_`printf %02d $CCDNUM_LIST`"
 
@@ -1064,15 +1064,19 @@ for c in $ccdlist; do
     # determine overlap ccd by ccd
     for overlapfile in `ls ${TOPDIR_WSDIFF}/pairs/${EXPNUM}-*.out`
     do
-
         overlapexp=`basename $overlapfile | sed -e s/${EXPNUM}\-// -e s/\.out//`
         overlapnite=$(egrep -o /pnfs/des/${DESTCACHE}/${SCHEMA}/exp/[0-9]{8}/${overlapexp}/${overlapexp}.out ${procnum}/input_files/copy_pairs_for_${EXPNUM}.sh | sed -r -e "s/.*\/([0-9]{8})\/.*/\1/")
         overlapccds=`awk '($2=='${CCDNUM_LIST}') { for( f=5; f<=NF; f++) print $f}' $overlapfile`
+	tempfiles=$(ifdh ls /pnfs/des/${DESTCACHE}/${SCHEMA}/exp/${overlapnite}/${overlapexp})
+	immaskfiles=""
+	immaskfitsfiles=""
+	psffiles=""
+	csvfiles=""
 
         for overlapccd in $overlapccds
         do
         
-        
+            
             if [ -d  ${TOPDIR_WSDIFF}/data/DECam_${overlapexp}_empty ]; then
                 rmdir  ${TOPDIR_WSDIFF}/data/DECam_${overlapexp}_empty
             fi
@@ -1082,11 +1086,15 @@ for c in $ccdlist; do
             fi
             file2copy="/pnfs/des/${DESTCACHE}/${SCHEMA}/exp/${overlapnite}/${overlapexp}/D`printf %08d $overlapexp`_${BAND}_`printf %02d $overlapccd`_${rpnum}_immask.fits.fz"
             ZPdir="/pnfs/des/${DESTCACHE}/${SCHEMA}/exp/${overlapnite}/${overlapexp}/"
+	    ZPfilename=$(echo $tempfiles | grep -o D$(printf %08d $overlapexp)_$(printf %02d $overlapccd)_${rpnum}_ZP.csv)
+	    if [ -z "$ZPfilename" ]; then ZPfilename=D$(printf %08d $overlapexp)_${rpnum}_ZP.csv ; fi
             ZPfilename="D`printf %08d $overlapexp`_`printf %02d $overlapccd`_${rpnum}_ZP.csv"
             ZPfile=${ZPdir}${ZPfilename}
             if [ -z "$ZPfile" ] ; then
                 echo "ZP file for the template is not available. We are leaving out this template."
             else
+		ifdh cp -D $ZPfile ./ || echo "Error copying $ZPfile"
+
                 # if the ZP file for this CCD exists we will symlink it to the generic name, and then copy in fits files
            #     echo "Making symlink to this CCD ZP file..."
            #     currentdir=$(pwd)
@@ -1120,6 +1128,17 @@ for c in $ccdlist; do
                 cd ../../../
             fi
         done
+	overlapexp8=$(printf %08d $overlapexp)
+	if [ "${STARCAT_NAME}" != "" ] || [ "${SNVETO_NAME}" != "" ]; then
+	    if [ ! -s D${overlapexp8}_r${RNUM}p${PNUM}_ZP.csv ]; then
+		echo "Combining D${overlapexp8}_CCD_r${RNUM}p${PNUM}_ZP.csv files..."
+		echo "ID,EXPNUM,CCDNUM,NUMBER,ALPHAWIN_J2000,DELTAWIN_J2000,FLUX_AUTO,FLUXERR_AUTO,FLUX_PSF,FLUXERR_PSF,MAG_AUTO,MAGERR_AUTO,MAG_PSF,MAGERR_PSF,SPREAD_MODEL,SPREADERR_MODEL,FWHM_WORLD,FWHMPSF_IMAGE,FWHMPSF_WORLD,CLASS_STAR,FLAGS,IMAFLAGS_ISO,ZeroPoint,ZeroPoint_rms,ZeroPoint_FLAGS" > D${overlapexp8}_r${RNUM}p${PNUM}_ZP.csv
+		for csvfile in $(ls  D${overlapexp8}_[0-6][0-9]_r${RNUM}p${PNUM}_ZP.csv)
+		do 
+		    awk '(NR>1) { print $0 }' $csvfile >>  D${overlapexp8}_r${RNUM}p${PNUM}_ZP.csv
+		done
+	    fi
+	fi
     done
 
     # makestarcat
@@ -1375,7 +1394,7 @@ echo "***** BEGINNING DIFFIMG *****"
         echo "NONE" >> RUN_ALL.FAIL
     fi
 
-    copyback
+   # copyback
 
 
 
