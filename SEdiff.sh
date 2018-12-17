@@ -1394,7 +1394,7 @@ echo "***** BEGINNING DIFFIMG *****"
         echo "NONE" >> RUN_ALL.FAIL
     fi
 
-   # copyback
+    copyback
 
 
 
