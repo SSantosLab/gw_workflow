@@ -681,8 +681,8 @@ do
                 for (( ichip=1;ichip<63;ichip++ ))
                 do
                     if [ $ichip -ne 2 ] && [ $ichip -ne 31 ] && [ $ichip -ne 61 ] ; then
-			# CHANGE 11-20-18 TO RUN SEDiff ON ALL EXPOSURES
-                        echo "jobsub -n --group=des --OS=SL6 --resource-provides=usage_model=${RESOURCES} $JOBSUB_OPTS --append_condor_requirements='(TARGET.GLIDEIN_Site==\\\"FermiGrid\\\"||(TARGET.HAS_CVMFS_des_opensciencegrid_org==true&&TARGET.HAS_CVMFS_des_osgstorage_org==true)${STASHVER})' file://SEdiff.sh -r $RNUM -p $PNUM -E $EXPLIST -b $BAND -n $overlapnite $JUMPTOEXPCALIBOPTION -d $DESTCACHE -m $SCHEMA $SEARCH_OPTS -c $ichip -S $procnum $(echo $SNSTAR_OPTS | sed -e "s/\${CCDNUM_LIST}/${ichip}/") $(echo $SNVETO_OPTS | sed -e "s/\${CCDNUM_LIST}/${ichip}/")" >> $searchfile
+			# CHANGE 11-20-18 TO RUN SEDiff ON ALL EXPOSURES EXPLIST --> overlapnum
+                        echo "jobsub -n --group=des --OS=SL6 --resource-provides=usage_model=${RESOURCES} $JOBSUB_OPTS --append_condor_requirements='(TARGET.GLIDEIN_Site==\\\"FermiGrid\\\"||(TARGET.HAS_CVMFS_des_opensciencegrid_org==true&&TARGET.HAS_CVMFS_des_osgstorage_org==true)${STASHVER})' file://SEdiff.sh -r $RNUM -p $PNUM -E $EXPLIST -v $DIFFIMG_EUPS_VERSION -b $BAND -n $overlapnite $JUMPTOEXPCALIBOPTION -d $DESTCACHE -m $SCHEMA $SEARCH_OPTS -c $ichip -S $procnum $(echo $SNSTAR_OPTS | sed -e "s/\${CCDNUM_LIST}/${ichip}/") $(echo $SNVETO_OPTS | sed -e "s/\${CCDNUM_LIST}/${ichip}/")" >> $searchfile
                         #echo "jobsub -n --group=des --OS=SL6 --resource-provides=usage_model=${RESOURCES} $JOBSUB_OPTS --append_condor_requirements='(TARGET.GLIDEIN_Site==\\\"FermiGrid\\\"||(TARGET.HAS_CVMFS_des_opensciencegrid_org==true&&TARGET.HAS_CVMFS_des_osgstorage_org==true)${STASHVER})' file://SEdiff.sh -r $RNUM -p $PNUM -E $overlapnum -b $BAND -n $overlapnite $JUMPTOEXPCALIBOPTION -d $DESTCACHE -m $SCHEMA $SEARCH_OPTS -c $ichip -S $procnum $(echo $SNSTAR_OPTS | sed -e "s/\${CCDNUM_LIST}/${ichip}/") $(echo $SNVETO_OPTS | sed -e "s/\${CCDNUM_LIST}/${ichip}/")" >> $searchfile
  #                       echo wrote chip $ichip to $searchfile
                     fi    
@@ -697,7 +697,7 @@ do
 #                if [ $ichip -ne 2 ] && [ $ichip -ne 31 ] && [ $ichip -ne 61 ] ; then
                 if [ $ichip -ne 2 ] && [ $ichip -ne 61 ] ; then
 		    # CHANGE 11-20-18 TO RUN SEDiff ON ALL EXPOSURES
-                    echo "jobsub -n --group=des --OS=SL6 --resource-provides=usage_model=${RESOURCES} $JOBSUB_OPTS --append_condor_requirements='(TARGET.GLIDEIN_Site==\\\"FermiGrid\\\"||(TARGET.HAS_CVMFS_des_opensciencegrid_org==true&&TARGET.HAS_CVMFS_des_osgstorage_org==true))' file://SEdiff.sh -r $RNUM -p $PNUM -E $EXPLIST -b $BAND -n $overlapnite $JUMPTOEXPCALIBOPTION -d $DESTCACHE -m $SCHEMA -t $TEMP_OPTS -c $ichip -S $procnum" >> $outfile
+                    echo "jobsub -n --group=des --OS=SL6 --resource-provides=usage_model=${RESOURCES} $JOBSUB_OPTS --append_condor_requirements='(TARGET.GLIDEIN_Site==\\\"FermiGrid\\\"||(TARGET.HAS_CVMFS_des_opensciencegrid_org==true&&TARGET.HAS_CVMFS_des_osgstorage_org==true))' file://SEdiff.sh -r $RNUM -p $PNUM -E $overlapnum -v $DIFFIMG_EUPS_VERSION -b $BAND -n $overlapnite $JUMPTOEXPCALIBOPTION -d $DESTCACHE -m $SCHEMA -t $TEMP_OPTS -c $ichip -S $procnum" >> $outfile
                     #echo "jobsub -n --group=des --OS=SL6 --resource-provides=usage_model=${RESOURCES} $JOBSUB_OPTS --append_condor_requirements='(TARGET.GLIDEIN_Site==\\\"FermiGrid\\\"||(TARGET.HAS_CVMFS_des_opensciencegrid_org==true&&TARGET.HAS_CVMFS_des_osgstorage_org==true))' file://SEdiff.sh -r $RNUM -p $PNUM -E $overlapnum -b $BAND -n $overlapnite $JUMPTOEXPCALIBOPTION -d $DESTCACHE -m $SCHEMA -t $TEMP_OPTS -c $ichip -S $procnum" >> $outfile
                 fi    
                 done
