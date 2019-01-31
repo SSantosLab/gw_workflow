@@ -327,12 +327,8 @@ chmod a+x dummyjob.sh
 echo "set up environment, and handy commands"
 
 # pull the setps from setup-diffImg
-. /cvmfs/des.opensciencegrid.org/2015_Q2/eeups/SL6/eups/desdm_eups_setup.sh
+. /cvmfs/des.opensciencegrid.org/eeups/startupcachejob21i.sh 
 
-export PATH=/cvmfs/fermilab.opensciencegrid.org/products/common/prd/kx509/v3_1_0/NULL/bin:/cvmfs/fermilab.opensciencegrid.org/products/common/prd/cigetcert/v1_16_1/Linux64bit-2-6-2-12/bin:/cvmfs/fermilab.opensciencegrid.org/products/common/prd/ifdhc/v1_8_11/Linux64bit-2-6-2-12/bin:/cvmfs/fermilab.opensciencegrid.org/products/common/prd/jobsub_client/v1_2_3_1/NULL:${PATH}
-export PYTHONPATH=/cvmfs/fermilab.opensciencegrid.org/products/common/prd/ifdhc/v1_8_11/Linux64bit-2-6-2-12/lib/python:/cvmfs/fermilab.opensciencegrid.org/products/common/prd/jobsub_client/v1_2_3_1/NULL:${PYTHONPATH}:/cvmfs/fermilab.opensciencegrid.org/products/common/prd/pycurl/v7_16_4/Linux64bit-2-6-2-12/pycurl
-
-export IFDH_NO_PROXY=1
 export CIGETCERTLIBS_DIR=/cvmfs/fermilab.opensciencegrid.org/products/common/prd/cigetcertlibs/v1_1/Linux64bit-2-6-2-12
 
 export EUPS_PATH=/cvmfs/des.opensciencegrid.org/eeups/fnaleups:$EUPS_PATH
@@ -350,8 +346,6 @@ setup astropy
 export DIFFIMG_HOST=FNAL
 #for IFDH
 export EXPERIMENT=des
-export PATH=${PATH}:/cvmfs/fermilab.opensciencegrid.org/products/common/db/../prd/cpn/v1_7/NULL/bin:/cvmfs/fermilab.opensciencegrid.org/products/common/prd/ifdhc/v1_8_11/Linux64bit-2-6-2-12/bin
-export PYTHONPATH=${PYTHONPATH}:/cvmfs/fermilab.opensciencegrid.org/products/common/prd/ifdhc/v1_8_11/Linux64bit-2-6-2-12/lib/python
 export IFDH_NO_PROXY=1
 setup wcstools
 export PYTHONPATH=${PYTHONPATH}:/data/des40.b/data/kherner/qatoolkit-trunk/python
@@ -631,8 +625,10 @@ fi
 	    fi
 	fi
     fi
-
-    echo "jobsub -n --group=des --OS=SL6 --resource-provides=usage_model=${RESOURCES} $JOBSUB_OPTS $JOBSUB_OPTS_SE file://SE_job.sh -r $RNUM -p $PNUM -E $overlapnum -b $BAND -n $overlapnite $JUMPTOEXPCALIBOPTION -d $DESTCACHE -m $SCHEMA $SE_OPTS" >> $outfile
+    for iccd in 1 {3..9} {10..60} 62
+    do
+    echo "jobsub -n --group=des --OS=SL6 --resource-provides=usage_model=${RESOURCES} $JOBSUB_OPTS $JOBSUB_OPTS_SE file://SEdiff.sh -r $RNUM -p $PNUM -E $overlapnum -b $BAND -n $overlapnite -c $iccd -S dp$SEASON $JUMPTOEXPCALIBOPTION -d $DESTCACHE -m $SCHEMA $SE_OPTS $TEMP_OPTS" >> $outfile
+    done
 ### KH hack 2017-02-18
     echo "submitting job for $overlapnum"
 #jobsub_submit --role=DESGW --group=des --OS=SL6 --resource-provides=usage_model=${RESOURCES} $JOBSUB_OPTS $JOBSUB_OPTS_SE file://SE_job.sh -r $RNUM -p $PNUM -E $overlapnum -b $BAND -n $overlapnite $JUMPTOEXPCALIBOPTION -d $DESTCACHE -m $SCHEMA $SE_OPTS
