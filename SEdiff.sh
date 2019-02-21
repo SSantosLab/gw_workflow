@@ -109,9 +109,9 @@ export IFDH_GRIDFTP_EXTRA="-st 1800"
 export XRD_REQUESTTIMEOUT=1200
 
 
-export CONDA_DIR=/cvmfs/des.opensciencegrid.org/fnal/anaconda2
-source $CONDA_DIR/etc/profile.d/conda.sh
-conda activate des18a
+#export CONDA_DIR=/cvmfs/des.opensciencegrid.org/fnal/anaconda2
+#source $CONDA_DIR/etc/profile.d/conda.sh
+#conda activate des18a
 
 # parse arguments and flags
 ARGS="$@"
@@ -303,23 +303,11 @@ if [ "$SKIPSE" == "false" ] ; then # if statement allows SE to be skipped if SE 
         fi
     fi
     
-    #### add other code here from Nikolay's area
-    #TODO move all the necessary files into the tar.gz and into /pnfs/ so they don't have to be copied in here
-    #ifdh cp -D /pnfs/des/persistent/desdm/code/desdmLiby1e2.py /pnfs/des/persistent/desdm/code/run_desdmy1e2.py /pnfs/des/persistent/desdm/code/run_SEproc.py  /pnfs/des/persistent/desdm/code/getcorners.sh /pnfs/des/persistent/kuropat/scripts/MySoft.tgz  /pnfs/des/scratch/gw/code/test_mysql_libs.tar.gz /pnfs/des/scratch/nglaeser/BLISS-expCalib_Y3apass-old.py /pnfs/des/scratch/nglaeser/Scamp_allCCD_r4p5.fits ./ || { echo "Error copying input files. Exiting." ; exit 2 ; }
-    #ifdh cp -D /pnfs/des/resilient/gw/code/MySoft3.tar.gz  /pnfs/des/scratch/gw/code/test_mysql_libs.tar.gz /pnfs/des/scratch/nglaeser/Scamp_allCCD_r4p5.fits ./ || { echo "Error copying input files. Exiting." ; exit 2 ; }
     ifdh cp -D /pnfs/des/resilient/gw/code/MySoft4.tar.gz  /pnfs/des/resilient/gw/code/test_mysql_libs.tar.gz ./ || { echo "Error copying input files. Exiting." ; exit 2 ; }
     tar xzf ./MySoft4.tar.gz
     
     tar xzfm ./test_mysql_libs.tar.gz
-    
-    
-#    ifdh cp -D /pnfs/des/scratch/nglaeser/BLISS-expCalib_Y3apass-old.py ./ || { echo "Error copying BLISS-old.py file. Exiting." ; exit 2; }
-#    ifdh cp -D /pnfs/des/scratch/nglaeser/BLISS-expCalib_Y3apass.py ./ || { echo "Error copying BLISS.py file. Exiting." ; exit 2; }
-#    ifdh cp -D /pnfs/des/scratch/nglaeser/run_SEproc.py /pnfs/des/scratch/nglaeser/run_desdmy1e2.py /pnfs/des/scratch/nglaeser/desdmLiby1e2.py ./ || { echo "Error copying run_SEproc.py and run_desdmy1e2.py. Exiting." ; exit 2; }
-#    ifdh cp -D /pnfs/des/scratch/nglaeser/desdmLiby1e2.py ./ || { echo "Error copying desdmLiby1e2.py. Exiting." ; exit 2; }
-#    ifdh cp -D /pnfs/des/scratch/nglaeser/make_red_catlist.py ./ || { echo "Error copying make_red_catlist.py Exiting." ; exit 2; }
-    
-   
+       
     chmod +x make_red_catlist.py BLISS-expCalib_Y3apass.py BLISS-expCalib_Y3apass-old.py getcorners.sh
     
     rm -f confFile
@@ -614,9 +602,9 @@ EOF
 # doing this unsetup bit seems to break the BLISS old script. Commenting out for now	
 #	for prodlist in healpy astropy  fitsio  matplotlib six python ; do unsetup $prodlist ; done # some attempted version fixing
 	
-	export CONDA_DIR=/cvmfs/des.opensciencegrid.org/fnal/anaconda2
-	source $CONDA_DIR/etc/profile.d/conda.sh
-	conda activate des18a
+#	export CONDA_DIR=/cvmfs/des.opensciencegrid.org/fnal/anaconda2
+#	source $CONDA_DIR/etc/profile.d/conda.sh
+#	conda activate des18a
 	
 #    ./BLISS-expCalib_Y3apass.py --expnum $EXPNUM --reqnum $RNUM --attnum $PNUM --ccd $CCDNUM_LIST
 	./BLISS-expCalib_Y3apass-old.py --expnum $EXPNUM --reqnum $RNUM --attnum $PNUM --ccd $CCDNUM_LIST
@@ -669,86 +657,15 @@ do
     echo "Checking exposure $tempexp"
     
 # note that $templatedir has a trailing slash already
-    
-# check for all of the necessary files
-##    tempfiles=$(ifdh ls ${templatedir})
-##    immaskfiles=""
-##    immaskfitsfiles=""
-##    psffiles=""
-##    csvfiles=""
-##    for tempfile in $tempfiles
-##    do
-##	if   [[ $tempfile == *_r${RNUM}p${PNUM}_immask.fits.fz ]]; then
-##	    immaskfiles="$immaskfiles $tempfile"
-##	elif [[ $tempfile == *_r${RNUM}p${PNUM}_immask.fits ]]; then
-##	    immaskfitsfiles="$immaskfitsfiles $tempfile"
-##	elif [[ $tempfile == *_r${RNUM}p${PNUM}_fullcat.fits ]]; then
-##	    psffiles="$psffiles $tempfile"
-##	elif [[ $tempfile == ${templatedir}allZP_D$(printf %08d ${tempexp})_r${RNUM}p${PNUM}.csv ]] || [[ $tempfile == ${templatedir}Zero_$(printf %08d ${tempexp})_${BAND}_*_r${RNUM}p${PNUM}.csv ]] || [[ $tempfile == ${templatedir}D*${tempexp}*_r${RNUM}p${PNUM}_ZP.csv ]] ; then
-##	    csvfiles="$csvfiles $tempfile"
-##	fi
-##    done
-##
-### first check immask because if they aren't there, we know it's a failure and there's no point doing the rest of it
-###    immaskfiles="$(ifdh ls ${templatedir}'*_r'${RNUM}'p'${PNUM}'_immask.fits.fz' | grep fits | grep fnal)"
-##    nimmask=`echo $immaskfiles | wc -w`
-##    if [ $nimmask -lt 59 ]; then
-##        ### OK, we're missing the .fz files. Maybe there are uncompressed (.fits) files. Let's check for those too.
-###        immaskfiles="$(ifdh ls ${templatedir}'*_r'${RNUM}'p'${PNUM}'_immask.fits' | grep fits | grep fnal)"
-##        nimmask=`echo $immaskfitsfiles | wc -w`
-##        if [ $nimmask -lt 59 ]; then
-##            echo "Exposure $tempexp missing one or more immask.fits files. Editing copy_pairs_for_${EXPNUM}.sh and WS_diff.list to remove this exposure. Diffimg will not consider it as a template."
-##            sed -i -e "s:${templatedir}${tempexp}.out::" copy_pairs_for_${EXPNUM}.sh
-##            FAILEDEXPS="$FAILEDEXPS $tempexp"
-##            continue
-##        else
-##            echo ".fits files are present. It is a good idea to run fpack on these files and save them in their compressed state in dCache to save space."
-##        fi
 ##    fi
-##    
-###ok, now check the psf and csv files, but only if we need them
-##    if [ "$DOCALIB" == "true" ]; then
-##	
-###	psffiles="$(ifdh ls ${templatedir}'*_r'${RNUM}p${PNUM}_fullcat.fits | grep fullcat | grep fnal)"
-##	npsf=`echo $psffiles | wc -w`
-##        if [ $npsf -lt 59 ]; then
-##            echo "Exposure $tempexp missing one or more fullcat.fits files. Editing copy_pairs_for_${EXPNUM}.sh and WS_diff.list to remove this exposure. Diffimg will not consider it as a template."
-##            sed -i -e "s:${templatedir}${tempexp}.out::" copy_pairs_for_${EXPNUM}.sh
-##            FAILEDEXPS="$FAILEDEXPS $tempexp"
-##            continue
-##        fi	
-##    fi
-    
-##    if [ "${STARCAT_NAME}" != "" ] || [ "${SNVETO_NAME}" != "" ]; then
-###	csvfiles="$(ifdh ls ${templatedir}allZP_D$(printf %08d ${tempexp})_r'${RNUM}p${PNUM}'.csv' | grep csv | grep fnal) $(ifdh ls ${templatedir}Zero_$(printf %08d ${tempexp})_${BAND_'*_r'${RNUM}p${PNUM}.csv | grep csv | grep fnal) $(ifdh ls ${templatedir}'D*'${tempexp}'*_r'${RNUM}p${PNUM}'*_ZP.csv' | grep csv | grep fnal)"
-##	
-##	ncsv=`echo $csvfiles | wc -w`
-##	if [ $ncsv -lt 3 ]; then
-##	    echo "Exposure $tempexp missing one or more required csv files. Editing copy_pairs_for_${EXPNUM}.sh and WS_diff.list to remove this exposure. Diffimg will not consider it as a template."
-##	    sed -i -e "s:${templatedir}${tempexp}.out::" copy_pairs_for_${EXPNUM}.sh
-##	    FAILEDEXPS="$FAILEDEXPS $tempexp"
-##	    continue
-### KRH 20181216
-###	else
-###	    ifdh cp ${IFDHCP_OPT} -D $csvfiles ./ || echo "WARNING: Copy of csv files for exposure ${tempexp} failed with status $?"
-##	fi
-#	# We also need to see if these are per-CCD csv files that we need to combine for makestarcat.py. Namely, the D*_ZP.csv files
-#	tempexp8=$(printf %08d $tempexp)
-#	if [ ! -s D${tempexp8}_r${RNUM}p${PNUM}_ZP.csv ]; then
-#	    echo "Combining D${tempexp8}_CCD_r${RNUM}p${PNUM}_ZP.csv files..."
-#	    echo "ID,EXPNUM,CCDNUM,NUMBER,ALPHAWIN_J2000,DELTAWIN_J2000,FLUX_AUTO,FLUXERR_AUTO,FLUX_PSF,FLUXERR_PSF,MAG_AUTO,MAGERR_AUTO,MAG_PSF,MAGERR_PSF,SPREAD_MODEL,SPREADERR_MODEL,FWHM_WORLD,FWHMPSF_IMAGE,FWHMPSF_WORLD,CLASS_STAR,FLAGS,IMAFLAGS_ISO,ZeroPoint,ZeroPoint_rms,ZeroPoint_FLAGS" > D${tempexp8}_r${RNUM}p${PNUM}_ZP.csv
-#	    for csvfile in $(ls  D${tempexp8}_[0-6][0-9]_r${RNUM}p${PNUM}_ZP.csv)
-#	    do 
-#		awk '(NR>1) { print $0 }' $csvfile >>  D${tempexp8}_r${RNUM}p${PNUM}_ZP.csv
-#	    done
-#	fi
-#    fi
 done
     
     
 # if any of them failed remove them from WS_diff.list
+echo "FAILEDEXPS = $FAILEDEXPS"
 for failedexp in $FAILEDEXPS
 do
+    echo "If FAILEDEXPS is empty, I shouldn't be getting here"
     sed -i -e "s/${failedexp}//"  ./WS_diff.list
     OLDCOUNT=`awk '{print $1}'  WS_diff.list`
     NEWCOUNT=$((${OLDCOUNT}-1))
@@ -764,8 +681,8 @@ setup extralibs
 # in most cases, this list will only be 1 ccd long (and the 1-ccd runs will be run in parallel)
 for c in $ccdlist; do
     c=$(printf "%02d" $c)
-    
-    export HOME=$OLDHOME
+    echo "c = $c"
+#    export HOME=$OLDHOME
     
     ######## CODE FORMERLY IN RUN_DIFFIMG_PIPELINE.sh ##########
     
@@ -780,7 +697,7 @@ for c in $ccdlist; do
     filestocopy="/pnfs/des/resilient/${SCHEMA}/db-tools/desservices.ini /pnfs/des/${DESTCACHE}/${SCHEMA}/exp/${NITE}/${EXPNUM}/WS_diff.list /pnfs/des/${DESTCACHE}/${SCHEMA}/exp/${NITE}/${EXPNUM}/${procnum}/${EXPNUM}_run_inputs.tar.gz"
     ifdh cp ${IFDHCP_OPT} -D $filestocopy ./ || { echo "ifdh cp failed for SN_mon* and such" ; exit 1 ; }
     tar zxf ${EXPNUM}_run_inputs.tar.gz
-    
+
     chmod 600 ${HOME}/desservices.ini
 
     # set environment location
@@ -832,7 +749,7 @@ for c in $ccdlist; do
     setup numpy 1.9.1+8
     #setup gw_utils
     setup scamp 2.6.10+0
-
+    setup python 2.7.9+1
     export EUPS_PATH=/cvmfs/des.opensciencegrid.org/eeups/fnaleups:$EUPS_PATH
     export SCAMP_CATALOG_DIR=/cvmfs/des.osgstorage.org/stash/fnal/SNscampCatalog
 
@@ -1050,7 +967,6 @@ for c in $ccdlist; do
                 cat $ccdfile >> ${texp}.out
             done
         fi
-        echo now that we have a combined .out, we can run create pairs with this template exposure number
         create_pairs
     done
 
@@ -1067,15 +983,22 @@ for c in $ccdlist; do
         overlapexp=`basename $overlapfile | sed -e s/${EXPNUM}\-// -e s/\.out//`
         overlapnite=$(egrep -o /pnfs/des/${DESTCACHE}/${SCHEMA}/exp/[0-9]{8}/${overlapexp}/${overlapexp}.out ${procnum}/input_files/copy_pairs_for_${EXPNUM}.sh | sed -r -e "s/.*\/([0-9]{8})\/.*/\1/")
         overlapccds=`awk '($2=='${CCDNUM_LIST}') { for( f=5; f<=NF; f++) print $f}' $overlapfile`
+	echo "overlap ccds = $overlapccds"
 	tempfiles=$(ifdh ls /pnfs/des/${DESTCACHE}/${SCHEMA}/exp/${overlapnite}/${overlapexp})
 	immaskfiles=""
 	immaskfitsfiles=""
 	psffiles=""
 	csvfiles=""
+	ZPdir="/pnfs/des/${DESTCACHE}/${SCHEMA}/exp/${overlapnite}/${overlapexp}/"
+	ZPfilename=$(echo $tempfiles | grep -o D$(printf %08d $overlapexp)_${rpnum}_ZP.csv 2>/dev/null)
+	echo "ZPfilename for combined file = $ZPfilename"
+        if [ ! -z "$ZPfilename" ]; then
+	    ifdh cp -D ${ZPdir}${ZPfilename} ./ || echo "Error copying $ZPfile"  
+	fi
 
         for overlapccd in $overlapccds
         do
-        
+            echo "Working on overlapccd $overlapccd"
             
             if [ -d  ${TOPDIR_WSDIFF}/data/DECam_${overlapexp}_empty ]; then
                 rmdir  ${TOPDIR_WSDIFF}/data/DECam_${overlapexp}_empty
@@ -1085,13 +1008,12 @@ for c in $ccdlist; do
                 mkdir  -p ${TOPDIR_WSDIFF}/data/DECam_${overlapexp}
             fi
             file2copy="/pnfs/des/${DESTCACHE}/${SCHEMA}/exp/${overlapnite}/${overlapexp}/D`printf %08d $overlapexp`_${BAND}_`printf %02d $overlapccd`_${rpnum}_immask.fits.fz"
-            ZPdir="/pnfs/des/${DESTCACHE}/${SCHEMA}/exp/${overlapnite}/${overlapexp}/"
-	    ZPfilename=$(echo $tempfiles | grep -o D$(printf %08d $overlapexp)_$(printf %02d $overlapccd)_${rpnum}_ZP.csv)
-	    if [ -z "$ZPfilename" ]; then ZPfilename=D$(printf %08d $overlapexp)_${rpnum}_ZP.csv ; fi
-            ZPfilename="D`printf %08d $overlapexp`_`printf %02d $overlapccd`_${rpnum}_ZP.csv"
-            ZPfile=${ZPdir}${ZPfilename}
-            if [ -z "$ZPfile" ] ; then
-                echo "ZP file for the template is not available. We are leaving out this template."
+            echo "file2copy = $file2copy"
+	    ZPfilename=$(echo $tempfiles | grep -o D$(printf %08d $overlapexp)_$(printf %02d $overlapccd)_${rpnum}_ZP.csv 2>/dev/null)
+	    ZPfile=${ZPdir}${ZPfilename}
+	    echo "ZPfile = $ZPfile"
+            if [ -z "$ZPfilename" ] ; then
+                echo "ZP file for this template and CCD is not available. Hopefully a combined files exists for this exposure."
             else
 		ifdh cp -D $ZPfile ./ || echo "Error copying $ZPfile"
 
@@ -1102,7 +1024,8 @@ for c in $ccdlist; do
            #     ln -s $ZPfilename D`printf %08d $overlapexp`_${rpnum}_ZP.csv
            #     cd $currentdir
 		
-                if [ -z "$file2copy" ] ; then
+            fi
+	    if [ -z "$file2copy" ] ; then
                     # backward compatibility
                     echo "WARNING: .fz file for $overlapexp CCD $overlapccd did not appear in ifdh ls and was thus not copied in. Could be a problem. Checking to see if an uncompressed (.fits) file is available."
                     file2copy="/pnfs/des/${DESTCACHE}/${SCHEMA}/exp/${overlapnite}/${overlapexp}/D`printf %08d $overlapexp`_${BAND}_`printf %02d $overlapccd`_${rpnum}_immask.fits"
@@ -1126,7 +1049,7 @@ for c in $ccdlist; do
                     fthedit  D`printf %08d $overlapexp`_${BAND}_`printf %02d $overlapccd`_${rpnum}_immask.fits[0] DOYT delete
                 fi
                 cd ../../../
-            fi
+            
         done
 	overlapexp8=$(printf %08d $overlapexp)
 	if [ "${STARCAT_NAME}" != "" ] || [ "${SNVETO_NAME}" != "" ]; then
@@ -1142,51 +1065,14 @@ for c in $ccdlist; do
     done
 
     # makestarcat
-    if [ "x$STARCAT_NAME" == "x" ]; then
-        if [ "x$SNVETO_NAME" == "x" ]; then
-        echo "INFO: Neither STARCAT_NAME nor SNVETO_NAME was provided. The makestarcat.py step will NOT run now."
-        echo "Please note that these files will not be present if you are expecting them for a diffimg run."
-        MAKESTARCAT_RESULT=-1
-        else
-        echo "WARNING: STARCAT_NAME is set but SNVETO_NAME is not. The SN veto file will be created with the default name."
-        python ${GW_UTILS_DIR}/code/makestarcat.py -e $EXPNUM -n $NITE -r $RNUM -p $PNUM -b $BAND --ccd $c -s `echo $procnum | sed -e s/dp//` -snveto $SNVETO_NAME
-        #python makestarcat.py -e $EXPNUM -n $NITE -r $RNUM -p $PNUM -b $BAND --ccd $c -s `echo $procnum | sed -e s/dp//` -snveto $SNVETO_NAME
-        MAKESTARCAT_RESULT=$?
-        fi
-    elif [ "x$SNVETO_NAME" == "x" ]; then
-        echo "WARNING: STARCAT_NAME is set but SNVETO_NAME is not. The SN veto file will be created with the default name."
-        python ${GW_UTILS_DIR}/code/makestarcat.py -e $EXPNUM -n $NITE -r $RNUM -p $PNUM -b $BAND --ccd $c -s `echo $procnum | sed -e s/dp//` -snstar $STARCAT_NAME
-        #python makestarcat.py -e $EXPNUM -n $NITE -r $RNUM -p $PNUM -b $BAND --ccd $c -s `echo $procnum | sed -e s/dp//` -snstar $STARCAT_NAME
-        MAKESTARCAT_RESULT=$?
-    else
-        python ${GW_UTILS_DIR}/code/makestarcat.py -e $EXPNUM -n $NITE -r $RNUM -p $PNUM -b $BAND --ccd $c -s `echo $procnum | sed -e s/dp//` -snstar $STARCAT_NAME -snveto $SNVETO_NAME
-        #python makestarcat.py -e $EXPNUM -n $NITE -r $RNUM -p $PNUM -b $BAND --ccd $c -s `echo $procnum | sed -e s/dp//` -snstar $STARCAT_NAME -snveto $SNVETO_NAME
-        MAKESTARCAT_RESULT=$?
-    fi
 
-    # set the STARCAT_NAME and SNVETO_NAME values to the default if one of them wasn't set
-    if [ -z "$STARCAT_NAME" ]; then STARCAT_NAME="SNSTAR_${EXPNUM}_${c}_r${RNUM}p${PNUM}.LIST" ; fi
-    if [ -z "$SNVETO_NAME"  ]; then SNVETO_NAME="SNVETO_${EXPNUM}_${c}_r${RNUM}p${PNUM}.LIST" ; fi
 
-    if [ $MAKESTARCAT_RESULT -eq 0 ]; then
 
-    # make sure that the files actually exist before we try to copy then. If makestarcat.py did not run, then we won't need to check.
-        if [ -f $STARCAT_NAME ] && [ -f $SNVETO_NAME ]; then
-        ifdh mkdir /pnfs/des/persistent/stash/${SCHEMA}/CATALOG_FILES/${NITE}
-        ifdh cp --force=xrootd -D $STARCAT_NAME $SNVETO_NAME /pnfs/des/persistent/stash/${SCHEMA}/CATALOG_FILES/${NITE}/ || echo "ERROR: copy of $STARCAT_NAME and $SNVETO_NAME failed with status $?. You may see problems running diffimg jobs later."  
-        fi
-    else
-        if [ $MAKESTARCAT_RESULT -eq -1 ]; then
-        echo "makestarcat.py did not run; no SNSTAR or SNVETO files to copy back."
-        else
-        echo "ERROR: makestarcat.py exited with status $MAKESTARCAT_RESULT. Check the logs for errors. We will NOT copy the output files back."
-        fi
-    fi
-    # end makestarcat
 
+    
 #### begin diffimg proper ####
-echo "***** BEGINNING DIFFIMG *****"
-
+    echo "***** BEGINNING DIFFIMG *****"
+    
     # needed wide survey files
     cp ${GW_UTILS_DIR}/code/WideSurvey_20150908.tar.gz data/WSruns/
     cd data/WSruns
@@ -1227,11 +1113,20 @@ echo "***** BEGINNING DIFFIMG *****"
 
     ##### check whether SNSTAR catalog or SNVETO filenames are required. If so, make a symlink if they are in CVMFS. If they are not in CVMFS, copy from dCache directly.
     # if they are given, we are using our own starcat instead of the default one
-    SNSTAR_FILENAME=`grep STARSOURCE_FILENAME RUN02_expose_makeStarCat | awk '{print $2}'`
-    SNSTAR_FILENAME=`echo $(eval "echo $SNSTAR_FILENAME")`
+    
+    if [ -z "$SNSTAR_NAME" ]; then
+	SNSTAR_FILENAME=`grep STARSOURCE_FILENAME RUN02_expose_makeStarCat | awk '{print $2}'`
+	SNSTAR_FILENAME=`echo $(eval "echo $SNSTAR_FILENAME")`
+    else
+	SNSTAR_FILENAME=$SNSTAR_NAME
+    fi
     OUTFILE_STARCAT=`grep outFile_starCat RUN02_expose_makeStarCat | awk '{print $2}'`
-    SNVETO_FILENAME=`grep inFile_veto RUN22_combined+expose_filterObj  | awk '{print $2}'`
-    SNVETO_FILENAME=`echo $(eval "echo $SNVETO_FILENAME")`
+    if [ -z "$SNVETO_NAME" ]; then
+	SNVETO_FILENAME=`grep inFile_veto RUN22_combined+expose_filterObj  | awk '{print $2}'`
+	SNVETO_FILENAME=`echo $(eval "echo $SNVETO_FILENAME")`
+    else
+	SNVETO_FILENAME=$SNVETO_NAME
+    fi
     # if we are outside the footprint (then SNSTAR_FILENAME and SNVETO_FILENAME are set), we make our own starcat (with gaia), using the BLISS.py outputs
     if [ ! -z "$SNSTAR_FILENAME" ]; then
         cp ${DIFFIMG_DIR}/bin/makeWSTemplates.sh ./
@@ -1252,20 +1147,72 @@ echo "***** BEGINNING DIFFIMG *****"
         sed -i -e "s/0xFFFF/0xFFDF/" -e "s/0x47FB/0x47DB/" SN_makeWeight.param
         sed -i -e '/ZPTEST_ONLY/ a\             -inFile_CALIB_STARS    '"$OUTFILE_STARCAT"' \\' -e "s#\${DIFFIMG_DIR}/etc/SN_makeWeight#${PWD}/SN_makeWeight#" makeWSTemplates.sh
     fi
-    if [ ! -z "$SNVETO_FILENAME" ]; then
-        if [ -s ${SNVETO_FILENAME} ]; then
+    if [ ! -z "$SNVETO_NAME" ]; then
+        if [ -s ${SNVETO_NAME} ]; then
             echo "using local copy of SNVETO"
         else
-            head -1 /cvmfs/des.osgstorage.org/pnfs/fnal.gov/usr/des/persistent/stash/${SCHEMA}/CATALOG_FILES/${NITE}/${SNVETO_FILENAME} >/dev/null 2>&1
+            head -1 /cvmfs/des.osgstorage.org/pnfs/fnal.gov/usr/des/persistent/stash/${SCHEMA}/CATALOG_FILES/${NITE}/${SNVETO_NAME} >/dev/null 2>&1
             HEADRESULT=$?
             if [ $HEADRESULT -eq 0 ]; then
-            ln -s /cvmfs/des.osgstorage.org/pnfs/fnal.gov/usr/des/persistent/stash/${SCHEMA}/CATALOG_FILES/${NITE}/${SNVETO_FILENAME} .
+            ln -s /cvmfs/des.osgstorage.org/pnfs/fnal.gov/usr/des/persistent/stash/${SCHEMA}/CATALOG_FILES/${NITE}/${SNVETO_NAME} .
             else
-            # try to ifdh cp 
-            ifdh cp -D ${IFDHCP_OPT} /pnfs/des/persistent/stash/${SCHEMA}/CATALOG_FILES/${NITE}/${SNVETO_FILENAME} ./ || echo "ERROR: ${SNVETO_FILENAME} is not in CVMFS and there was an error copying it to the worker node. RUN22 will probably fail..."
+            # try to ifdh cp
+	    echo "Try to ifdh cp $SNVETO_NAME"
+            ifdh cp -D ${IFDHCP_OPT} /pnfs/des/persistent/stash/${SCHEMA}/CATALOG_FILES/${NITE}/${SNVETO_NAME} ./ || echo "ERROR: ${SNVETO_NAME} is not in CVMFS and there was an error copying it to the worker node. RUN22 will probably fail..."
             fi
         fi
     fi
+
+ #makestarcat
+#make sure we actually need to do it first.
+
+    if ( [ ! -s $STARCAT_NAME ] && [ ! -L $STARCAT_NAME ] && [ "x$STARCAT_NAME" != "x" ] ) || ( [ ! -s $SNVETO_NAME ] && [ ! -L $SNVETO_NAME ] && [ "x$SNVETO_NAME" != "x" ] )
+    then
+
+	if [ "x$STARCAT_NAME" == "x" ]; then
+            if [ "x$SNVETO_NAME" == "x" ]; then
+		echo "INFO: Neither STARCAT_NAME nor SNVETO_NAME was provided. The makestarcat.py step will NOT run now."
+		echo "Please note that these files will not be present if you are expecting them for a diffimg run."
+		MAKESTARCAT_RESULT=-1
+            else
+		echo "WARNING: STARCAT_NAME is set but SNVETO_NAME is not. The SN veto file will be created with the default name."
+		python ${GW_UTILS_DIR}/code/makestarcat.py -e $EXPNUM -n $NITE -r $RNUM -p $PNUM -b $BAND --ccd $c -s `echo $procnum | sed -e s/dp//` -snveto $SNVETO_NAME
+        #python makestarcat.py -e $EXPNUM -n $NITE -r $RNUM -p $PNUM -b $BAND --ccd $c -s `echo $procnum | sed -e s/dp//` -snveto $SNVETO_NAME
+		MAKESTARCAT_RESULT=$?
+            fi
+	elif [ "x$SNVETO_NAME" == "x" ]; then
+            echo "WARNING: STARCAT_NAME is set but SNVETO_NAME is not. The SN veto file will be created with the default name."
+            python ${GW_UTILS_DIR}/code/makestarcat.py -e $EXPNUM -n $NITE -r $RNUM -p $PNUM -b $BAND --ccd $c -s `echo $procnum | sed -e s/dp//` -snstar $STARCAT_NAME
+        #python makestarcat.py -e $EXPNUM -n $NITE -r $RNUM -p $PNUM -b $BAND --ccd $c -s `echo $procnum | sed -e s/dp//` -snstar $STARCAT_NAME
+            MAKESTARCAT_RESULT=$?
+	else
+            python ${GW_UTILS_DIR}/code/makestarcat.py -e $EXPNUM -n $NITE -r $RNUM -p $PNUM -b $BAND --ccd $c -s `echo $procnum | sed -e s/dp//` -snstar $STARCAT_NAME -snveto $SNVETO_NAME
+        #python makestarcat.py -e $EXPNUM -n $NITE -r $RNUM -p $PNUM -b $BAND --ccd $c -s `echo $procnum | sed -e s/dp//` -snstar $STARCAT_NAME -snveto $SNVETO_NAME
+            MAKESTARCAT_RESULT=$?
+	fi
+	
+    # set the STARCAT_NAME and SNVETO_NAME values to the default if one of them wasn't set
+    if [ -z "$STARCAT_NAME" ]; then STARCAT_NAME="SNSTAR_${EXPNUM}_${c}_r${RNUM}p${PNUM}.LIST" ; fi
+    if [ -z "$SNVETO_NAME"  ]; then SNVETO_NAME="SNVETO_${EXPNUM}_${c}_r${RNUM}p${PNUM}.LIST" ; fi
+    
+    if [ $MAKESTARCAT_RESULT -eq 0 ]; then
+	
+    # make sure that the files actually exist before we try to copy then. If makestarcat.py did not run, then we won't need to check.
+    if [ -f $STARCAT_NAME ] && [ ! -L $STARCAT_NAME ] && [ -f $SNVETO_NAME ] && [ ! -L $SNVETO_NAME ]; then
+        ifdh mkdir /pnfs/des/persistent/stash/${SCHEMA}/CATALOG_FILES/${NITE}
+        ifdh cp --force=xrootd -D $STARCAT_NAME $SNVETO_NAME /pnfs/des/persistent/stash/${SCHEMA}/CATALOG_FILES/${NITE}/ || echo "ERROR: copy of $STARCAT_NAME and $SNVETO_NAME failed with status $?. You may see problems running diffimg jobs later."  
+    fi
+    else
+        if [ $MAKESTARCAT_RESULT -eq -1 ]; then
+            echo "makestarcat.py did not run; no SNSTAR or SNVETO files to copy back."
+        else
+            echo "ERROR: makestarcat.py exited with status $MAKESTARCAT_RESULT. Check the logs for errors. We will NOT copy the output files back."
+        fi
+    fi
+fi
+    # end makestarcat
+
+
     #################
     #copyback function
     #################
@@ -1348,11 +1295,19 @@ echo "***** BEGINNING DIFFIMG *****"
 
 
     sed -i -e "s/0x47FB/0x47DB/" RUN05_expose_makeWeight
-    sed -i -e "/MAXA/ s/1.5/2.0/" SN_cuts.filterObj
+#alyssa edit
+#    sed -i -e "/MAXA/ s/1.5/2.0/" SN_cuts.filterObj
 
     echo "start pipeline"
     #### THIS IS THE PIPELINE!!! #####
     export CCDNUM_LIST
+    setup glib 2.29.2+11
+    ### alyssa testing 2/8/19 #######
+#    source ldlibrary_nightly.sh 
+#    env > environment.txt
+    #ldd $(which makeCand)
+
+    
     ./RUN_ALL-${BAND}_`printf %02d ${CCDNUM_LIST}` $ARGS
 
     #eventually we want
@@ -1394,7 +1349,7 @@ echo "***** BEGINNING DIFFIMG *****"
         echo "NONE" >> RUN_ALL.FAIL
     fi
 
-    copyback
+#    copyback
 
 
 
