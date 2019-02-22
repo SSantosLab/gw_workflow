@@ -13,7 +13,7 @@ DIFFIMG_VERSION="gwdevel13" # can change this with parameter -v <diffimg_version
 ulimit -a
 OVERWRITE=false
 SKIPSE=false
-CCDNUM_LIST=1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36,37,38,39,40,41,42,43,44,45,46,47,48,49,50,51,52,53,54,55,56,57,58,59,60,61,62
+CCDNUM_LIST=1,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36,37,38,39,40,41,42,43,44,45,46,47,48,49,50,51,52,53,54,55,56,57,58,59,60,62
 IFDHCP_OPT=""
 DOCALIB="false"
 FAILEDEXPS=""
@@ -209,9 +209,13 @@ do case $opt in
     #TODO: does this work for a comma-separated list?
         [[ $OPTARG =~ ^[0-9]+$ ]] || { echo "Error: CCD number must be an integer! You put $OPTARG" ; exit 1; }
         [[ $OPTARG -lt 70 ]] || { echo "Error: the chip number must be less than 70. You entered $OPTARG." ; exit 1; }  
-        CCDNUM_LIST=$OPTARG
-        shift 2
-
+	if [ $OPTARG -gt 0 ]; then
+            CCDNUM_LIST=$OPTARG
+            shift 2
+	else
+	    CCDNUM_LIST=$(echo $CCDNUM_LIST | awk -F "," '{print $'$((${PROCESS}+1))'}')
+	    shift 2
+	fi
         ;;
     :)
             echo "Option -$OPTARG requires an argument."
@@ -1349,7 +1353,7 @@ fi
         echo "NONE" >> RUN_ALL.FAIL
     fi
 
-#    copyback
+    copyback
 
 
 
