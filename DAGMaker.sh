@@ -443,6 +443,7 @@ echo "<parallel>" >> $outfile
 # stick a dummy job in here so that there is something just in case there ends up being nothing to do for parallel processing
 echo "jobsub -n --group=des --OS=SL6  --resource-provides=usage_model=${RESOURCES} --memory=500MB --disk=100MB --expected-lifetime=600s file://dummyjob.sh" >> $outfile
 
+
 # initialize empty list of files for the copy pairs output
 DOTOUTFILES=""
 
@@ -691,16 +692,18 @@ do
 #                cat $searchfile
             else
                 echo "add template job for exp $overlapnum != $EXPNUM"
+		
+		echo "jobsub -n --group=des --OS=SL6 --resource-provides=usage_model=${RESOURCES} $JOBSUB_OPTS -N 60 --append_condor_requirements='(TARGET.GLIDEIN_Site==\\\"FermiGrid\\\"||(TARGET.HAS_CVMFS_des_opensciencegrid_org==true&&TARGET.HAS_CVMFS_des_osgstorage_org==true))' file://SEdiff.sh -r $RNUM -p $PNUM -E $overlapnum -v $DIFFIMG_EUPS_VERSION -b $BAND -n $overlapnite $JUMPTOEXPCALIBOPTION -d $DESTCACHE -m $SCHEMA -c 0 -t $TEMP_OPTS -S $procnum" >> $outfile
                 # template SE jobs (with -t option)
-                for (( ichip=1;ichip<63;ichip++ ))
-                do
-#                if [ $ichip -ne 2 ] && [ $ichip -ne 31 ] && [ $ichip -ne 61 ] ; then
-                if [ $ichip -ne 2 ] && [ $ichip -ne 61 ] ; then
-		    # CHANGE 11-20-18 TO RUN SEDiff ON ALL EXPOSURES
-                    echo "jobsub -n --group=des --OS=SL6 --resource-provides=usage_model=${RESOURCES} $JOBSUB_OPTS --append_condor_requirements='(TARGET.GLIDEIN_Site==\\\"FermiGrid\\\"||(TARGET.HAS_CVMFS_des_opensciencegrid_org==true&&TARGET.HAS_CVMFS_des_osgstorage_org==true))' file://SEdiff.sh -r $RNUM -p $PNUM -E $overlapnum -v $DIFFIMG_EUPS_VERSION -b $BAND -n $overlapnite $JUMPTOEXPCALIBOPTION -d $DESTCACHE -m $SCHEMA -t $TEMP_OPTS -c $ichip -S $procnum" >> $outfile
-                    #echo "jobsub -n --group=des --OS=SL6 --resource-provides=usage_model=${RESOURCES} $JOBSUB_OPTS --append_condor_requirements='(TARGET.GLIDEIN_Site==\\\"FermiGrid\\\"||(TARGET.HAS_CVMFS_des_opensciencegrid_org==true&&TARGET.HAS_CVMFS_des_osgstorage_org==true))' file://SEdiff.sh -r $RNUM -p $PNUM -E $overlapnum -b $BAND -n $overlapnite $JUMPTOEXPCALIBOPTION -d $DESTCACHE -m $SCHEMA -t $TEMP_OPTS -c $ichip -S $procnum" >> $outfile
-                fi    
-                done
+#                for (( ichip=1;ichip<63;ichip++ ))
+#                do
+##                if [ $ichip -ne 2 ] && [ $ichip -ne 31 ] && [ $ichip -ne 61 ] ; then
+#                if [ $ichip -ne 2 ] && [ $ichip -ne 61 ] ; then
+#		    # CHANGE 11-20-18 TO RUN SEDiff ON ALL EXPOSURES
+#                    echo "jobsub -n --group=des --OS=SL6 --resource-provides=usage_model=${RESOURCES} $JOBSUB_OPTS --append_condor_requirements='(TARGET.GLIDEIN_Site==\\\"FermiGrid\\\"||(TARGET.HAS_CVMFS_des_opensciencegrid_org==true&&TARGET.HAS_CVMFS_des_osgstorage_org==true))' file://SEdiff.sh -r $RNUM -p $PNUM -E $overlapnum -v $DIFFIMG_EUPS_VERSION -b $BAND -n $overlapnite $JUMPTOEXPCALIBOPTION -d $DESTCACHE -m $SCHEMA -t $TEMP_OPTS -c $ichip -S $procnum" >> $outfile
+#
+#                fi    
+#                done
             fi
             # add the .out file for this overlap image to the list to be copied
             DOTOUTFILES="${DOTOUTFILES} /pnfs/des/${DESTCACHE}/${SCHEMA}/exp/$overlapnite/$overlapnum/${overlapnum}.out"
