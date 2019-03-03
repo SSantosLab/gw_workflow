@@ -625,10 +625,7 @@ fi
 	    fi
 	fi
     fi
-    for iccd in 1 {3..9} {10..60} 62
-    do
-    echo "jobsub -n --group=des --OS=SL6 --resource-provides=usage_model=${RESOURCES} $JOBSUB_OPTS $JOBSUB_OPTS_SE file://SEdiff.sh -r $RNUM -p $PNUM -E $overlapnum -b $BAND -n $overlapnite -c $iccd -S dp$SEASON $JUMPTOEXPCALIBOPTION -d $DESTCACHE -m $SCHEMA $SE_OPTS $TEMP_OPTS" >> $outfile
-    done
+    echo "jobsub -n --group=des --OS=SL6 -N 60 --resource-provides=usage_model=${RESOURCES} $JOBSUB_OPTS $JOBSUB_OPTS_SE file://SEdiff.sh -r $RNUM -p $PNUM -E $overlapnum -b $BAND -n $overlapnite -c 0 -S dp$SEASON $JUMPTOEXPCALIBOPTION -d $DESTCACHE -m $SCHEMA $SE_OPTS $TEMP_OPTS" >> $outfile
 ### KH hack 2017-02-18
     echo "submitting job for $overlapnum"
 #jobsub_submit --role=DESGW --group=des --OS=SL6 --resource-provides=usage_model=${RESOURCES} $JOBSUB_OPTS $JOBSUB_OPTS_SE file://SE_job.sh -r $RNUM -p $PNUM -E $overlapnum -b $BAND -n $overlapnite $JUMPTOEXPCALIBOPTION -d $DESTCACHE -m $SCHEMA $SE_OPTS
