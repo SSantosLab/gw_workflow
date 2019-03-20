@@ -380,6 +380,13 @@ if [ ! -f exposures.list ]; then
     ./getExposureInfo.sh
     # and remove the diff.list2 to make sure it stays in sync with the new .list file
     rm -f ./mytemp_${EXPNUM}/KH_diff.list2
+else
+    for ifilter in u g r i z Y
+    do
+    	if [ ! -f exposures_${ifilter}.list ]; then
+    	    awk '($6 == "'$ifilter'")' exposures.list > exposures_${ifilter}.list
+    	fi
+    done
 fi
 BAND=`egrep "^\s?${EXPNUM}" exposures.list | awk '{print $6}'`
 if [ -z "${BAND}" ]; then
