@@ -13,7 +13,7 @@ if [ $# -eq 3 ]; then
     outfile=${e}.out
     immaskfiles=$(ls ${DATADIR}/D$(printf %08d ${e})*_immask.fits.fz)
     # prefer .fz files, but if none found, try .fits file
-    if [ -z $immaskfiles ]; then
+    if [ -z "${immaskfiles}" ]; then
 	immaskfiles=$(ls ${DATADIR}/D$(printf %08d ${e})*_immask.fits)
     fi
 elif [ $# -eq 4 ]; then
