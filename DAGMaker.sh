@@ -428,8 +428,6 @@ if [ ! -f KH_diff.list2 ] ; then
 fi
 cd ..
 
-echo "start composing the dag"
-
 # create the output dag file (empty)
 outfile=desgw_pipeline_${EXPNUM}.dag
 if [ -f $outfile ]; then
@@ -454,7 +452,6 @@ echo "jobsub -n --group=des --OS=SL6  --resource-provides=usage_model=${RESOURCE
 # initialize empty list of files for the copy pairs output
 DOTOUTFILES=""
 
-echo "loop over the diff list of exposures"
 #### make sure all images to be coadded are actually 
 
 # create a search command outfile (to append to the dag after the template jobs, after the upcoming loop)
@@ -480,13 +477,11 @@ do
     SKIP=false
 
     # check that exposure is 30 seconds or longer
-    echo check that exposure is 30 seconds or longer
     explength=$(egrep "^\s?${overlapnum}" exposures.list | awk '{print $7}')
     explength=$(echo $explength | sed -e 's/\.[0-9]*//' )
     if [ $explength -lt 30 ]; then SKIP=true ; fi
     
     # check that exposure's t_eff is greater than the cut for this band
-    echo check that exposure\'s t_eff is greater than the cut for this band
     if [ $i == 1 ]; then
 	echo "this is the search image; dont apply teff cuts"
     else  
@@ -502,7 +497,6 @@ do
 
 # image failed quality tests ; try the next exposure in the list
     if [ "$SKIP" == "true" ] ; then 
-        echo image failed quality test, removing from diff.list1 file
         # we need to remove reference to this exp from the diff.list1 file 
         sed -i -e "s/${overlapnum}//"  mytemp_${EXPNUM}/KH_diff.list1
         # we also need to reduce the count in the first field of KH_diff.list1 by one
@@ -576,7 +570,6 @@ do
         fi
     fi
     # check if we need to run the calibration. If we don't have SNSTAR and SNVETO defined in the .INPUT file, then assume we don't
-    echo check if we need to run the calibration. If we don\'t have SNSTAR and SNVETO defined in the .INPUT file, then assume we don\'t
     # we want to do calibration, and the SNSTAR and SNVETO names are defined
     if  [[ $SEARCH_OPTS == *-C* ]] && ( [ ! -z "${SNSTAR_FILENAME}" ] || [ ! -z "${SNVETO_FILENAME}" ] ) ; then
         # check if calibration outputs are present
@@ -600,7 +593,6 @@ do
     # if there are 59+ files with non-zero size, a .out file, and expCalib outputs, then don't do the SE job again for that exposure     
     if [ $nfiles -ge 59 ] ; then
         echo "SE proc. already complete for exposure $overlapnum"
-        echo "Add the .out file for this overlap image to the list to be copied"
         DOTOUTFILES="${DOTOUTFILES} /pnfs/des/${DESTCACHE}/${SCHEMA}/exp/$overlapnite/$overlapnum/${overlapnum}.out"
     fi
     if [ $nfiles -lt 59 ] || [ $i == 1 ]; then
@@ -655,7 +647,6 @@ do
         #    continue
 	
     fi # nfile -ge 59
-    echo moving on to writing the dag
     
     
     if [ ! -z "$SNSTAR_FILENAME" ]; then
@@ -685,7 +676,6 @@ do
             if [ "$overlapnum" == "$EXPNUM" ]; then
                 # search image (no -t option)
                 # write to a different text file, then append that at the end (to ensure templates are done before the search)
-                echo "add search job for exp $overlapnum"
                 for (( ichip=1;ichip<63;ichip++ ))
                 do
                     if [ $ichip -ne 2 ] && [ $ichip -ne 31 ] && [ $ichip -ne 61 ] ; then
@@ -695,11 +685,8 @@ do
  #                       echo wrote chip $ichip to $searchfile
                     fi    
                 done
-                echo finished writing search exposure jobs to $searchfile:
 #                cat $searchfile
-            else
-                echo "add template job for exp $overlapnum != $EXPNUM"
-		
+            else		
 		echo "jobsub -n --group=des --OS=SL6 --resource-provides=usage_model=${RESOURCES} $JOBSUB_OPTS -N 60 --append_condor_requirements='(TARGET.GLIDEIN_Site==\\\"FermiGrid\\\"||(TARGET.HAS_CVMFS_des_opensciencegrid_org==true&&TARGET.HAS_CVMFS_des_osgstorage_org==true))' file://SEdiff.sh -r $RNUM -p $PNUM -E $overlapnum -v $DIFFIMG_EUPS_VERSION -b $BAND -n $overlapnite $JUMPTOEXPCALIBOPTION -d $DESTCACHE -m $SCHEMA -c 0 -t $TEMP_OPTS -S $procnum" >> $outfile
                 # template SE jobs (with -t option)
 #                for (( ichip=1;ichip<63;ichip++ ))
@@ -718,13 +705,11 @@ do
     fi
     echo
 done
-echo "end of loop over list of overlapping exposures"
 # close the template portion of the dag
 echo "</parallel>" >> $outfile
 
 # close the search portion of the dag
 echo "</parallel>" >> $searchfile
-echo "appending search job after template jobs"
 cat $searchfile >> $outfile
 
 # write the full copy command for the .out files and other auxfiles
@@ -734,8 +719,6 @@ echo "ifdh cp -D $DOTOUTFILES \$TOPDIR_WSTEMPLATES/pairs/" > $templatecopyfile
 if [ $(awk '{print $1}' mytemp_${EXPNUM}/KH_diff.list1 ) -le 1 ]; then
     echo "There appear to be no templates for this exposure $EXPNUM. Diffimg will fail."
 fi
-
-echo "run RUN_DIFFIMG_PIPELINE.pl with no nodelist to set up the directory structure and make the scripts"
 
 export DES_SERVICES=~/.desservices.ini
 export DES_DB_SECTION=db-sn-test
@@ -859,8 +842,6 @@ done
 
 OPWD=$PWD
 
-echo "now in $PWD"
-
 mv ../MAKE_DIFFIMG_DIRS_${EXPNUM}.INPUT .
 
 #writeDB on/off
@@ -870,30 +851,10 @@ else
     RUN_DIFFIMG_PIPELINE.pl  MAKE_DIFFIMG_DIRS_${EXPNUM}.INPUT NOPROMPT
 fi
 
-
-#### KRH temp hack on 2016-08-28 to fix autoscan path until there is a new version of diffimg in cvmfs
-#for ascanfile in `ls ${procnum}/${BAND}_[0-9][0-9]/RUN24_combined_autoScan`
-#do
-#echo "in autoscan edit"
-#sed -i -e s#/data/des40.b/data/kherner/Diffimg-devel/diffimg-trunk#/cvmfs/des.opensciencegrid.org/eeups/fnaleups/Linux64/diffimg/gwdevel12# $ascanfile
-#done
-
-#### ugly hack !!!!! add new scamp file into the input_files dir and rename it to match the expected filename:
-#cp /data/des40.b/data/kherner/Diffimg-devel/diffimg-trunk/etc/GW_astrom_v1.scamp  ./${procnum}/input_files/GW_astrom_v1.scamp
-#cp ${DIFFIMG_DIR}/etc/GW_astrom_v2.scamp ./${procnum}/input_files/GW_astrom_v1.scamp
-#cp /data/des40.b/data/kherner/Diffimg-devel/diffimg-trunk/etc/GW_astrom_v3.scamp ./${procnum}/input_files/GW_astrom_v1.scamp
-#####
-
-# now we have to do some ugly hack of RUN01 in order to change 
-# the ln -s ... command to be an ifdh cp command, since the 
-# source file will likely not be mounted 
-
 for ((iccd=1;iccd<=62;iccd++))
 do
     if [ $iccd -ne 2 ] && [ $iccd -ne 31 ] && [ $iccd -ne 61 ]; then
-#	newlink=$(awk '$1=="ln" {print $4}' ./${procnum}/${BAND}_`printf %02d ${iccd}`/RUN01_expose_prepData)
 
-#	sed -i -e '/ln -sf/ s/ln -sf/ifdh cp/' -e '/ifdh cp\s.*\s(.*)/a ln -sf '$newlink' JOBDIR' ./${procnum}/${BAND}_`printf %02d ${iccd}`/RUN01_expose_prepData
 	sed -i -e '/ln -sf/ s/ln -sf/ifdh cp/' -e "s/fits/fits.fz/g" ./${procnum}/${BAND}_`printf %02d ${iccd}`/RUN01_expose_prepData
 	newlink="$(egrep "^ifdh"  ./${procnum}/${BAND}_`printf %02d ${iccd}`/RUN01_expose_prepData | awk '{print $4}')"
 	echo "newlink = $newlink"
@@ -1022,8 +983,6 @@ do
 rmlist="$rmlist /pnfs/des/${DESTCACHE}/${SCHEMA}/exp/${NITE}/${EXPNUM}/${procnum}/`basename $file`"
 done
 
-echo rmlist= $rmlist
-
 rm -rf $rmlist
 $COPYDCMD $outlist mytemp_${EXPNUM}/${EXPNUM}_run_inputs.tar.gz /pnfs/des/${DESTCACHE}/${SCHEMA}/exp/${NITE}/${EXPNUM}/${procnum}/ ||  echo "Error copying input files to dCache!!!!"
 #ifdh cp -r -D mytemp_${EXPNUM}/data /pnfs/des/${DESTCACHE}/${SCHEMA}/exp/${NITE}/${EXPNUM}/ ||  echo "Error copying data dir!!!!"
@@ -1038,7 +997,7 @@ rm -f /pnfs/des/${DESTCACHE}/${SCHEMA}/exp/${NITE}/${EXPNUM}/WS_diff.list
 $COPYCMD mytemp_${EXPNUM}/KH_diff.list1  /pnfs/des/${DESTCACHE}/${SCHEMA}/exp/${NITE}/${EXPNUM}/WS_diff.list
 
 echo "To submit this DAG do"
-echo "jobsub_submit_dag -G des --role=DESGW --maxRunning 15 file://${outfile}"
+echo "jobsub_submit_dag -G des --role=DESGW file://${outfile}"
 
 touch mytemp_${EXPNUM}/DAGMaker.DONE
 echo "jobsub_submit_dag -G des --role=DESGW file://${outfile}" >> mytemp_${EXPNUM}/DAGMaker.DONE
