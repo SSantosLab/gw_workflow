@@ -297,6 +297,9 @@ if [ -d mytemp_$EXPNUM ]; then
     rm -r mytemp_$EXPNUM
 fi
 
+# read in SE_blacklist.txt
+blexps=$(cat SE_blacklist.txt)
+
 # see if wre going to be doing on-the-fly SNSTAR and SNVETO catalogs from the templates. Based on the content of  MAKESCRIPT_DIFFIMG_TEMPLATE.INPUT
 # this writes to the RUN_DIFFIMG_PIPELINE $SNSTAR_FILENAME variable, which should be exported to the RUN02 script when it is called (and then RUN02 should do the eval of $SNSTAR_FILENAME since the $CCDNUM_LIST is finally known at that point)
 SNSTAR_OPTS=""
@@ -494,6 +497,14 @@ do
             echo "Exposure ${overlapnum} has a t_eff of $teff, below the cut value of $TEFF_CUT. We will not use this image."
         fi
     fi
+    # check if the exposure is in SE_blacklist.txt                                                                                                                                                       
+    for blexp in $blexps
+    do
+        if [ "$blexp" == "$overlapnum" ] ; then
+            SKIP=true
+            echo "$overlapnum is in SE_blacklist.txt. Skipping."
+        fi
+    done
 
 # image failed quality tests ; try the next exposure in the list
     if [ "$SKIP" == "true" ] ; then 
