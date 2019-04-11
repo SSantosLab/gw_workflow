@@ -84,7 +84,7 @@ DOFAKE_OPTIONS: -outFile_STARCAT  STARMATCH_doFake.out -SNCUT_MAG 15 25 -SNCUT_T
 MKWGT_INFILE:  SN_makeWeight.param
 PSFEX_INFILE:  SN_image.psfex           
 #SCAMP_INFILE:  SN_astrom_NERSC.scamp
-SCAMP_INFILE: GW_astrom_v4.scamp
+SCAMP_INFILE: GW_astrom_v5.scamp
 #SCAMP_INFILE: WS_astrom_FNAL_v4.scamp
 
 SWARP_INFILE_TEMPLATE:  SN_template.swarp  # for coadd template to be stored
