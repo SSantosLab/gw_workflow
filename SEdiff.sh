@@ -241,6 +241,8 @@ immaskfiles=""
 psffiles=""
 csvfiles=""
 ccdsvfiles=""
+dotoutfile=""
+ccddotoutfile=""
 for lsfile in $lsfiles
 do
     if [[ $lsfile == *D$(printf %08d ${EXPNUM})_${BAND}_$(printf %02d ${CCDNUM_LIST})_r${RNUM}p${PNUM}_immask.fits.fz ]]; then
@@ -251,6 +253,10 @@ do
 	csvfiles="$csvfiles $lsfile"
     elif [[ $lsfile == /pnfs/des/${DESTCACHE}/${SCHEMA}/exp/${NITE}/${EXPNUM}/allZP_D$(printf %08d ${EXPNUM})_r${RNUM}p${PNUM}.csv ]] || [[ $lsfile ==  /pnfs/des/${DESTCACHE}/${SCHEMA}/exp/${NITE}/${EXPNUM}/Zero_D$(printf %08d ${EXPNUM})_$(printf %02d $CCDNUM_LIST)_r${RNUM}p${PNUM}.csv ]] || [[ $lsfile == /pnfs/des/${DESTCACHE}/${SCHEMA}/exp/${NITE}/${EXPNUM}/D$(printf %08d ${EXPNUM})_$(printf %02d $CCDNUM_LIST)_r${RNUM}p${PNUM}_ZP.csv ]] ; then
 	ccdcsvfiles="$ccdcsvfiles $lsfile"
+    elif [[ $lsfile == */${EXPNUM}.out ]]; then
+	dotoutfile=$lsfile
+    elif [[ $lsfile == */${EXPNUM}_$(printf %02d ${ccdlist}).out ]]; then
+    	ccddotoutfile=$lsfile
     fi
 done
 # get filenames
@@ -650,10 +656,14 @@ export NITE=$NITE
 
 
 # copy over the copy_pairs script so we know the templates
-ifdh cp ${IFDHCP_OPT} -D /pnfs/des/${DESTCACHE}/${SCHEMA}/exp/${NITE}/${EXPNUM}/${procnum}/input_files/copy_pairs_for_${EXPNUM}.sh  /pnfs/des/${DESTCACHE}/${SCHEMA}/exp/${NITE}/${EXPNUM}/WS_diff.list /pnfs/des/${DESTCACHE}/${SCHEMA}/exp/${NITE}/${EXPNUM}/${EXPNUM}.out ./ || { echo "failed to copy WS_diff.list and copy_paris_for_$EXPNUM}.sh files" ; exit 2 ; }  # do we want to exit here?
+ifdh cp ${IFDHCP_OPT} -D /pnfs/des/${DESTCACHE}/${SCHEMA}/exp/${NITE}/${EXPNUM}/${procnum}/input_files/copy_pairs_for_${EXPNUM}.sh  /pnfs/des/${DESTCACHE}/${SCHEMA}/exp/${NITE}/${EXPNUM}/WS_diff.list ./ || { echo "failed to copy WS_diff.list and copy_paris_for_$EXPNUM}.sh files" ; exit 2 ; }  # do we want to exit here?
 
 TEMPLATEPATHS=`cat copy_pairs_for_${EXPNUM}.sh | sed -r -e "s/ifdh\ cp\ (\-\-force=xrootd\ )?\-D\ //" -e "s/[0-9]{6}\.out//g" | sed -e 's/\$TOPDIR_WSTEMPLATES\/pairs\///'`
 
+ifdh cp -D $dotoutfiles $ccddotoutfiles ./ || { echo "Failed to copy both combined .out file $dotoutfiles and CCD file ${ccddotoutfiles}. At least one is required. Exiting." ; exit 2 ; }
+if [ ! -f ${EXPNUM}.out ] && [ -f $(basename $ccddoutoutfiles) ]; then
+    ln -s $(basename $ccddoutoutfiles) ${EXPNUM}.out
+fi
 for templatedir in $TEMPLATEPATHS
 do
     
@@ -1299,18 +1309,11 @@ fi
 
 
     sed -i -e "s/0x47FB/0x47DB/" RUN05_expose_makeWeight
-#alyssa edit
-#    sed -i -e "/MAXA/ s/1.5/2.0/" SN_cuts.filterObj
 
     echo "start pipeline"
     #### THIS IS THE PIPELINE!!! #####
     export CCDNUM_LIST
     setup glib 2.29.2+11
-    ### alyssa testing 2/8/19 #######
-#    source ldlibrary_nightly.sh 
-#    env > environment.txt
-    #ldd $(which makeCand)
-
     
     ./RUN_ALL-${BAND}_`printf %02d ${CCDNUM_LIST}` $ARGS
 
