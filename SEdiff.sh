@@ -576,7 +576,7 @@ EOF
 		c=$(printf "%02d" $c)
 		filestocopy1="$(ifdh ls /pnfs/des/${DESTCACHE}/${SCHEMA}/exp/${NITE}/${EXPNUM}/D$(printf %08d ${EXPNUM})_${BAND}_${c}_r${RNUM}p${PNUM}_fullcat.fits | grep fits)"
 		echo "filestocopy1: $filestocopy1"
-		filestocopy2="$(ifdh ls /pnfs/des/${DESTCACHE}/${SCHEMA}/exp/${NITE}/${EXPNUM}/D$(printf %08d ${EXPNUM})_${BAND}_${c}_r${RNUM}p${PNUM}_immask.fits.fz' | grep fits)"
+		filestocopy2="$(ifdh ls /pnfs/des/${DESTCACHE}/${SCHEMA}/exp/${NITE}/${EXPNUM}/D$(printf %08d ${EXPNUM})_${BAND}_${c}_r${RNUM}p${PNUM}_immask.fits.fz | grep fits)"
 		echo "filestocopy2: $filestocopy2"
 		ifdh cp --force=xrootd -D $filestocopy1 $filestocopy2 .
 	    done
