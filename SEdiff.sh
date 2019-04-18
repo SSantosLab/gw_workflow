@@ -255,7 +255,7 @@ do
 	ccdcsvfiles="$ccdcsvfiles $lsfile"
     elif [[ $lsfile == */${EXPNUM}.out ]]; then
 	dotoutfile=$lsfile
-    elif [[ $lsfile == */${EXPNUM}_$(printf %02d ${ccdlist}).out ]]; then
+    elif [[ $lsfile == */${EXPNUM}_$(printf %d ${ccdlist}).out ]]; then
     	ccddotoutfile=$lsfile
     fi
 done
@@ -656,13 +656,13 @@ export NITE=$NITE
 
 
 # copy over the copy_pairs script so we know the templates
-ifdh cp ${IFDHCP_OPT} -D /pnfs/des/${DESTCACHE}/${SCHEMA}/exp/${NITE}/${EXPNUM}/${procnum}/input_files/copy_pairs_for_${EXPNUM}.sh  /pnfs/des/${DESTCACHE}/${SCHEMA}/exp/${NITE}/${EXPNUM}/WS_diff.list ./ || { echo "failed to copy WS_diff.list and copy_paris_for_$EXPNUM}.sh files" ; exit 2 ; }  # do we want to exit here?
+ifdh cp ${IFDHCP_OPT} -D /pnfs/des/${DESTCACHE}/${SCHEMA}/exp/${NITE}/${EXPNUM}/${procnum}/input_files/copy_pairs_for_${EXPNUM}.sh  /pnfs/des/${DESTCACHE}/${SCHEMA}/exp/${NITE}/${EXPNUM}/WS_diff.list ./ || { echo "failed to copy WS_diff.list and copy_paris_for_${EXPNUM}.sh files" ; exit 2 ; }  # do we want to exit here?
 
 TEMPLATEPATHS=`cat copy_pairs_for_${EXPNUM}.sh | sed -r -e "s/ifdh\ cp\ (\-\-force=xrootd\ )?\-D\ //" -e "s/[0-9]{6}\.out//g" | sed -e 's/\$TOPDIR_WSTEMPLATES\/pairs\///'`
 
-ifdh cp -D $dotoutfiles $ccddotoutfiles ./ || { echo "Failed to copy both combined .out file $dotoutfiles and CCD file ${ccddotoutfiles}. At least one is required. Exiting." ; exit 2 ; }
-if [ ! -f ${EXPNUM}.out ] && [ -f $(basename $ccddoutoutfiles) ]; then
-    ln -s $(basename $ccddoutoutfiles) ${EXPNUM}.out
+ifdh cp -D $dotoutfile $ccddotoutfile ./ || { echo "Failed to copy both combined .out file $dotoutfiles and CCD file ${ccddotoutfiles}. At least one is required. Exiting." ; exit 2 ; }
+if [ ! -f ${EXPNUM}.out ] && [ -f $(basename $ccddoutoutfile) ]; then
+    ln -s $(basename $ccddoutoutfile) ${EXPNUM}.out
 fi
 for templatedir in $TEMPLATEPATHS
 do
@@ -842,9 +842,12 @@ for c in $ccdlist; do
 
     if [ ! "$(ls -A  $TOPDIR_WSTEMPLATES/pairs)" ]; then
         echo "executing copy_pairs.sh at `date`"
-        source ./${procnum}/input_files/copy_pairs_for_${EXPNUM}.sh || { echo "Error in copy_pairs_for_${EXPNUM}.sh. Exiting..." ; exit 2 ; }
-    fi
+        source ./${procnum}/input_files/copy_pairs_for_${EXPNUM}.sh || echo "Error in copy_pairs_for_${EXPNUM}.sh. You may have problems with overlap calculation."   # { echo "Error in copy_pairs_for_${EXPNUM}.sh. Exiting..." ; exit 2 ; }
 
+    fi
+    if [ -e ${EXPNUM}.out ]; then
+        cp ${EXPNUM}.out $TOPDIR_WSTEMPLATES/pairs/
+    fi
     #show output of copy
     echo "contents of pairs directory:"
     ls $TOPDIR_WSTEMPLATES/pairs/
@@ -1182,6 +1185,11 @@ for c in $ccdlist; do
 
     if ( [ ! -s $STARCAT_NAME ] && [ ! -L $STARCAT_NAME ] && [ "x$STARCAT_NAME" != "x" ] ) || ( [ ! -s $SNVETO_NAME ] && [ ! -L $SNVETO_NAME ] && [ "x$SNVETO_NAME" != "x" ] )
     then
+	# KRH 20190419 temporary kludge under makestarcat.py is rewritten to deal with .out files only having one line
+ 	if [ $(wc -l ${EXPNUM}.out | awk '{print $1}') -lt 2 ]; then
+ 	    oneliner=$(cat ${EXPNUM}.out)
+ 	    echo $oneliner >> ${EXPNUM}.out
+ 	fi
 
 	if [ "x$STARCAT_NAME" == "x" ]; then
             if [ "x$SNVETO_NAME" == "x" ]; then
