@@ -660,9 +660,12 @@ ifdh cp ${IFDHCP_OPT} -D /pnfs/des/${DESTCACHE}/${SCHEMA}/exp/${NITE}/${EXPNUM}/
 
 TEMPLATEPATHS=`cat copy_pairs_for_${EXPNUM}.sh | sed -r -e "s/ifdh\ cp\ (\-\-force=xrootd\ )?\-D\ //" -e "s/[0-9]{6}\.out//g" | sed -e 's/\$TOPDIR_WSTEMPLATES\/pairs\///'`
 
+baseccddotout=$(basename $ccddotoutfile)
 ifdh cp -D $dotoutfile $ccddotoutfile ./ || { echo "Failed to copy both combined .out file $dotoutfiles and CCD file ${ccddotoutfiles}. At least one is required. Exiting." ; exit 2 ; }
-if [ ! -f ${EXPNUM}.out ] && [ -f $(basename $ccddoutoutfile) ]; then
-    ln -s $(basename $ccddoutoutfile) ${EXPNUM}.out
+if [ ! -f ${EXPNUM}.out ]; then
+    if [ -n "$baseccddotout" ] && [ -f $baseccddotout ]; then
+        cp ${baseccddotout} ${EXPNUM}.out || echo "Error copying ${baseccdotout}."
+    fi
 fi
 for templatedir in $TEMPLATEPATHS
 do
@@ -695,7 +698,6 @@ setup extralibs
 # in most cases, this list will only be 1 ccd long (and the 1-ccd runs will be run in parallel)
 for c in $ccdlist; do
     c=$(printf "%02d" $c)
-    echo "c = $c"
 #    export HOME=$OLDHOME
     
     ######## CODE FORMERLY IN RUN_DIFFIMG_PIPELINE.sh ##########
@@ -845,7 +847,7 @@ for c in $ccdlist; do
         source ./${procnum}/input_files/copy_pairs_for_${EXPNUM}.sh || echo "Error in copy_pairs_for_${EXPNUM}.sh. You may have problems with overlap calculation."   # { echo "Error in copy_pairs_for_${EXPNUM}.sh. Exiting..." ; exit 2 ; }
 
     fi
-    if [ -e ${EXPNUM}.out ]; then
+    if [ -s ${EXPNUM}.out ]; then
         cp ${EXPNUM}.out $TOPDIR_WSTEMPLATES/pairs/
     fi
     #show output of copy
@@ -957,15 +959,15 @@ for c in $ccdlist; do
      echo "Error, no .out files to make templates!!!"
     fi
 
-    for dotoutfile in $dotoutfiles
+    for idotoutfile in $dotoutfiles
     do
-        texp=`basename $dotoutfile | sed -e s/\.out//` # template exposure number
+        texp=`basename $idotoutfile | sed -e s/\.out//` # template exposure number
         echo "texp = $texp"
         
     ### link necessary as of diffimg gwdevel7
         mkdir -p ${TOPDIR_WSDIFF}/pairs/$texp
-        ln -s $dotoutfile   ${TOPDIR_WSDIFF}/pairs/$texp/
-        ln -s $dotoutfile   .
+        ln -s $idotoutfile   ${TOPDIR_WSDIFF}/pairs/$texp/
+        ln -s $idotoutfile   .
     #make the DECam_$temp_empty directory by default and remove it later if we actually have an overlap for this CCD
     # the "_empty" indicates that there is no overlap
         mkdir  ${TOPDIR_WSDIFF}/data/DECam_${texp}_empty
