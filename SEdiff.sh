@@ -249,7 +249,7 @@ do
 	immaskfiles="$immaskfiles $lsfile"
     elif [[ $lsfile == *D$(printf %08d ${EXPNUM})_${BAND}_$(printf %02d ${CCDNUM_LIST})_r${RNUM}p${PNUM}_fullcat.fits ]]; then
 	psffiles="$psffiles $lsfile"
-    elif [[ $lsfile == *allZP_D$(printf %08d ${EXPNUM})_r${RNUM}p${PNUM}.csv ]] || [[ $lsfile == *Zero_D$(printf %08d ${EXPNUM})_r${RNUM}p${PNUM}.csv ]] || [[ $lsfile == *D$(printf %08d ${EXPNUM})_r${RNUM}p${PNUM}_ZP.csv ]] ; then
+    elif [[ $lsfile == *allZP_D$(printf %08d ${EXPNUM})_r${RNUM}p${PNUM}.csv ]] || [[ $lsfile == *D$(printf %08d ${EXPNUM})_r${RNUM}p${PNUM}_ZP.csv ]] ; then
 	csvfiles="$csvfiles $lsfile"
     elif [[ $lsfile == /pnfs/des/${DESTCACHE}/${SCHEMA}/exp/${NITE}/${EXPNUM}/allZP_D$(printf %08d ${EXPNUM})_r${RNUM}p${PNUM}.csv ]] || [[ $lsfile ==  /pnfs/des/${DESTCACHE}/${SCHEMA}/exp/${NITE}/${EXPNUM}/Zero_D$(printf %08d ${EXPNUM})_$(printf %02d $CCDNUM_LIST)_r${RNUM}p${PNUM}.csv ]] || [[ $lsfile == /pnfs/des/${DESTCACHE}/${SCHEMA}/exp/${NITE}/${EXPNUM}/D$(printf %08d ${EXPNUM})_$(printf %02d $CCDNUM_LIST)_r${RNUM}p${PNUM}_ZP.csv ]] ; then
 	ccdcsvfiles="$ccdcsvfiles $lsfile"
@@ -268,7 +268,7 @@ if [ $nimmask -ge 1 ]; then
     if [ $npsf -ge 1 ] || [ "$DOCALIB" == "false" ]; then
 #	csvfiles="`ifdh ls  /pnfs/des/${DESTCACHE}/${SCHEMA}/exp/${NITE}/${EXPNUM}/allZP_D$(printf %08d ${EXPNUM})_r${RNUM}p${PNUM}.csv | grep -v "/$"` `ifdh ls  /pnfs/des/${DESTCACHE}/${SCHEMA}/exp/${NITE}/${EXPNUM}/Zero_D$(printf %08d ${EXPNUM})_r${RNUM}p${PNUM}.csv | grep -v "/$"` `ifdh ls  /pnfs/des/${DESTCACHE}/${SCHEMA}/exp/${NITE}/${EXPNUM}/D$(printf %08d ${EXPNUM})_r${RNUM}p${PNUM}_ZP.csv | grep -v "/$"`" 
 	ncsv=`echo $csvfiles | wc -w`
-	if [ $ncsv -ge 3 ] || [ "$DOCALIB" == "false" ]; then
+	if [ $ncsv -ge 2 ] || [ "$DOCALIB" == "false" ]; then
 	    if [ "$OVERWRITE" == "false" ]; then
 		echo "All SE processing for $EXPNUM, r=$RNUM, p=$PNUM is complete. We will skip the SE step."
 		SKIPSE=true
@@ -662,7 +662,9 @@ TEMPLATEPATHS=`cat copy_pairs_for_${EXPNUM}.sh | sed -r -e "s/ifdh\ cp\ (\-\-for
 
 baseccddotout=$(basename $ccddotoutfile)
 ifdh cp -D $dotoutfile $ccddotoutfile ./ || { echo "Failed to copy both combined .out file $dotoutfiles and CCD file ${ccddotoutfiles}. At least one is required. Exiting." ; exit 2 ; }
-if [ ! -f ${EXPNUM}.out ]; then
+#AG change
+#if [ ! -f ${EXPNUM}.out ]; then
+if [ ! -s ${EXPNUM}.out ]; then
     if [ -n "$baseccddotout" ] && [ -f $baseccddotout ]; then
         cp ${baseccddotout} ${EXPNUM}.out || echo "Error copying ${baseccdotout}."
     fi
@@ -672,11 +674,27 @@ do
     
     tempexp=$(echo $templatedir | egrep -o "\/[0-9]{6}\/$" | tr -d "/")
     echo "Checking exposure $tempexp"
-    
+    dirfiles=$(ifdh ls $templatedir)
+#    echo "AG dirfiles "$dirfiles
+    tempdotouts=""
+    for dirfile in $dirfiles
+    do
+	if [[ $dirfile =~ *.out ]]; then
+	    tempdotouts="$tempdotouts $dirfile"
+	    echo "AG temdotout "$tempdotouts
+	fi
+    done
+    ifdh cp -D $tempdotouts . || echo "Error copying .out files for $tempexp."
+    if [ ! -f ${tempexp}.out ] ; then
+	ccddots=$(ls ${tempexp}_[0-6][0-9].out 2>/dev/null)
+	if [ ! -z "${ccddots}" ] ; then
+	    cat $ccddots > $TOPDIR_WSTEMPLATES/pairs/${tempexp}.out
+	fi
+    fi
 # note that $templatedir has a trailing slash already
 ##    fi
 done
-    
+
     
 # if any of them failed remove them from WS_diff.list
 echo "FAILEDEXPS = $FAILEDEXPS"
@@ -838,7 +856,7 @@ for c in $ccdlist; do
     do
         if [[ $overlapfile =~ [0-9]{6}.out$ ]] ; then
         filebase=$(basename $overlapfile)
-        if [ -e ${PWD}/overlap_outfiles/$filebase ]; then ln -s ${PWD}/overlap_outfiles/$filebase  $TOPDIR_WSTEMPLATES/pairs/ ; fi
+        if [ -s ${PWD}/overlap_outfiles/$filebase ]; then ln -s ${PWD}/overlap_outfiles/$filebase  $TOPDIR_WSTEMPLATES/pairs/ ; fi
         fi
     done
 
@@ -847,9 +865,37 @@ for c in $ccdlist; do
         source ./${procnum}/input_files/copy_pairs_for_${EXPNUM}.sh || echo "Error in copy_pairs_for_${EXPNUM}.sh. You may have problems with overlap calculation."   # { echo "Error in copy_pairs_for_${EXPNUM}.sh. Exiting..." ; exit 2 ; }
 
     fi
-    if [ -s ${EXPNUM}.out ]; then
+    if [ -s ${EXPNUM}.out && -f ${EXPNUM}.out && ! -s $TOPDIR_WSTEMPLATES/pairs/ ]; then
         cp ${EXPNUM}.out $TOPDIR_WSTEMPLATES/pairs/
+#	echo "AG expnum.out exists"
     fi
+
+    for templatedir in $TEMPLATEPATHS
+    do
+	
+	tempexp=$(echo $templatedir | egrep -o "\/[0-9]{6}\/$" | tr -d "/")
+	echo "Checking exposure $tempexp"
+	if [ ! -s  $TOPDIR_WSTEMPLATES/pairs/${tempexp}.out ] ; then
+	    dirfiles=$(ifdh ls $templatedir)
+	    tempdotouts=""
+	    for dirfile in $dirfiles
+	    do
+		if [[ $dirfile =~ *.out ]]; then
+		    tempdotouts="$tempdotouts $dirfile"
+		fi
+	    done
+	    ifdh cp -D $tempdotouts . || echo "Error copying .out files for $tempexp."
+	    if [ ! -f ${tempexp}.out ] ; then
+		ccddots=$(ls ${tempexp}_[0-6][0-9].out 2>/dev/null)
+		if [ ! -z "${ccddots}" ] ; then
+		    cat $ccddots > $TOPDIR_WSTEMPLATES/pairs/${tempexp}.out
+		fi
+	    fi
+	fi
+# note that $templatedir has a trailing slash already
+##    fi
+    done
+    
     #show output of copy
     echo "contents of pairs directory:"
     ls $TOPDIR_WSTEMPLATES/pairs/

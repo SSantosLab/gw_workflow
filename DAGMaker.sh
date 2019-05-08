@@ -458,7 +458,8 @@ DOTOUTFILES=""
 #### make sure all images to be coadded are actually 
 
 # create a search command outfile (to append to the dag after the template jobs, after the upcoming loop)
-searchfile=search.dag
+#AG search.dag --> search_${EXPNUM}.dag
+searchfile=search_${EXPNUM}.dag
 if [ -f $searchfile ]; then
     rm $searchfile # maybe we don't want to overwrite? think about that a bit
 fi
