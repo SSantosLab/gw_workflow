@@ -71,24 +71,6 @@ CHECK_XRDCP=$?
 which uberftp >/dev/null 2>&1
 CHECK_UBERFTP=$?
 
-# pretend that CHECK_XRDCP failed if we detect version 4.6.0 (or 4.7.0) since it is buggy
-XRDCP_VERSION=`xrdcp --version 2>&1`
-if [[ $XRDCP_V == *4.6.0* ]] || [[ $XRDCP_VERSION == *4.7.0* ]] ; then CHECK_XRDCP=1 ; fi
-
-if [ $CHECK_XRDCP -ne 0 ] || [ $CHECK_UBERFTP -ne 0 ]; then
-    if [ -f /cvmfs/oasis.opensciencegrid.org/mis/osg-wn-client/3.3/current/el6-x86_64/setup.sh ]; then
-	. /cvmfs/oasis.opensciencegrid.org/mis/osg-wn-client/3.3/current/el6-x86_64/setup.sh
-    # TODO from RUN_DIFFIMG_PIPELINE
-    #if [ -f /cvmfs/oasis.opensciencegrid.org/mis/osg-wn-client/current/el6-x86_64/setup.sh ]; then
-    #. /cvmfs/oasis.opensciencegrid.org/mis/osg-wn-client/current/el6-x86_64/setup.sh
-    else
-    "Cannot find OASIS CVMFS setup file, and xrdcp and/or uberftp are not in the path."
-    fi
-fi
-
-# . /cvmfs/oasis.opensciencegrid.org/mis/osg-wn-client/3.3/3.3.27/el6-x86_64/setup.sh
-# 2018-03-09 replace with current OSG stack and 3.4 
-# from verifySE.sh TODO
 . /cvmfs/oasis.opensciencegrid.org/mis/osg-wn-client/3.4/current/el6-x86_64/setup.sh
 echo "xrdcp version and path now $(xrdcp --version 2>&1) and $(which xrdcp 2>&1)"
 
