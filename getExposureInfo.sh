@@ -12,7 +12,7 @@ setup easyaccess
 setup psycopg2
 python getExposureInfo.py
 
-for band in u g r i z Y
+for band in u g r i z Y VR
 do
 awk '($6 == "'$band'")' exposures.list > exposures_${band}.list
 done
