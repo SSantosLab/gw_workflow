@@ -588,7 +588,7 @@ do
         # if number of reduced images and sextractor catalogs is not the same, something looks fishy. set nfiles=0 to force reprocessing 
         if [ $mfiles -ne $nfiles ] ; then nfiles=0 ; fi 
         JUMPTOEXPCALIBOPTION=""
-        if [ -e /pnfs/des/${DESTCACHE}/${SCHEMA}/exp/${overlapnite}/${overlapnum}/allZP_D`printf %08d ${overlapnum}`_${rpnum}.csv ] && [ -e /pnfs/des/${DESTCACHE}/${SCHEMA}/exp/${overlapnite}/${overlapnum}/Zero_D`printf %08d ${overlapnum}`_${rpnum}.csv ] && [ -e /pnfs/des/${DESTCACHE}/${SCHEMA}/exp/${overlapnite}/${overlapnum}/D`printf %08d ${overlapnum}`_${rpnum}_ZP.csv ]; then
+        if [ -e /pnfs/des/${DESTCACHE}/${SCHEMA}/exp/${overlapnite}/${overlapnum}/allZP_D`printf %08d ${overlapnum}`_${rpnum}.csv ] && [ -e /pnfs/des/${DESTCACHE}/${SCHEMA}/exp/${overlapnite}/${overlapnum}/D`printf %08d ${overlapnum}`_${rpnum}_ZP.csv ]; then
             ls /pnfs/des/${DESTCACHE}/${SCHEMA}/exp/${overlapnite}/${overlapnum}/allZP_D`printf %08d ${overlapnum}`_${rpnum}.csv 
         else
             # if only the expCalib outputs are missing and we are not allowed to ignore them
