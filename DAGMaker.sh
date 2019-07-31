@@ -891,6 +891,10 @@ do
 		ex -s -c ${i},${m}m${n},${l} -c w -c q ./${procnum}/${BAND}_`printf %02d ${iccd}`/RUN01_expose_prepData
             fi
 	done
+	# Now edit the RUN22 script if we're using a veto catalog from a file                                                                                                                                                                                                
+        if [ ! -z "${SNVETO_FILENAME}" ] ; then
+            sed -i -e '/inFile_param/ a\  -inFile_veto       '$SNVETO_FILENAME' \\'  ./${procnum}/${BAND}_`printf %02d ${iccd}`/RUN22_combined+expose_filterObj
+        fi
     fi
 done
 
