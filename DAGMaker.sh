@@ -605,7 +605,11 @@ do
     # if there are 59+ files with non-zero size, a .out file, and expCalib outputs, then don't do the SE job again for that exposure     
     if [ $nfiles -ge 59 ] ; then
         echo "SE proc. already complete for exposure $overlapnum"
-        DOTOUTFILES="${DOTOUTFILES} /pnfs/des/${DESTCACHE}/${SCHEMA}/exp/$overlapnite/$overlapnum/${overlapnum}.out"
+	# since we go into the next if statement for the search (first) image anyway, only add the .out file here
+	# for i > 1; otherwise it will appear twice.
+       if [ $i -gt 1 ]; then 
+           DOTOUTFILES="${DOTOUTFILES} /pnfs/des/${DESTCACHE}/${SCHEMA}/exp/$overlapnite/$overlapnum/${overlapnum}.out"
+       fi
     fi
     if [ $nfiles -lt 59 ] || [ $i == 1 ]; then
 	if [ $i == 1 ]; then echo "This is the search image so we need to make sure that the raw image is stil present." ; fi
