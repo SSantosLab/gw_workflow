@@ -458,7 +458,8 @@ DOTOUTFILES=""
 #### make sure all images to be coadded are actually 
 
 # create a search command outfile (to append to the dag after the template jobs, after the upcoming loop)
-searchfile=search.dag
+#AG search.dag --> search_${EXPNUM}.dag
+searchfile=search_${EXPNUM}.dag
 if [ -f $searchfile ]; then
     rm $searchfile # maybe we don't want to overwrite? think about that a bit
 fi
@@ -587,7 +588,8 @@ do
         # if number of reduced images and sextractor catalogs is not the same, something looks fishy. set nfiles=0 to force reprocessing 
         if [ $mfiles -ne $nfiles ] ; then nfiles=0 ; fi 
         JUMPTOEXPCALIBOPTION=""
-        if [ -e /pnfs/des/${DESTCACHE}/${SCHEMA}/exp/${overlapnite}/${overlapnum}/allZP_D`printf %08d ${overlapnum}`_${rpnum}.csv ] && [ -e /pnfs/des/${DESTCACHE}/${SCHEMA}/exp/${overlapnite}/${overlapnum}/Zero_D`printf %08d ${overlapnum}`_${rpnum}.csv ] && [ -e /pnfs/des/${DESTCACHE}/${SCHEMA}/exp/${overlapnite}/${overlapnum}/D`printf %08d ${overlapnum}`_${rpnum}_ZP.csv ]; then
+#        if [ -e /pnfs/des/${DESTCACHE}/${SCHEMA}/exp/${overlapnite}/${overlapnum}/allZP_D`printf %08d ${overlapnum}`_${rpnum}.csv ] && [ -e /pnfs/des/${DESTCACHE}/${SCHEMA}/exp/${overlapnite}/${overlapnum}/Zero_D`printf %08d ${overlapnum}`_${rpnum}.csv ] && [ -e /pnfs/des/${DESTCACHE}/${SCHEMA}/exp/${overlapnite}/${overlapnum}/D`printf %08d ${overlapnum}`_${rpnum}_ZP.csv ]; then
+        if [ -e /pnfs/des/${DESTCACHE}/${SCHEMA}/exp/${overlapnite}/${overlapnum}/allZP_D`printf %08d ${overlapnum}`_${rpnum}.csv ] && [ -e /pnfs/des/${DESTCACHE}/${SCHEMA}/exp/${overlapnite}/${overlapnum}/D`printf %08d ${overlapnum}`_${rpnum}_ZP.csv ]; then
             ls /pnfs/des/${DESTCACHE}/${SCHEMA}/exp/${overlapnite}/${overlapnum}/allZP_D`printf %08d ${overlapnum}`_${rpnum}.csv 
         else
             # if only the expCalib outputs are missing and we are not allowed to ignore them
@@ -604,7 +606,11 @@ do
     # if there are 59+ files with non-zero size, a .out file, and expCalib outputs, then don't do the SE job again for that exposure     
     if [ $nfiles -ge 59 ] ; then
         echo "SE proc. already complete for exposure $overlapnum"
-        DOTOUTFILES="${DOTOUTFILES} /pnfs/des/${DESTCACHE}/${SCHEMA}/exp/$overlapnite/$overlapnum/${overlapnum}.out"
+	# since we go into the next if statement for the search (first) image anyway, only add the .out file here
+	# for i > 1; otherwise it will appear twice.
+        if [ $i -gt 1 ]; then 
+            DOTOUTFILES="${DOTOUTFILES} /pnfs/des/${DESTCACHE}/${SCHEMA}/exp/$overlapnite/$overlapnum/${overlapnum}.out"
+        fi
     fi
     if [ $nfiles -lt 59 ] || [ $i == 1 ]; then
 	if [ $i == 1 ]; then echo "This is the search image so we need to make sure that the raw image is stil present." ; fi
@@ -615,7 +621,7 @@ do
             chmod 775  /pnfs/des/scratch/${SCHEMA}/dts/${overlapnite}/
         fi
 	
-        if [ "${SKIP_INCOMPLETE_SE}" == "false" ]; then
+        if [ "${SKIP_INCOMPLETE_SE}" == "false" ] || [ $i == 1 ]; then
                     # check if the raw image is present so that the SE processing can run. If it isn't, try to pull it over from des30.b, des51.b, NCSA DESDM, NOAO archive		
             if [ -e /pnfs/des/scratch/${SCHEMA}/dts/${overlapnite}/DECam_`printf %08d ${overlapnum}`.fits.fz ]; then
                 echo "Raw image present in dCache"
@@ -890,6 +896,12 @@ do
 		ex -s -c ${i},${m}m${n},${l} -c w -c q ./${procnum}/${BAND}_`printf %02d ${iccd}`/RUN01_expose_prepData
             fi
 	done
+
+	# Now edit the RUN22 script if we're using a veto catalog from a file
+
+	if [ ! -z "${SNVETO_FILENAME}" ] ; then
+	    sed -i -e '/inFile_param/ a\  -inFile_veto       '$SNVETO_FILENAME' \\'  ./${procnum}/${BAND}_`printf %02d ${iccd}`/RUN22_combined+expose_filterObj    
+	fi
     fi
 done
 
