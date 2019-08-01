@@ -203,12 +203,12 @@ check_header() {
 # we need to see if the "OBJECT" field in the image header in dCache contains the word "hex". If it does not then we need to 
 # replace that field in the header with "DES${SCHEMA} hex $FIELD tiling 1"
     
-    IMGOBJECT=$(gethead /pnfs/des/scratch/${SCHEMA}/dts/${NITE}/DECam_`printf %08d ${EXPNUM}`.fits.fz OBJECT)
-    IMGTILING=$(gethead /pnfs/des/scratch/${SCHEMA}/dts/${NITE}/DECam_`printf %08d ${EXPNUM}`.fits.fz TILING)
+    IMGOBJECT=$(gethead /pnfs/des/scratch/${SCHEMA}/dts/${overlapnite}/DECam_`printf %08d ${overlapnum}`.fits.fz OBJECT)
+    IMGTILING=$(gethead /pnfs/des/scratch/${SCHEMA}/dts/${overlapnite}/DECam_`printf %08d ${overlapnum}`.fits.fz TILING)
     
    ### first copy the file down
-    $COPYDCMD /pnfs/des/scratch/${SCHEMA}/dts/${NITE}/DECam_`printf %08d ${EXPNUM}`.fits.fz ./ && rm -f /pnfs/des/scratch/${SCHEMA}/dts/${NITE}/DECam_`printf %08d ${EXPNUM}`.fits.fz
-       imageline=$(egrep "^\s?${EXPNUM}" exposures_${BAND}.list | awk '{print $4,$5}' )
+    $COPYDCMD /pnfs/des/scratch/${SCHEMA}/dts/${overlapnite}/DECam_`printf %08d ${overlapnum}`.fits.fz ./ && rm -f /pnfs/des/scratch/${SCHEMA}/dts/${NITE}/DECam_`printf %08d ${EXPNUM}`.fits.fz
+       imageline=$(egrep "^\s?${overlapnum}" exposures_${BAND}.list | awk '{print $4,$5}' )
     SEARCHRA=`echo $imageline | cut -d " " -f 1`
     SEARCHDEC=`echo $imageline | cut -d " " -f 2 | sed s/+//`
     RA10=$(echo "${SEARCHRA}*10" | bc | cut -d "." -f 1)
@@ -231,15 +231,15 @@ check_header() {
 
     for hdr in {1..9} {10..70} 
     do
-    fthedit "DECam_$(printf %08d ${EXPNUM}).fits.fz[${hdr}]"  @editfile || echo "Error running fthedit for  DECam_`printf %08d ${EXPNUM}`[${hdr}].fits.fz"
+    fthedit "DECam_$(printf %08d ${overlapnum}).fits.fz[${hdr}]"  @editfile || echo "Error running fthedit for  DECam_`printf %08d ${EXPNUM}`[${hdr}].fits.fz"
     done
-    $COPYCMD DECam_`printf %08d ${EXPNUM}`.fits.fz /pnfs/des/scratch/${SCHEMA}/dts/${NITE}/DECam_`printf %08d ${EXPNUM}`.fits.fz
+    $COPYCMD DECam_`printf %08d ${overlapnum}`.fits.fz /pnfs/des/scratch/${SCHEMA}/dts/${overlapnite}/DECam_`printf %08d ${overlapnum}`.fits.fz
     
     if [ $? -eq 0 ]; then
-    rm DECam_`printf %08d ${EXPNUM}`.fits.fz
+    rm DECam_`printf %08d ${overlapnum}`.fits.fz
     else
-        echo "Error copying edited file DECam_`printf %08d ${EXPNUM}`.fits.fz back to dCache!"
-    rm DECam_`printf %08d ${EXPNUM}`.fits.fz
+        echo "Error copying edited file DECam_`printf %08d ${overlapnum}`.fits.fz back to dCache!"
+    rm DECam_`printf %08d ${overlapnum}`.fits.fz
     exit 1 
     fi
 }
@@ -292,6 +292,7 @@ TEFF_CUT_i=0.0
 TEFF_CUT_r=0.0
 TEFF_CUT_Y=0.0
 TEFF_CUT_z=0.0
+DO_HEADER_CHECK=0
 # overwrite defaults if user provides a .rc file
 DAGMAKERRC=./dagmaker.rc
 if [ -f $DAGMAKERRC ] ; then
@@ -315,6 +316,7 @@ echo "RESOURCES = $RESOURCES"
 echo "DIFFIMG_EUPS_VERSION = $DIFFIMG_EUPS_VERSION"
 echo "DESTCACHE = $DESTCACHE"
 echo "SCHEMA = $SCHEMA"
+echo "DO_HEADER_CHECK = $DO_HEADER_CHECK"
 echo "----------------"
 
 ### dummy job
@@ -624,6 +626,9 @@ fi
 		fi
 	    fi
 	fi
+    fi
+    if [ $DO_HEADER_CHECK -eq 1 ]; then 
+    	check_header
     fi
     echo "jobsub -n --group=des --OS=SL6 -N 60 --resource-provides=usage_model=${RESOURCES} $JOBSUB_OPTS $JOBSUB_OPTS_SE file://SEdiff.sh -r $RNUM -p $PNUM -E $overlapnum -b $BAND -n $overlapnite -c 0 -S dp$SEASON $JUMPTOEXPCALIBOPTION -d $DESTCACHE -m $SCHEMA $SE_OPTS $TEMP_OPTS" >> $outfile
 ### KH hack 2017-02-18

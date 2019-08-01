@@ -26,7 +26,7 @@ WRITEDB=on
 # When true, DAGMaker will delete a pre-existing mytemp dir for the exposure and rerun
 RM_MYTEMP=true
 
-JOBSUB_OPTS="--memory=2500MB --disk=70GB --cpu=1 --expected-lifetime=5h --email-to=alyssag94@brandies.edu --disk=70GB"
+JOBSUB_OPTS="--memory=2500MB --disk=70GB --cpu=1 --expected-lifetime=5h --email-to=alyssag94@brandeis.edu --disk=70GB"
 JOBSUB_OPTS_SE="--memory=3600MB --disk=100GB --cpu=4 --expected-lifetime=5h"
 
 RESOURCES="DEDICATED,OPPORTUNISTIC,OFFSITE"
