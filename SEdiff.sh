@@ -847,7 +847,7 @@ for c in $ccdlist; do
         source ./${procnum}/input_files/copy_pairs_for_${EXPNUM}.sh || echo "Error in copy_pairs_for_${EXPNUM}.sh. You may have problems with overlap calculation."   # { echo "Error in copy_pairs_for_${EXPNUM}.sh. Exiting..." ; exit 2 ; }
 
     fi
-    if [ -s ${EXPNUM}.out && -f ${EXPNUM}.out && ! -s $TOPDIR_WSTEMPLATES/pairs/ ]; then
+    if [ -s ${EXPNUM}.out ] && [ -f ${EXPNUM}.out ]  && [ ! -s $TOPDIR_WSTEMPLATES/pairs/ ]; then
         cp ${EXPNUM}.out $TOPDIR_WSTEMPLATES/pairs/
 #	echo "AG expnum.out exists"
     fi
