@@ -647,7 +647,7 @@ ifdh cp -D $dotoutfile $ccddotoutfile ./ || { echo "Failed to copy both combined
 #AG change
 #if [ ! -f ${EXPNUM}.out ]; then
 if [ ! -s ${EXPNUM}.out ]; then
-    if [ -n "$baseccddotout" ] && [ -f $baseccddotout ]; then
+    if [ -s $baseccddotout ]; then
         cp ${baseccddotout} ${EXPNUM}.out || echo "Error copying ${baseccdotout}."
     fi
 fi
@@ -697,7 +697,7 @@ setup extralibs
 # run make starcat and difference imaging ccd-by-ccd (in case of comma-separated ccd list)
 # in most cases, this list will only be 1 ccd long (and the 1-ccd runs will be run in parallel)
 for c in $ccdlist; do
-    c=$(printf "%02d" $c)
+    c2=$(printf "%02d" $c)
 #    export HOME=$OLDHOME
     
     ######## CODE FORMERLY IN RUN_DIFFIMG_PIPELINE.sh ##########
