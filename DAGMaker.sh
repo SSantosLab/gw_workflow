@@ -449,7 +449,7 @@ touch $templatecopyfile
 echo "<parallel>" >> $outfile
 
 # stick a dummy job in here so that there is something just in case there ends up being nothing to do for parallel processing
-echo "jobsub -n --group=des --OS=SL6  --resource-provides=usage_model=${RESOURCES} --memory=500MB --disk=100MB --expected-lifetime=600s file://dummyjob.sh" >> $outfile
+echo "jobsub -n --group=des --OS=SL6,SL7  --resource-provides=usage_model=${RESOURCES} --memory=500MB --disk=100MB --expected-lifetime=600s file://dummyjob.sh" >> $outfile
 
 
 # initialize empty list of files for the copy pairs output
@@ -632,6 +632,12 @@ do
                     if [ -e /data/des51.b/data/DTS/src/${overlapnite}/DECam_`printf %08d ${overlapnum}`.fits.fz ]; then
                         echo "Raw image not present in dCache or /data/des30.b; trying from des51.b"
                         $COPYCMD /data/des51.b/data/DTS/src/${overlapnite}/DECam_`printf %08d ${overlapnum}`.fits.fz /pnfs/des/scratch/${SCHEMA}/dts/${overlapnite}/DECam_`printf %08d ${overlapnum}`.fits.fz || { echo "cp failed!" ; exit 2 ; }
+
+		    elif [ -e /data/des41.a/data/marcelle/o3/20190814/DECam_`printf %08d ${overlapnum}`.fits.fz ]; then
+                        echo "Getting raw image from /data/des41.a/data/marcelle/o3/20190814"
+
+                        $COPYCMD /data/des41.a/data/marcelle/o3/20190814/DECam_`printf %08d ${overlapnum}`.fits.fz /pnfs/des/scratch/${SCHEMA}/dts/${overlapnite}/DECam_`printf %08d ${overlapnum}`.fits.fz || { echo "cp failed!" ; exit 2 ; }
+
                     else 
                         echo " Raw image for exposure $overlapnum not in dcache and not in /data/des30.b or /data/des51.b. Try to tansfer from NCSA..."
                         export WGETRC=$HOME/.wgetrc-desdm
@@ -815,7 +821,7 @@ fi
 if [ $(awk '{print $1}' mytemp_${EXPNUM}/KH_diff.list1 ) -gt 1 ]; then
 # Add the runmon step at the end of the dag. wait until now because we need to determine the field first. Only do it if there are templates though, since there will be no diffimg jobs otherwise.
 echo "<serial>" >> $outfile
-echo "jobsub -n --group=des --OS=SL6  --resource-provides=usage_model=$RESOURCES $JOBSUB_OPTS --expected-lifetime=7200s  --append_condor_requirements='(TARGET.GLIDEIN_Site==\\\"FermiGrid\\\"||TARGET.HAS_CVMFS_des_opensciencegrid_org==true)' file://RUNMON.sh -r $rpnum -p $procnum -E $EXPNUM -n $NITE -f $FIELD -d $DESTCACHE -m $SCHEMA" >> $outfile
+echo "jobsub -n --group=des --OS=SL6,SL7  --resource-provides=usage_model=$RESOURCES $JOBSUB_OPTS --expected-lifetime=7200s  --append_condor_requirements='(TARGET.GLIDEIN_Site==\\\"FermiGrid\\\"||TARGET.HAS_CVMFS_des_opensciencegrid_org==true)' file://RUNMON.sh -r $rpnum -p $procnum -E $EXPNUM -n $NITE -f $FIELD -d $DESTCACHE -m $SCHEMA" >> $outfile
 echo "</serial>" >> $outfile
 fi
 # edit the template files to match this exposure
