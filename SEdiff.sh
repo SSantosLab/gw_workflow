@@ -1046,10 +1046,7 @@ for c in $ccdlist; do
         for overlapccd in $overlapccds
         do
             echo "Working on overlapccd $overlapccd"
-            
-            if [ -d  ${TOPDIR_WSDIFF}/data/DECam_${overlapexp}_empty ]; then
-                rmdir  ${TOPDIR_WSDIFF}/data/DECam_${overlapexp}_empty
-            fi
+
             # if overlap, remove "_empty" from filename
             if [ ! -d ${TOPDIR_WSDIFF}/data/DECam_${overlapexp} ]; then
                 mkdir  -p ${TOPDIR_WSDIFF}/data/DECam_${overlapexp}
@@ -1074,43 +1071,65 @@ for c in $ccdlist; do
             fi
 	    if [ -z "$file2copy" ] ; then
                     # backward compatibility
-                    echo "WARNING: .fz file for $overlapexp CCD $overlapccd did not appear in ifdh ls and was thus not copied in. Could be a problem. Checking to see if an uncompressed (.fits) file is available."
-                    file2copy="/pnfs/des/${DESTCACHE}/${SCHEMA}/exp/${overlapnite}/${overlapexp}/D`printf %08d $overlapexp`_${BAND}_`printf %02d $overlapccd`_${rpnum}_immask.fits"
-                    if [ -z "$file2copy" ] ; then
-                        echo  "WARNING: .fits file for $overlapexp CCD $overlapccd did not appear in ifdh ls and was thus not copied in. There could be problems down the road."
-                    else
-                        ifdh cp ${IFDHCP_OPT} -D $file2copy ${TOPDIR_WSDIFF}/data/DECam_${overlapexp}/ || echo "Error in ifdh cp ${IFDHCP_OPT} /pnfs/des/${DESTCACHE}/${SCHEMA}/exp/${overlapnite}/${overlapexp}/D`printf %08d $overlapexp`_${BAND}_`printf %02d $overlapccd`_${rpnum}_immask.fits WSTemplates/data/DECam_${overlapexp}/ !!!"
-                        cd  ${TOPDIR_WSDIFF}/data/DECam_${overlapexp}/
-                        ln -s D`printf %08d $overlapexp`_${BAND}_`printf %02d $overlapccd`_${rpnum}_immask.fits DECam_`printf %08d ${overlapexp}`_`printf %02d $overlapccd`.fits
-                        ln -s D`printf %08d $overlapexp`_${BAND}_`printf %02d $overlapccd`_${rpnum}_immask.fits DECam_`printf %06d ${overlapexp}`_`printf %02d $overlapccd`.fits
-                        fthedit  D`printf %08d $overlapexp`_${BAND}_`printf %02d $overlapccd`_${rpnum}_immask.fits[0] DOYT delete
-                    fi
-                # copy the ccd files over
+                echo "WARNING: .fz file for $overlapexp CCD $overlapccd did not appear in ifdh ls and was thus not copied in. Could be a problem. Checking to see if an uncompressed (.fits) file is available."
+                file2copy="/pnfs/des/${DESTCACHE}/${SCHEMA}/exp/${overlapnite}/${overlapexp}/D`printf %08d $overlapexp`_${BAND}_`printf %02d $overlapccd`_${rpnum}_immask.fits"
+                if [ -z "$file2copy" ] ; then
+                    echo  "WARNING: .fits file for $overlapexp CCD $overlapccd did not appear in ifdh ls and was thus not copied in. There could be problems down the road."
                 else
-                    ifdh cp ${IFDHCP_OPT} -D $file2copy ${TOPDIR_WSDIFF}/data/DECam_${overlapexp}/ || echo "Error in ifdh cp ${IFDHCP_OPT} /pnfs/des/${DESTCACHE}/${SCHEMA}/exp/${overlapnite}/${overlapexp}/D`printf %08d $overlapexp`_${BAND}_`printf %02d $overlapccd`_${rpnum}_immask.fits WSTemplates/data/DECam_${overlapexp}/ !!!"
+                    ifdh cp ${IFDHCP_OPT} -D $file2copy ${TOPDIR_WSDIFF}/data/DECam_${overlapexp}/ 
+		    if [ $? -eq 0 ]; then
+			cd  ${TOPDIR_WSDIFF}/data/DECam_${overlapexp}/
+			ln -s D`printf %08d $overlapexp`_${BAND}_`printf %02d $overlapccd`_${rpnum}_immask.fits DECam_`printf %08d ${overlapexp}`_`printf %02d $overlapccd`.fits
+			ln -s D`printf %08d $overlapexp`_${BAND}_`printf %02d $overlapccd`_${rpnum}_immask.fits DECam_`printf %06d ${overlapexp}`_`printf %02d $overlapccd`.fits
+			fthedit  D`printf %08d $overlapexp`_${BAND}_`printf %02d $overlapccd`_${rpnum}_immask.fits[0] DOYT delete
+			if [ -d  ${TOPDIR_WSDIFF}/data/DECam_${overlapexp}_empty ]; then
+			    rmdir  ${TOPDIR_WSDIFF}/data/DECam_${overlapexp}_empty
+			fi
+		    else
+			echo "Error in ifdh cp ${IFDHCP_OPT} /pnfs/des/${DESTCACHE}/${SCHEMA}/exp/${overlapnite}/${overlapexp}/D`printf %08d $overlapexp`_${BAND}_`printf %02d $overlapccd`_${rpnum}_immask.fits WSTemplates/data/DECam_${overlapexp}/ !!!"
+		    fi  
+                fi
+                # copy the ccd files over
+            else
+                ifdh cp ${IFDHCP_OPT} -D $file2copy ${TOPDIR_WSDIFF}/data/DECam_${overlapexp}/ 
+		if [ $? -eq 0 ]; then
                     funpack -D ${TOPDIR_WSDIFF}/data/DECam_${overlapexp}/`basename $file2copy`
                     cd  ${TOPDIR_WSDIFF}/data/DECam_${overlapexp}/
                     # make symlinks to fit naming convention to the expectation of the pipeline
                     ln -s D`printf %08d $overlapexp`_${BAND}_`printf %02d $overlapccd`_${rpnum}_immask.fits DECam_`printf %08d ${overlapexp}`_`printf %02d $overlapccd`.fits
                     ln -s D`printf %08d $overlapexp`_${BAND}_`printf %02d $overlapccd`_${rpnum}_immask.fits DECam_`printf %06d ${overlapexp}`_`printf %02d $overlapccd`.fits
                     fthedit  D`printf %08d $overlapexp`_${BAND}_`printf %02d $overlapccd`_${rpnum}_immask.fits[0] DOYT delete
-                fi
-                cd ../../../
+		    if [ -d  ${TOPDIR_WSDIFF}/data/DECam_${overlapexp}_empty ]; then
+			rmdir  ${TOPDIR_WSDIFF}/data/DECam_${overlapexp}_empty
+		    fi
+		else
+		    echo "Error in ifdh cp ${IFDHCP_OPT} /pnfs/des/${DESTCACHE}/${SCHEMA}/exp/${overlapnite}/${overlapexp}/D`printf %08d $overlapexp`_${BAND}_`printf %02d $overlapccd`_${rpnum}_immask.fits WSTemplates/data/DECam_${overlapexp}/ !!!"
+		fi
+            fi
+            cd ../../../
             
         done
 	overlapexp8=$(printf %08d $overlapexp)
 	if [ "${STARCAT_NAME}" != "" ] || [ "${SNVETO_NAME}" != "" ]; then
-	    if [ ! -s D${overlapexp8}_r${RNUM}p${PNUM}_ZP.csv ]; then
+	    # if there is not already an existing D${overlapexp8}_r${RNUM}p${PNUM}_ZP.csv AND we have some  D${overlapexp8}_[0-6][0-9]_r${RNUM}p${PNUM}_ZP.csv files with content
+	    if [ ! -s D${overlapexp8}_r${RNUM}p${PNUM}_ZP.csv ] ; then
 		echo "Combining D${overlapexp8}_CCD_r${RNUM}p${PNUM}_ZP.csv files..."
-		echo "ID,EXPNUM,CCDNUM,NUMBER,ALPHAWIN_J2000,DELTAWIN_J2000,FLUX_AUTO,FLUXERR_AUTO,FLUX_PSF,FLUXERR_PSF,MAG_AUTO,MAGERR_AUTO,MAG_PSF,MAGERR_PSF,SPREAD_MODEL,SPREADERR_MODEL,FWHM_WORLD,FWHMPSF_IMAGE,FWHMPSF_WORLD,CLASS_STAR,FLAGS,IMAFLAGS_ISO,ZeroPoint,ZeroPoint_rms,ZeroPoint_FLAGS" > D${overlapexp8}_r${RNUM}p${PNUM}_ZP.csv
+		touch D${overlapexp8}_r${RNUM}p${PNUM}_ZP.csv
 		for csvfile in $(ls  D${overlapexp8}_[0-6][0-9]_r${RNUM}p${PNUM}_ZP.csv)
 		do 
 		    awk '(NR>1) { print $0 }' $csvfile >>  D${overlapexp8}_r${RNUM}p${PNUM}_ZP.csv
 		done
+                # add the header if the file has content
+		if [ -s D${overlapexp8}_r${RNUM}p${PNUM}_ZP.csv ]; then
+		    sed -i -e "1 i\ID,EXPNUM,CCDNUM,NUMBER,ALPHAWIN_J2000,DELTAWIN_J2000,FLUX_AUTO,FLUXERR_AUTO,FLUX_PSF,FLUXERR_PSF,MAG_AUTO,MAGERR_AUTO,MAG_PSF,MAGERR_PSF,SPREAD_MODEL,SPREADERR_MODEL,FWHM_WORLD,FWHMPSF_IMAGE,FWHMPSF_WORLD,CLASS_STAR,FLAGS,IMAFLAGS_ISO,ZeroPoint,ZeroPoint_rms,ZeroPoint_FLAGS" D${overlapexp8}_r${RNUM}p${PNUM}_ZP.csv
+		else
+		    # nothing was written into the file, so we delete this combined csv file to avoid problems later
+		    rm  D${overlapexp8}_r${RNUM}p${PNUM}_ZP.csv
+		fi
+		
 	    fi
 	fi
     done
-
     # makestarcat
 
 
