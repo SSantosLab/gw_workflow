@@ -1128,6 +1128,8 @@ for c in $ccdlist; do
 		fi
 		
 	    fi
+	    # final check for an empty csv file
+	    if [ $(wc -l D${overlapexp8}_r${RNUM}p${PNUM}_ZP.csv | awk '{print $1}') -lt 2 ]; then rm D${overlapexp8}_r${RNUM}p${PNUM}_ZP.csv ; fi
 	fi
     done
     # makestarcat
