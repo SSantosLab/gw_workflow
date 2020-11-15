@@ -317,7 +317,8 @@ if [ "$SKIPSE" == "false" ] ; then # if statement allows SE to be skipped if SE 
     # Y4E1                          666747
     # Y5E1                          674970
     # Y5E2                          724364
-    # Y6                     724365       
+    # Y6                     724365 need to check, go with 946849 for now      
+    # Y7
     #######################################333
     
     
@@ -441,8 +442,18 @@ if [ "$SKIPSE" == "false" ] ; then # if statement allows SE to be skipped if SE 
 	    starflatfile='Y5A1_20170906t0222_{filter:s}_c{ccd:>02s}_r3459p01_starflat.fits'
 	    headfile='{filter:s}no2no61.head'
 	    pcaprefix='binned-fp/Y5A1_20170815t0222_{filter:s}_r3460p01_skypca-binned-fp.fits'	    
-	else
+	elif [ $EXPNUM -le 946849 ]; then
 	    YEAR=y6
+	    EPOCH=''
+	    biasfile='D_n20180913t0923_c{ccd:>02s}_r4033p02_biascor.fits'
+	    bpmfile='D_n20180912t1105_c{ccd:>02s}_r3697p01_bpm.fits'
+	    dflatfile='D_n20180913t0923_{filter:s}_c{ccd:>02s}_r4033p02_norm-dflatcor.fits'
+	    skytempfile='Y6A1_20180908t1117_{filter:s}_c{ccd:>02s}_r4024p01_skypca-tmpl.fits'
+	    starflatfile='Y6A1_20180908t1117_{filter:s}_c{ccd:>02s}_r3762p01_starflat.fits'
+	    headfile='{filter:s}no2no61.head'
+	    pcaprefix='binned-fp/Y6A1_20180908t1117_{filter:s}_r4024p01_skypca-binned-fp.fits'
+	else
+	    YEAR=y7
 	    EPOCH=''
 	    biasfile='D_n20180913t0923_c{ccd:>02s}_r4033p02_biascor.fits'
 	    bpmfile='D_n20180912t1105_c{ccd:>02s}_r3697p01_bpm.fits'
