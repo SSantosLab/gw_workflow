@@ -315,11 +315,8 @@ if [ "$SKIPSE" == "false" ] ; then # if statement allows SE to be skipped if SE 
     # Y2E2 20141205 20150518 383751 438346
     # Y3   20150731 20160212 459984 516846
     # Y4E1                          666747
-    # Y5E1                          674970
-    # Y5E2                          724364
-    # Y6                     724365 need to check, go with 946849 for now      
-    # Y7
-    #######################################333
+    # Y7                     666748        # Per Nikolay 2020-11-15, everything for Y5+ now using "Y7" 
+    #######################################
     
     
     # need to implement here handling of different "epochs" within the same year
@@ -422,36 +419,6 @@ if [ "$SKIPSE" == "false" ] ; then # if statement allows SE to be skipped if SE 
         starflatfile='Y2A1_20150715t0315_{filter:s}_c{ccd:>02s}_r2360p01_starflat.fits'
         headfile='f'$CCDNUM_LIST'.head'                                                 
         pcaprefix='binned-fp/Y2T4_20150715t0315_{filter:s}_r2404p01_skypca-binned-fp.fits'
-        elif [ $EXPNUM -le 674970 ]; then
-	    YEAR=y5
-	    EPOCH=''
-	    biasfile='D_n20170815t0824_c{ccd:>02s}_r3388p01_biascor.fits'
-	    bpmfile='D_n20170815t0824_c{ccd:>02s}_r3370p02_bpm.fits'
-	    dflatfile='D_n20170815t0824_{filter:s}_c{ccd:>02s}_r3388p01_norm-dflatcor.fits'
-	    skytempfile='Y5A1_20170815t0222_{filter:s}_c{ccd:>02s}_r3460p01_skypca-tmpl.fits'
-	    starflatfile='Y5A1_20170815t0903_{filter:s}_c{ccd:>02s}_r3458p01_starflat.fits'
-	    headfile='{filter:s}no2no61.head'
-	    pcaprefix='binned-fp/Y5A1_20170815t0222_{filter:s}_r3460p01_skypca-binned-fp.fits'
-        elif [ $EXPNUM -le 724364 ]; then
-	    YEAR=y5
-	    EPOCH=''
-	    biasfile='D_n20170815t0824_c{ccd:>02s}_r3388p01_biascor.fits'
-	    bpmfile='D_n20170815t0824_c{ccd:>02s}_r3370p02_bpm.fits'
-	    dflatfile='D_n20170815t0824_{filter:s}_c{ccd:>02s}_r3388p01_norm-dflatcor.fits'
-	    skytempfile='Y5A1_20170815t0222_{filter:s}_c{ccd:>02s}_r3460p01_skypca-tmpl.fits'
-	    starflatfile='Y5A1_20170906t0222_{filter:s}_c{ccd:>02s}_r3459p01_starflat.fits'
-	    headfile='{filter:s}no2no61.head'
-	    pcaprefix='binned-fp/Y5A1_20170815t0222_{filter:s}_r3460p01_skypca-binned-fp.fits'	    
-	elif [ $EXPNUM -le 946849 ]; then
-	    YEAR=y6
-	    EPOCH=''
-	    biasfile='D_n20180913t0923_c{ccd:>02s}_r4033p02_biascor.fits'
-	    bpmfile='D_n20180912t1105_c{ccd:>02s}_r3697p01_bpm.fits'
-	    dflatfile='D_n20180913t0923_{filter:s}_c{ccd:>02s}_r4033p02_norm-dflatcor.fits'
-	    skytempfile='Y6A1_20180908t1117_{filter:s}_c{ccd:>02s}_r4024p01_skypca-tmpl.fits'
-	    starflatfile='Y6A1_20180908t1117_{filter:s}_c{ccd:>02s}_r3762p01_starflat.fits'
-	    headfile='{filter:s}no2no61.head'
-	    pcaprefix='binned-fp/Y6A1_20180908t1117_{filter:s}_r4024p01_skypca-binned-fp.fits'
 	else
 	    YEAR=y7
 	    EPOCH=''
@@ -473,6 +440,17 @@ if [ "$SKIPSE" == "false" ] ; then # if statement allows SE to be skipped if SE 
             starflatfile='Y2A1_20140801t1130_{filter:s}_c{ccd:>02s}_r1637p01_starflat.fits'   
             headfile='f'$CCDNUM_LIST'.head'                                                 
             pcaprefix='binned-fp/Y2A1_20140801t1130_{filter:s}_r1635p02_skypca-binned-fp.fits'
+	    if [ $EXPNUM -gt 666747 ]; then
+		YEAR=y7u                                                                           
+		EPOCH=''                                                                          
+		biasfile='D_n20180913t0923_c{ccd:>02s}_r4033p02_biascor.fits'                     
+		bpmfile='D_n20180912t1105_c{ccd:>02s}_r3697p01_bpm.fits'                          
+		dflatfile='D_n20170201t0213_{filter:s}_c{ccd:>02s}_r2922p01_norm-dflatcor.fits'   
+		skytempfile='Y6A1_20170104t190116_{filter:s}_c{ccd:>02s}_r4099p01_skypca-tmpl.fits' 
+		starflatfile='Y2A1_20150715t0315_{filter:s}_c{ccd:>02s}_r2360p01_starflat.fits'   
+		headfile='f'$CCDNUM_LIST'.head'                                                 
+		pcaprefix='binned-fp/Y6A1_20170104t190116_{filter:s}_r4099p01_skypca-binned-fp.fits'	
+	    fi
         fi
     fi
 
