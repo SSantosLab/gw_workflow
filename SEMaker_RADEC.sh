@@ -54,23 +54,24 @@ fetch_from_DESDM () {
     export PYTHONPATH=/data/des40.b/data/kherner/qatoolkit-trunk/python:${PYTHONPATH}
     
     find_template_images_by_exp.py -s db-dessci -S des_admin --expnum $overlapnum -p Y3A1_FINALCUT --band $BAND --release Y3A2 --use_blacklist --use_eval --outfilename desdm_files_${overlapnum}.list ||  echo "Error $? running python script."
-    if [ ! -e  desdm_files_${overlapnum}.list ] ; then continue ; fi
+    if [ ! -e  desdm_files_${overlapnum}.list ] ; then return 1 ; fi
     
     while read url
     do
-    FILENAME=`basename $url`
-    FILENAME=`echo $FILENAME | sed -r -e "s/r[0-9]+p[0-9]+/r4p4/" -e "s/immasked/immask/" -e "s/_c([0-9]{2})/_\1/"`
-    wget -nv --user=kherner --password=krh70chips --ca-directory=/etc/grid-security/certificates $url
-    mv `basename $url` $FILENAME
-#       check_header
-    NITE=`echo $url | cut -d "/" -f 10`
-    overlapnum=`echo $url | cut -d "/" -f 11 | sed -e "s/D[0-9][0-9]//"`
+	FILENAME=`basename $url`
+	FILENAME=`echo $FILENAME | sed -r -e "s/r[0-9]+p[0-9]+/r4p4/" -e "s/immasked/immask/" -e "s/_c([0-9]{2})/_\1/"`
+	WGETRC=$HOME/.wgetrc-desdm
+	wget -nv --ca-directory=/etc/grid-security/certificates $url
+	mv `basename $url` $FILENAME
+	#       check_header
+	NITE=`echo $url | cut -d "/" -f 10`
+	overlapnum=`echo $url | cut -d "/" -f 11 | sed -e "s/D[0-9][0-9]//"`
     done < desdm_files_${overlapnum}.list
     if [ `wc -l desdm_files_${overlapnum}.list | cut -d " " -f 1` -eq 0 ] ; then 
-    rm desdm_files_${overlapnum}.list
-    echo "No files available for this exposure from DESDM. Mostly likely it fails a zero point or other quality cut."
-    export PYTHONPATH=$OLDPYTHONPATH
-    return 1
+	rm desdm_files_${overlapnum}.list
+	echo "No files available for this exposure from DESDM. Mostly likely it fails a zero point or other quality cut."
+	export PYTHONPATH=$OLDPYTHONPATH
+	return 1
     fi
     if [ ! -d /pnfs/des/persistent/${SCHEMA}/exp/${NITE}/${overlapnum} ]; then mkdir -p /pnfs/des/persistent/${SCHEMA}/exp/${NITE}/${overlapnum}  ; chmod g+w /pnfs/des/persistent/${SCHEMA}/exp/${NITE}/${overlapnum} ; fi
     ./getcorners.sh $overlapnum ./ ./ && if [ -f /pnfs/des/persistent/${SCHEMA}/exp/${NITE}/${overlapnum}/${overlapnum}.out ]; then rm -f /pnfs/des/persistent/${SCHEMA}/exp/${NITE}/${overlapnum}/${overlapnum}.out ; fi ; cp ${overlapnum}.out /pnfs/des/persistent/${SCHEMA}/exp/${NITE}/${overlapnum}/${overlapnum}.out
@@ -207,7 +208,7 @@ check_header() {
     IMGTILING=$(gethead /pnfs/des/scratch/${SCHEMA}/dts/${overlapnite}/DECam_`printf %08d ${overlapnum}`.fits.fz TILING)
     
    ### first copy the file down
-    $COPYDCMD /pnfs/des/scratch/${SCHEMA}/dts/${overlapnite}/DECam_`printf %08d ${overlapnum}`.fits.fz ./ && rm -f /pnfs/des/scratch/${SCHEMA}/dts/${NITE}/DECam_`printf %08d ${EXPNUM}`.fits.fz
+    $COPYDCMD /pnfs/des/scratch/${SCHEMA}/dts/${overlapnite}/DECam_`printf %08d ${overlapnum}`.fits.fz ./ && rm -f /pnfs/des/scratch/${SCHEMA}/dts/${overlapnite}/DECam_`printf %08d ${overlapnum}`.fits.fz
        imageline=$(egrep "^\s?${overlapnum}" exposures_${BAND}.list | awk '{print $4,$5}' )
     SEARCHRA=`echo $imageline | cut -d " " -f 1`
     SEARCHDEC=`echo $imageline | cut -d " " -f 2 | sed s/+//`
@@ -236,11 +237,11 @@ check_header() {
     $COPYCMD DECam_`printf %08d ${overlapnum}`.fits.fz /pnfs/des/scratch/${SCHEMA}/dts/${overlapnite}/DECam_`printf %08d ${overlapnum}`.fits.fz
     
     if [ $? -eq 0 ]; then
-    rm DECam_`printf %08d ${overlapnum}`.fits.fz
+	rm DECam_`printf %08d ${overlapnum}`.fits.fz
     else
         echo "Error copying edited file DECam_`printf %08d ${overlapnum}`.fits.fz back to dCache!"
-    rm DECam_`printf %08d ${overlapnum}`.fits.fz
-    exit 1 
+	rm DECam_`printf %08d ${overlapnum}`.fits.fz
+	return 1 
     fi
 }
 
@@ -276,10 +277,10 @@ if [ ! -f $optionalfile ] ; then echo "Warning: $optionalfile not found." ; fi
 RNUM="2"
 PNUM="01"
 SEASON="11"
-JOBSUB_OPTS="--mail_on_error --email-to=kherner@fnal.gov"
-RESOURCES="DEDICATED,OPPORTUNISTIC,OFFSITE,SLOTTEST"
+JOBSUB_OPTS=""
+RESOURCES="DEDICATED,OPPORTUNISTIC,OFFSITE"
 DIFFIMG_EUPS_VERSION="gwdevel13"
-JOBSUB_OPTS_SE="--memory=3000MB --expected-lifetime=medium --cpu=4"
+JOBSUB_OPTS_SE=""
 WRITEDB="off"
 IGNORECALIB="false"
 DESTCACHE="persistent"
@@ -355,6 +356,12 @@ export PATH=${PATH}:/data/des40.b/data/kherner/qatoolkit-trunk/bin
 setup numpy 1.9.1+8
 setup despydb 2.0.0+4
 
+if [ ! -d syspfiles_$$ ]; then
+    mkdir syspfiles_$$
+    ln -s ${FTOOLS_DIR}/syspfiles/* syspfiles_$$
+fi
+export PFILES=$PWD/syspfiles_$$
+
 # setup handy  commands
 COPYCMD="ifdh cp"
 COPYDCMD="ifdh cp -D"
@@ -411,7 +418,7 @@ fi
 #### begin composing the dag 
 echo "<parallel>" >> $outfile
 # stick a dummy job in here so that there is something just in case there ends up being nothing to do for parallel processing
-echo "jobsub -n --group=des --OS=SL6  --resource-provides=usage_model=${RESOURCES} --memory=500MB --disk=100MB --expected-lifetime=600s $JOBSUB_OPTS file://dummyjob.sh" >> $outfile
+echo "jobsub -n --group=des  --resource-provides=usage_model=${RESOURCES} --memory=500MB --disk=100MB --expected-lifetime=600s $JOBSUB_OPTS file://dummyjob.sh" >> $outfile
 ###
 #### initialize empty list of files for the copy pairs output
 ###DOTOUTFILES=""
@@ -428,6 +435,7 @@ do
     BAND=$(awk "NR == $i {print \$3}" KH_diff_RADEC.list2)
     # try to use this exposure 
     SKIP=false
+    ALLGOOD=false
     if [ -z "${overlapnum}" ] && [ -z "${overlapnite}" ] ; then continue ;  fi
 
     # check that exposure is 30 seconds or longer
@@ -534,10 +542,11 @@ do
 ### try fetching inputs from DESDM. If the fetch function returns 0, call it good.
     fetch_from_DESDM
     if [ $? -eq 0 ] ; then
-    echo "DESDM fetching for $overlapnum was successful."
-    ALLGOOD=true
-    continue
+	echo "DESDM fetching for $overlapnum was successful."
+	ALLGOOD=true
+	continue
     fi
+    
 #### see if the BLISS processing exists for this exposure, copy and use that if so.
 
 if [ $(ls /data/des50.b/data/BLISS/${overlapnum:0:4}00/${overlapnum}/D`printf %08d $overlapnum`_*r1p1_fullcat.fits | wc -l) -ge 59 ] && [ $(ls /data/des50.b/data/BLISS/${overlapnum:0:4}00/${overlapnum}/D`printf %08d $overlapnum`_*r1p1_immask.fits.fz | wc -l) -ge 59 ] ; then
@@ -582,8 +591,9 @@ if [ $(ls /data/des50.b/data/BLISS/${overlapnum:0:4}00/${overlapnum}/D`printf %0
 ##  cp /data/des50.b/data/BLISS/${overlapnum:0:4}00/${overlapnum}/${overlapnum}.out /pnfs/des/${DESTCACHE}/${SCHEMA}/exp/$overlapnite/$overlapnum/
     DOTOUTFILES="${DOTOUTFILES} /pnfs/des/${DESTCACHE}/${SCHEMA}/exp/$overlapnite/$overlapnum/${overlapnum}.out" 
 ##    fi
-    if [ $ALLGOOD == "true" ] ; then continue ; fi
+    if [ "$ALLGOOD" == "true" ] ; then continue ; fi
 fi
+
 
     #### at this point we have determined that we need to run SE proc for this exposure. so let's add it to the dag:
 
@@ -630,7 +640,7 @@ fi
     if [ $DO_HEADER_CHECK -eq 1 ]; then 
     	check_header
     fi
-    echo "jobsub -n --group=des --OS=SL6 -N 60 --resource-provides=usage_model=${RESOURCES} $JOBSUB_OPTS $JOBSUB_OPTS_SE file://SEdiff.sh -r $RNUM -p $PNUM -E $overlapnum -b $BAND -n $overlapnite -c 0 -S dp$SEASON $JUMPTOEXPCALIBOPTION -d $DESTCACHE -m $SCHEMA $SE_OPTS $TEMP_OPTS" >> $outfile
+    echo "jobsub -n --group=des --lines='+SingularityImage=\\\"/cvmfs/singularity.opensciencegrid.org/fermilab/fnal-wn-sl6:latest\\\"' -N 60 --resource-provides=usage_model=${RESOURCES} $JOBSUB_OPTS $JOBSUB_OPTS_SE file://SEdiff.sh -r $RNUM -p $PNUM -E $overlapnum -b $BAND -n $overlapnite -c 0 -S dp$SEASON $JUMPTOEXPCALIBOPTION -d $DESTCACHE -m $SCHEMA $SE_OPTS $TEMP_OPTS" >> $outfile
 ### KH hack 2017-02-18
     echo "submitting job for $overlapnum"
 #jobsub_submit --role=DESGW --group=des --OS=SL6 --resource-provides=usage_model=${RESOURCES} $JOBSUB_OPTS $JOBSUB_OPTS_SE file://SE_job.sh -r $RNUM -p $PNUM -E $overlapnum -b $BAND -n $overlapnite $JUMPTOEXPCALIBOPTION -d $DESTCACHE -m $SCHEMA $SE_OPTS
@@ -650,4 +660,4 @@ echo "</parallel>" >> $outfile
 #echo "To submit this DAG do"
 #echo "jobsub_submit_dag -G des --role=DESGW file://${outfile}"
 
-
+if [ -d syspfiles_$$ ] ; then rm -r syspfiles_$$ ; fi
