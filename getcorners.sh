@@ -55,7 +55,7 @@ get_corners ()
     coord=( `${AWK} '{printf "%10.5f %10.5f  ",$1,$2}' tmp.tmp${e}` )
     # output = ( Expo Band CCD RA1 Dec1 RA2 Dec2 RA3 Dec3 RA4 Dec4 )
     echo ${e} ${filt} ${ccd} ${coord[0]} ${coord[1]} ${coord[2]} ${coord[3]} ${coord[4]} ${coord[5]} ${coord[6]} ${coord[7]} | \
-      ${AWK} '{printf "%6d   %s   %2d  %10.5f %10.5f  %10.5f %10.5f  %10.5f %10.5f  %10.5f %10.5f\n",$1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11}' >> ${CORNERDIR}/$outfile
+      ${AWK} '{printf "%8d   %s   %2d  %10.5f %10.5f  %10.5f %10.5f  %10.5f %10.5f  %10.5f %10.5f\n",$1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11}' >> ${CORNERDIR}/$outfile
 
   done
   rm -f tmp.tmp${e}
