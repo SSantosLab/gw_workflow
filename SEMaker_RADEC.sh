@@ -181,7 +181,7 @@ for ifile in range(0,n_files):
      print expstring + "\n"  
      if int(expstring) == SEARCHEXP :
          try:
-             os.system("cp " + fname + " /pnfs/des/scratch/${SCHEMA}/dts/${overlapnite}/DECam_00${overlapnum}.fits.fz")
+             os.system("cp " + fname + " /pnfs/des/scratch/${SCHEMA}/dts/${overlapnite}/DECam_$(printf %08d ${overlapnum}).fits.fz")
          except:
              print("Error copying file into dCache!\n")
          finally:

@@ -82,7 +82,7 @@ set decr = `echo $mydec | awk '{printf "%9.6f",$1*'${dtor}'}'`
   # 3 i 271688 271043 271034
   # ...
 #  echo $band $expinfo[1] | awk '{printf "%s %6d",$1,$2}' >> KH_diff_RADEC.tmp1
-  awk '($6=="'${band}'")&&(sin('$decr')*sin($5*'${dtor}')+cos('$decr')*cos($5*'${dtor}')*cos('$rar'-$4*'${dtor}')>='$drad'){printf " %6d",$1}' KH_RADEC.list >> KH_diff_RADEC.tmp1
+  awk '($6=="'${band}'")&&(sin('$decr')*sin($5*'${dtor}')+cos('$decr')*cos($5*'${dtor}')*cos('$rar'-$4*'${dtor}')>='$drad'){printf " %8d",$1}' KH_RADEC.list >> KH_diff_RADEC.tmp1
   echo hi | awk '{printf "\n"}' >> KH_diff_RADEC.tmp1
 
 
@@ -104,7 +104,7 @@ set decr = `echo $mydec | awk '{printf "%9.6f",$1*'${dtor}'}'`
 #  set ntempl = `wc -l KH_diff_RADEC.tmp0 | awk '{print $1-1}'`
 #  awk '(NR==1){print $0,'${ntempl}'}' KH_diff_RADEC.tmp0 >> KH_diff_RADEC.tmp2
 ####   awk '($6=="'${band}'")&&(sin('$decr')*sin($5*'${dtor}')+cos('$decr')*cos($5*'${dtor}')*cos('$rar'-$4*'${dtor}')>='$drad'){printf "%6d %8d %10.5f %12.9f\n",$1,$2,$3-'$expinfo[3]',atan2(sqrt(1-$7*$7),$7)/'${dtor}'}' KH_RADEC.list >> KH_diff_RADEC.tmp2
-  awk '($6=="'${band}'")&&(sin('$decr')*sin($5*'${dtor}')+cos('$decr')*cos($5*'${dtor}')*cos('$rar'-$4*'${dtor}')>='$drad'){printf "%6d %8d %s\n",$1,$2,$6}' KH_RADEC.list >> KH_diff_RADEC.tmp2
+  awk '($6=="'${band}'")&&(sin('$decr')*sin($5*'${dtor}')+cos('$decr')*cos($5*'${dtor}')*cos('$rar'-$4*'${dtor}')>='$drad'){printf "%8d %8d %s\n",$1,$2,$6}' KH_RADEC.list >> KH_diff_RADEC.tmp2
   echo hi | awk '{printf "\n"}' >> KH_diff_RADEC.tmp2
 #  break  
 #endif

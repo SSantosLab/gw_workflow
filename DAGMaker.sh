@@ -148,7 +148,7 @@ for ifile in range(0,n_files):
      print expstring + "\n"  
      if int(expstring) == SEARCHEXP :
          try:
-             os.system("cp " + fname + " /pnfs/des/scratch/${SCHEMA}/dts/${overlapnite}/DECam_00${overlapnum}.fits.fz")
+             os.system("cp " + fname + " /pnfs/des/scratch/${SCHEMA}/dts/${overlapnite}/DECam_$(printf %08d {overlapnum}).fits.fz")
              sys.exit(0)
          except:
              print("Error copying file into dCache!\n")
@@ -194,6 +194,7 @@ check_header() {
     
    ### first copy the file down
     $COPYDCMD /pnfs/des/scratch/${SCHEMA}/dts/${NITE}/DECam_`printf %08d ${EXPNUM}`.fits.fz ./ && rm -f /pnfs/des/scratch/${SCHEMA}/dts/${NITE}/DECam_`printf %08d ${EXPNUM}`.fits.fz
+    chmod u+w DECam_`printf %08d ${EXPNUM}`.fits.fz
     for hdr in {1..9} {10..70} 
     do
 	fthedit "DECam_$(printf %08d ${EXPNUM}).fits.fz[${hdr}]"  @editfile || echo "Error running fthedit for  DECam_`printf %08d ${EXPNUM}`[${hdr}].fits.fz"
@@ -633,10 +634,11 @@ do
                         echo "Raw image not present in dCache or /data/des30.b; trying from des51.b"
                         $COPYCMD /data/des51.b/data/DTS/src/${overlapnite}/DECam_`printf %08d ${overlapnum}`.fits.fz /pnfs/des/scratch/${SCHEMA}/dts/${overlapnite}/DECam_`printf %08d ${overlapnum}`.fits.fz || { echo "cp failed!" ; exit 2 ; }
 
-		    elif [ -e /data/des41.a/data/marcelle/o3/20190814/DECam_`printf %08d ${overlapnum}`.fits.fz ]; then
-                        echo "Getting raw image from /data/des41.a/data/marcelle/o3/20190814"
+		    elif [ -e /data/des41.b/data/marcelle/S200224ca/20200227/DECam_`printf %08d ${overlapnum}`.fits.fz ]; then
+                        #echo "Getting raw image from /data/des41.a/data/marcelle/o3/20190814"
+			echo "Getting raw image from /data/des41.b/data/marcelle/S200224ca/20200227/"
 
-                        $COPYCMD /data/des41.a/data/marcelle/o3/20190814/DECam_`printf %08d ${overlapnum}`.fits.fz /pnfs/des/scratch/${SCHEMA}/dts/${overlapnite}/DECam_`printf %08d ${overlapnum}`.fits.fz || { echo "cp failed!" ; exit 2 ; }
+                        $COPYCMD /data/des41.b/data/marcelle/S200224ca/20200227/DECam_`printf %08d ${overlapnum}`.fits.fz /pnfs/des/scratch/${SCHEMA}/dts/${overlapnite}/DECam_`printf %08d ${overlapnum}`.fits.fz || { echo "cp failed!" ; exit 2 ; }
 
                     else 
                         echo " Raw image for exposure $overlapnum not in dcache and not in /data/des30.b or /data/des51.b. Try to tansfer from NCSA..."
