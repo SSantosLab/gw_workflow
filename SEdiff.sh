@@ -314,6 +314,10 @@ if [ "$SKIPSE" == "false" ] ; then # if statement allows SE to be skipped if SE 
     # Y2E1 20140807 20141129 345031 382973
     # Y2E2 20141205 20150518 383751 438346
     # Y3   20150731 20160212 459984 516846
+    # Y4E1                          666747
+    # Y5E1                          674970
+    # Y5E2                          724364
+    # Y6                     724365       
     #######################################333
     
     
@@ -407,7 +411,7 @@ if [ "$SKIPSE" == "false" ] ; then # if statement allows SE to be skipped if SE 
         starflatfile='Y2A1_20150715t0315_{filter:s}_c{ccd:>02s}_r2360p01_starflat.fits'
         headfile='f'$CCDNUM_LIST'.head'                                                 
         pcaprefix='binned-fp/Y2A1_20150715t0315_{filter:s}_r2361p01_skypca-binned-fp.fits'
-        else
+        elif [ $EXPNUM -le 666747 ]; then
         YEAR=y4
         EPOCH=e1
         biasfile='D_n20151113t1123_c{ccd:>02s}_r2350p02_biascor.fits'
@@ -417,6 +421,36 @@ if [ "$SKIPSE" == "false" ] ; then # if statement allows SE to be skipped if SE 
         starflatfile='Y2A1_20150715t0315_{filter:s}_c{ccd:>02s}_r2360p01_starflat.fits'
         headfile='f'$CCDNUM_LIST'.head'                                                 
         pcaprefix='binned-fp/Y2T4_20150715t0315_{filter:s}_r2404p01_skypca-binned-fp.fits'
+        elif [ $EXPNUM -le 674970 ]; then
+	    YEAR=y5
+	    EPOCH=''
+	    biasfile='D_n20170815t0824_c{ccd:>02s}_r3388p01_biascor.fits'
+	    bpmfile='D_n20170815t0824_c{ccd:>02s}_r3370p02_bpm.fits'
+	    dflatfile='D_n20170815t0824_{filter:s}_c{ccd:>02s}_r3388p01_norm-dflatcor.fits'
+	    skytempfile='Y5A1_20170815t0222_{filter:s}_c{ccd:>02s}_r3460p01_skypca-tmpl.fits'
+	    starflatfile='Y5A1_20170815t0903_{filter:s}_c{ccd:>02s}_r3458p01_starflat.fits'
+	    headfile='{filter:s}no2no61.head'
+	    pcaprefix='binned-fp/Y5A1_20170815t0222_{filter:s}_r3460p01_skypca-binned-fp.fits'
+        elif [ $EXPNUM -le 724364 ]; then
+	    YEAR=y5
+	    EPOCH=''
+	    biasfile='D_n20170815t0824_c{ccd:>02s}_r3388p01_biascor.fits'
+	    bpmfile='D_n20170815t0824_c{ccd:>02s}_r3370p02_bpm.fits'
+	    dflatfile='D_n20170815t0824_{filter:s}_c{ccd:>02s}_r3388p01_norm-dflatcor.fits'
+	    skytempfile='Y5A1_20170815t0222_{filter:s}_c{ccd:>02s}_r3460p01_skypca-tmpl.fits'
+	    starflatfile='Y5A1_20170906t0222_{filter:s}_c{ccd:>02s}_r3459p01_starflat.fits'
+	    headfile='{filter:s}no2no61.head'
+	    pcaprefix='binned-fp/Y5A1_20170815t0222_{filter:s}_r3460p01_skypca-binned-fp.fits'	    
+	else
+	    YEAR=y6
+	    EPOCH=''
+	    biasfile='D_n20180913t0923_c{ccd:>02s}_r4033p02_biascor.fits'
+	    bpmfile='D_n20180912t1105_c{ccd:>02s}_r3697p01_bpm.fits'
+	    dflatfile='D_n20180913t0923_{filter:s}_c{ccd:>02s}_r4033p02_norm-dflatcor.fits'
+	    skytempfile='Y6A1_20180908t1117_{filter:s}_c{ccd:>02s}_r4024p01_skypca-tmpl.fits'
+	    starflatfile='Y6A1_20180908t1117_{filter:s}_c{ccd:>02s}_r3762p01_starflat.fits'
+	    headfile='{filter:s}no2no61.head'
+	    pcaprefix='binned-fp/Y6A1_20180908t1117_{filter:s}_r4024p01_skypca-binned-fp.fits'
         fi
         if [ "${BAND}" == "u" ]; then
             YEAR=y2                                                                           
@@ -431,7 +465,7 @@ if [ "$SKIPSE" == "false" ] ; then # if statement allows SE to be skipped if SE 
         fi
     fi
 
-
+    
     # IMPORTANT: test whether we are on a node where stashCache work properly. 
     # now, we test if /cvmfs/des.ogstorage.ord is available and works properly. If it does,
     # use it for corr_dir and conf_dir
@@ -447,7 +481,9 @@ if [ "$SKIPSE" == "false" ] ; then # if statement allows SE to be skipped if SE 
         #conf_dir="/pnfs/des/persistent/desdm/config/"
 	conf_dir="/pnfs/des/persistent/stash/desdm/config/"
     fi
-    
+    ## ag / kh hack feb 25, 2020                                                                                                                                                                                                                                               
+    conf_dir="/pnfs/des/persistent/stash/desdm/config/"
+    ###                                        
 # write to confFile
     cat <<EOF >> confFile
 [General]
@@ -940,7 +976,7 @@ for c in $ccdlist; do
              (${AWK} '{printf "%11.8f %11.8f  %11.8f %11.8f  %11.8f %11.8f  %11.8f %11.8f   %2d\n",$4*"'"${dtorad}"'",$5*"'"${dtorad}"'",$6*"'"${dtorad}"'",$7*"'"${dtorad}"'",$8*"'"${dtorad}"'",$9*"'"${dtorad}"'",$10*"'"${dtorad}"'",$11*"'"${dtorad}"'",$3}' ${CORNERDIR}/${texp}.out | ${AWK} '{printf "%10.8f %10.8f %10.8f %10.8f  %2d\n",sin("'"${d1}"'")*sin($2)+cos("'"${d1}"'")*cos($2)*cos("'"${a1}"'"-$1),sin("'"${d1}"'")*sin($4)+cos("'"${d1}"'")*cos($4)*cos("'"${a1}"'"-$3),sin("'"${d1}"'")*sin($6)+cos("'"${d1}"'")*cos($6)*cos("'"${a1}"'"-$5),sin("'"${d1}"'")*sin($8)+cos("'"${d1}"'")*cos($8)*cos("'"${a1}"'"-$7),$9}' | ${AWK} '{printf "%11.8f %11.8f %11.8f %11.8f  %2d\n",atan2(sqrt(1-$1*$1),$1),atan2(sqrt(1-$2*$2),$2),atan2(sqrt(1-$3*$3),$3),atan2(sqrt(1-$4*$4),$4),$5}' > ${texp}.dist) >& /dev/null
         
              # protections for out-of-bounds results to cos/sin when image and template are exactly on top of each other 
-             (paste ${texp}.sides ${texp}.dist | ${AWK} -v eps=0.00000001 '{printf "%11.8f %11.8f %11.8f %11.8f  %2d\n",(cos($1)-cos($5)*cos($6))/(sin($5)*sin($6)+eps),(cos($2)-cos($5)*cos($7))/(sin($5)*sin($7)+eps),(cos($3)-cos($7)*cos($8))/(sin($7)*sin($8)+eps),(cos($4)-cos($6)*cos($8))/(sin($6)*sin($8)+eps),$9}' | while read one two three four five ; do eps=0.00000001 ; if [[ "$one" =~ ^[1-9] ]] ; then one=0.99999999 ; elif [[ "$one" =~ ^-[1-9] ]]; then one=-0.99999999 ; fi ; if [[ "$two" =~ ^[1-9] ]] ; then two=0.99999999 ; elif [[ "$two" =~ ^-[1-9] ]] ; then two=-0.99999999 ;  fi ; if [[ "$three" =~ ^[1-9] ]] ; then three=0.99999999 ;  elif [[ "$three" =~ ^-[1-9] ]] ;  then three=-0.99999999 ; fi ; if [[ "$four" =~ ^[1-9] ]] ; then four=0.99999999 ; elif [[ "$four" =~ ^-[1-9] ]] ;  then four=-0.99999999 ;  fi ; echo $one $two $three $four $five  ; done | ${AWK} '{printf "%11.8f %11.8f %11.8f %11.8f  %2d\n",atan2(sqrt(1-$1*$1),$1),atan2(sqrt(1-$2*$2),$2),atan2(sqrt(1-$3*$3),$3),atan2(sqrt(1-$4*$4),$4),$5}' | ${AWK} '($1<10)&&($2<10)&&($3<10)&&($4<10)&&($1+$2+$3+$4>"'"${twopi}"'"*0.95){printf "%6d  %2d  %6d  %2d\n","'"${sexp}"'","'"${sccd}"'","'"${texp}"'",$5}' >> tmp.tmp1) >& /dev/null
+             (paste ${texp}.sides ${texp}.dist | ${AWK} -v eps=0.00000001 '{printf "%11.8f %11.8f %11.8f %11.8f  %2d\n",(cos($1)-cos($5)*cos($6))/(sin($5)*sin($6)+eps),(cos($2)-cos($5)*cos($7))/(sin($5)*sin($7)+eps),(cos($3)-cos($7)*cos($8))/(sin($7)*sin($8)+eps),(cos($4)-cos($6)*cos($8))/(sin($6)*sin($8)+eps),$9}' | while read one two three four five ; do eps=0.00000001 ; if [[ "$one" =~ ^[1-9] ]] ; then one=0.99999999 ; elif [[ "$one" =~ ^-[1-9] ]]; then one=-0.99999999 ; fi ; if [[ "$two" =~ ^[1-9] ]] ; then two=0.99999999 ; elif [[ "$two" =~ ^-[1-9] ]] ; then two=-0.99999999 ;  fi ; if [[ "$three" =~ ^[1-9] ]] ; then three=0.99999999 ;  elif [[ "$three" =~ ^-[1-9] ]] ;  then three=-0.99999999 ; fi ; if [[ "$four" =~ ^[1-9] ]] ; then four=0.99999999 ; elif [[ "$four" =~ ^-[1-9] ]] ;  then four=-0.99999999 ;  fi ; echo $one $two $three $four $five  ; done | ${AWK} '{printf "%11.8f %11.8f %11.8f %11.8f  %2d\n",atan2(sqrt(1-$1*$1),$1),atan2(sqrt(1-$2*$2),$2),atan2(sqrt(1-$3*$3),$3),atan2(sqrt(1-$4*$4),$4),$5}' | ${AWK} '($1<10)&&($2<10)&&($3<10)&&($4<10)&&($1+$2+$3+$4>"'"${twopi}"'"*0.95){printf "%8d  %2d  %8d  %2d\n","'"${sexp}"'","'"${sccd}"'","'"${texp}"'",$5}' >> tmp.tmp1) >& /dev/null
         
               j=$[$j+1]
 
@@ -951,10 +987,10 @@ for c in $ccdlist; do
             n=`wc -l tmp.tmp1 | ${AWK} '{print $1}'`
             if [[ $n -eq 1 ]]
             then
-              ${AWK} '(NR==1){printf "%6d  %2d  %6d %2d    %2d\n",$1,$2,$3,'${n}',$4}' tmp.tmp1 >> ${outpair}
+              ${AWK} '(NR==1){printf "%8d  %2d  %8d %2d    %2d\n",$1,$2,$3,'${n}',$4}' tmp.tmp1 >> ${outpair}
             elif [[ $n -gt 1 ]]
             then
-              ${AWK} '(NR==1){printf "%6d  %2d  %6d %2d    %2d",$1,$2,$3,'${n}',$4}' tmp.tmp1 >> ${outpair}
+              ${AWK} '(NR==1){printf "%8d  %2d  %8d %2d    %2d",$1,$2,$3,'${n}',$4}' tmp.tmp1 >> ${outpair}
               ${AWK} '(NR>1){printf "  %2d",$4}' tmp.tmp1 >> ${outpair}
               echo hi | ${AWK} '{printf "\n"}' >> ${outpair}
             fi
