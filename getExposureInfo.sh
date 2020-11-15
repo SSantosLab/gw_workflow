@@ -6,7 +6,7 @@ if [ ! -f ~/.pgpass ]; then
 fi
 
 
-source /cvmfs/des.opensciencegrid.org/eeups/startupcachejob21i.sh
+source /cvmfs/des.opensciencegrid.org/eeups/startupcachejob31i.sh
 
 setup easyaccess
 setup psycopg2
