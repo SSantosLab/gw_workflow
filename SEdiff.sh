@@ -427,7 +427,7 @@ if [ "$SKIPSE" == "false" ] ; then # if statement allows SE to be skipped if SE 
 	    dflatfile='D_n20180913t0923_{filter:s}_c{ccd:>02s}_r4033p02_norm-dflatcor.fits'
 	    skytempfile='Y6A1_20180908t1117_{filter:s}_c{ccd:>02s}_r4024p01_skypca-tmpl.fits'
 	    starflatfile='Y6A1_20180908t1117_{filter:s}_c{ccd:>02s}_r3762p01_starflat.fits'
-	    headfile='{filter:s}no2no61.head'
+	    headfile='f'$CCDNUM_LIST'.head'
 	    pcaprefix='binned-fp/Y6A1_20180908t1117_{filter:s}_r4024p01_skypca-binned-fp.fits'
         fi
         if [ "${BAND}" == "u" ]; then
