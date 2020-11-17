@@ -12,7 +12,7 @@ pRun = str(ConfigSectionMap("General")['p'])
 YEAR = ConfigSectionMap("General")['year']
 EPOCH = ConfigSectionMap("General")['epoch']
 
-EXPFILE =  'DECam_{:08d}'.format(EXPNUM)+'.fits.fz'
+EXPFILE =  'DECam_{:08d}'.format(int(EXPNUM))+'.fits.fz'
 args = {'expnum': EXPNUM, 'filter': FILTER, 'ccd':'0', 'r':rRun, 'p':pRun, 'year': YEAR, 'epoch': EPOCH}
 
 #running crosstalk
@@ -30,9 +30,9 @@ for ccd in CCD:
 for ccd in CCD:
     ccdstring= "%02d"%int(ccd)
 
-    combineFiles('D{:08d}'.format(EXPNUM)+'_i_'+ccdstring+'_r4p5_sextractor.fits', 'Scamp_allCCD_r'+rRun+'p'+pRun+'.fits')
-    scamp('D{:08d}'.format(EXPNUM)+'_i_'+ccdstring+'_r4p5_sextractor.fits')
-    change_head('D{:08d}'.format(EXPNUM)+'_i_'+ccdstring+'_r4p5_sextractor.head', 'sextractor', 'detrend', 'wcs', CCD, **args)
+    combineFiles('D{:08d}'.format(int(EXPNUM))+'_i_'+ccdstring+'_r4p5_sextractor.fits', 'Scamp_allCCD_r'+rRun+'p'+pRun+'.fits')
+    scamp('D{:08d}'.format(int(EXPNUM))+'_i_'+ccdstring+'_r4p5_sextractor.fits')
+    change_head('D{:08d}'.format(int(EXPNUM))+'_i_'+ccdstring+'_r4p5_sextractor.head', 'sextractor', 'detrend', 'wcs', CCD, **args)
 
     bleedmask(ccdstring,'wcs','bleedmasked',**args)
     skycompress(ccdstring,'bleedmasked','bleedmask-mini',**args)
