@@ -26,8 +26,8 @@ def run_stage_2(ccd):
     ccdstring= "%02d"%int(ccd)
 
     #use the entire image to get astrometry solution
-    scamp('D{:08d}'.format(EXPNUM)+'_'+FILTER+'_'+ccdstring+'_r'+rRun+'p'+pRun+'_sextractor.fits')
-    change_head('D{:08d}'.format(EXPNUM)+'_'+FILTER+'_'+ccdstring+'_r'+rRun+'p'+pRun+'_sextractor.head', 'sextractor', 'detrend', 'wcs', CCD, **args)
+    scamp('D{:08d}'.format(int(EXPNUM))+'_'+FILTER+'_'+ccdstring+'_r'+rRun+'p'+pRun+'_sextractor.fits')
+    change_head('D{:08d}'.format(int(EXPNUM))+'_'+FILTER+'_'+ccdstring+'_r'+rRun+'p'+pRun+'_sextractor.head', 'sextractor', 'detrend', 'wcs', CCD, **args)
 
     bleedmask(ccdstring,'wcs','bleedmasked',**args)
     skycompress(ccdstring,'bleedmasked','bleedmask-mini',**args)
@@ -82,7 +82,7 @@ if __name__ == '__main__':
     EPOCH = ConfigSectionMap("General")['epoch']
 
 # setup args
-    EXPFILE =  'DECam_{:08d}'.format(EXPNUM)+'.fits.fz'
+    EXPFILE =  'DECam_{:08d}'.format(int(EXPNUM))+'.fits.fz'
     args = {'expnum': EXPNUM, 'filter': FILTER, 'ccd':'0', 'r':rRun, 'p':pRun, 'year': YEAR, 'epoch': EPOCH}
     NPARALLEL = 4
 
