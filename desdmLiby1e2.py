@@ -375,7 +375,8 @@ if not os.path.exists(head_FILE):
 def scamp(inputFile):
     cmd = 'scamp ' + inputFile +\
         ' ' + '-AHEADER_GLOBAL ' + head_FILE +\
-        ' -ASTRINSTRU_KEY DUMMY -AHEADER_SUFFIX .aheadnoexist -ASTREFMAG_LIMITS -99,17 ' +\
+        ' -ASTRINSTRU_KEY DUMMY -AHEADER_SUFFIX .aheadnoexist -ASTREFMAG_LIMITS -99,22 ' +\
+	' -REF_SERVER cocat1.u-strasbg.fr,vizier.nao.ac.jp,vizier.cfa.harvard.edu ' +\
         ' -ASTREF_CATALOG ' +catalog_ref +' -c ' +default_scamp +\
         ' -WRITE_XML Y -XML_NAME scamp.xml -MOSAIC_TYPE SAME_CRVAL -ASTREF_BAND DEFAULT -POSITION_MAXERR 60.0 -NTHREADS 1 '
 
