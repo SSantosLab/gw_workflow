@@ -511,7 +511,7 @@ def psfex(name,CCD, **args):
     args['ccd']=CCD
 
     cmd = 'psfex ' + template_file.format(**args)+'_'+name+'.fits -c  ' +config_filePSF +\
-   '  -OUTCAT_NAME  '+ template_file.format(**args)+'_psflist.fits  -OUTCAT_TYPE FITS_LDAC'
+    '  -OUTCAT_NAME  '+ template_file.format(**args)+'_psflist.fits  -OUTCAT_TYPE FITS_LDAC'
     print '\n',cmd,'\n'
 
     retval = subprocess.call(cmd.split(),stderr=subprocess.STDOUT)
@@ -671,7 +671,7 @@ def change_head(File, catalog, image, outname, CCD, **args):
     #changing the header
     cont = 0
     for i in range(ccdLen):
-	ccdstring="%02d"%int(CCD[i])
+        ccdstring="%02d"%int(CCD[i])
         args['ccd']=ccdstring
         catalog1 = template_file.format(**args)+'_'+catalog+'.fits'
         image1 = template_file.format(**args)+'_'+image+'.fits'
@@ -681,7 +681,7 @@ def change_head(File, catalog, image, outname, CCD, **args):
         h=DESImage.load(image1)
         h.header['FWHM'] = fwhm_
         h.header['ELLIPTIC'] = ellip
-	h.header['SCAMPFLG'] = 0		
+        h.header['SCAMPFLG'] = 0		
 
         im=h.data
         iterate1=stats.sigmaclip(im,5,5)[0]
