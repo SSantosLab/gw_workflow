@@ -698,7 +698,7 @@ def change_head(File, catalog, image, outname, CCD, **args):
 
         for j in range(n):
             h.header[info_array[j]] = float(matrix[cont])
-	    cont =  cont + 1
+            cont =  cont + 1
 
             h.save(template_file.format(**args)+'_'+outname+'.fits')
 
