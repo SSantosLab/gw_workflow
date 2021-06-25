@@ -217,6 +217,13 @@ check_header() {
 # read the search exposure number
 if [ $# -lt 1 ]; then echo "Error, an exposure number must be supplied" ; exit 1; fi
 ALLEXPS="$@"
+# {
+echo "All the exposures are:"
+echo ${ALLEXPS[*]}
+ALLEXPS=($(echo ${ALLEXPS[*]}| tr " " "\n" | sort -n))
+echo "Now, sorted, they are:"
+echo ${ALLEXPS[*]}
+# } Added by NS on 25.06.2021
 EXPNUM=$1
 [[ $EXPNUM =~ ^[0-9]+$ ]] || { echo "Error, exposure number must be a number; you entered $EXPNUM." ; exit 1; }
 echo "EXPNUM = $EXPNUM"
@@ -246,6 +253,11 @@ DESTCACHE="persistent"
 SEARCH_OPTS=""
 SCHEMA="gw"
 TWINDOW=30.0
+#{
+TWINDOW_DISTINCT=0
+TWINDOW_BEFORE=0
+TWINDOW_AFTER=0
+#} Added by NS on 25.06.2021
 TEFF_CUT=0.0
 TEFF_CUT_g=0.0
 TEFF_CUT_i=0.0
@@ -392,7 +404,7 @@ else
     	fi
     done
 fi
-BAND=`egrep "^\s?${EXPNUM}" exposures.list | awk '{print $6}'`
+BAND=`egrep "^\s{0,}${EXPNUM}" exposures.list | awk '{print $6}'`
 if [ -z "${BAND}" ]; then
     echo "Error with setting band. Check exposures.list to see if there is a problem with this exposure. Exiting..."
     exit 1
@@ -526,17 +538,32 @@ do
         SEARCHMJD=$(egrep "^\s?${overlapnum}" exposures.list | awk '{print $3}')
     else
         overlapmjd=$(egrep "^\s?${overlapnum}" exposures.list | awk '{print $3}')
-        # skip if the overlap night is within one of the search exposure night
-        if ( [ $(echo "$SEARCHMJD - $overlapmjd < $TWINDOW" | bc ) -eq 1 ] && [ $(echo "$overlapmjd - $SEARCHMJD < $TWINDOW" | bc ) -eq 1 ] )  || [ $overlapnite -lt $MIN_NITE ]  || [ $overlapnite -gt $MAX_NITE ] ; then
-            echo "Template $overlapnum is within $TWINDOW MJD of search image, before min night, or after max nite. Skipping this exposure."
-            SKIP=true
-            # we need to remove reference to this exp from the diff.list1 file
-            sed -i -e "s/${overlapnum}//"  mytemp_${EXPNUM}/KH_diff.list1
-            # we also need to reduce the count in the first field of KH_diff.list1 by one
-            OLDCOUNT=`awk '{print $1}'  mytemp_${EXPNUM}/KH_diff.list1`
-            NEWCOUNT=$((${OLDCOUNT}-1))
-            sed -i -e s/${OLDCOUNT}/${NEWCOUNT}/  mytemp_${EXPNUM}/KH_diff.list1
-            continue
+	if [ $TWINDOW_DISTINCT == 0 ]; then
+            # skip if the overlap night is within one of the search exposure night
+            if ( [ $(echo "$SEARCHMJD - $overlapmjd < $TWINDOW" | bc ) -eq 1 ] && [ $(echo "$overlapmjd - $SEARCHMJD < $TWINDOW" | bc ) -eq 1 ] )  || [ $overlapnite -lt $MIN_NITE ]  || [ $overlapnite -gt $MAX_NITE ] ; then
+		echo "Template $overlapnum is within $TWINDOW MJD of search image, before min night, or after max nite. Skipping this exposure."
+		SKIP=true
+		# we need to remove reference to this exp from the diff.list1 file
+		sed -i -e "s/${overlapnum}//"  mytemp_${EXPNUM}/KH_diff.list1
+		# we also need to reduce the count in the first field of KH_diff.list1 by one
+		OLDCOUNT=`awk '{print $1}'  mytemp_${EXPNUM}/KH_diff.list1`
+		NEWCOUNT=$((${OLDCOUNT}-1))
+		sed -i -e s/${OLDCOUNT}/${NEWCOUNT}/  mytemp_${EXPNUM}/KH_diff.list1
+		continue
+	    fi
+	else
+	    # skip if the overlap night is within one of the search exposure night
+	    if ( [ $(echo "$SEARCHMJD - $overlapmjd < $TWINDOW_BEFORE" | bc ) -eq 1 ] && [ $(echo "$overlapmjd - $SEARCHMJD < $TWINDOW_AFTER" | bc ) -eq 1 ] )  || [ $overlapnite -lt $MIN_NITE ]  || [ $overlapnite -gt $MAX_NITE ] ; then
+		echo "Template $overlapnum is within $TWINDOW MJD of search image, before min night, or after max nite. Skipping this exposure."
+		SKIP=true
+                # we need to remove reference to this exp from the diff.list1 file
+		sed -i -e "s/${overlapnum}//"  mytemp_${EXPNUM}/KH_diff.list1
+                # we also need to reduce the count in the first field of KH_diff.list1 by one
+		OLDCOUNT=`awk '{print $1}'  mytemp_${EXPNUM}/KH_diff.list1`
+                NEWCOUNT=$((${OLDCOUNT}-1))
+                sed -i -e s/${OLDCOUNT}/${NEWCOUNT}/  mytemp_${EXPNUM}/KH_diff.list1
+		continue
+	    fi
         fi
     fi
     
