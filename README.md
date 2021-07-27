@@ -75,7 +75,7 @@ jobsub_submit_dag -G des file://desgw_pipeline_EXPNUM.dag
 
 The steps contained in the DAG file (i.e. the image processing pipeline) can also be executed manually, for example:
 ```
-./SEdiff.sh -r 4 -p 7 -E 668443 -b i -n 20170817 -d persistent -m gw -C -O -c 33 -S dp67 -V SNVETO_668443_33_r4p7.LIST -T SNSTAR_668443_33_r4p7.LIST
+./SEdiff.sh -r 4 -p 7 -E 668443 -b i -n 20170817 -d persistent -m gw -v gw6 -C -O -c 33 -S dp67 -V SNVETO_668443_33_r4p7.LIST -T SNSTAR_668443_33_r4p7.LIST
 ```
 
 #### Flags
