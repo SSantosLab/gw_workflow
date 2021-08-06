@@ -803,7 +803,7 @@ for c in $ccdlist; do
 
     # setup lots more environment variables
     export DES_SERVICES=${PWD}/desservices.ini
-    export DES_DB_SECTION=db-sn-test
+    export DES_DB_SECTION=db-dessci
     export DIFFIMG_HOST=FNAL
     # use catalog dir in stashCache if StashCache works on this worker node. Otherwise fall back to regular CVMFS.
     # try to read testfile in stashcache ; to check if StashCache is correct version and readable
