@@ -51,7 +51,8 @@ umask 002
 fetch_noao() {
 
 # first we need the RA and DEC of the image in question
-full_imageline=$(egrep "^\s?${overlapnum}" exposures_${BAND}.list)
+full_imageline=$(egrep "^\s{0,}${overlapnum}" exposures_${BAND}.list)
+#full_imageline=$(awk '($1=='${EXPNUM}') exposures_${BAND}.list')
 
 imageline=$(echo $full_imageline | awk '{print $4,$5}' )
 PROPID=$( echo  $full_imageline | awk '{print $8}' )
@@ -173,7 +174,7 @@ check_header() {
     
     IMGOBJECT=$(gethead /pnfs/des/scratch/${SCHEMA}/dts/${NITE}/DECam_`printf %08d ${EXPNUM}`.fits.fz OBJECT)
     IMGTILING=$(gethead /pnfs/des/scratch/${SCHEMA}/dts/${NITE}/DECam_`printf %08d ${EXPNUM}`.fits.fz TILING)
-    imageline=$(egrep "^\s?${EXPNUM}" exposures_${BAND}.list | awk '{print $4,$5}' )
+    imageline=$(egrep "^\s{0,}${EXPNUM}" exposures_${BAND}.list | awk '{print $4,$5}' )
     SEARCHRA=`echo $imageline | cut -d " " -f 1`
     SEARCHDEC=`echo $imageline | cut -d " " -f 2 | sed s/+//`
     RA10=$(echo "${SEARCHRA}*10" | bc | cut -d "." -f 1)
@@ -494,7 +495,7 @@ do
     SKIP=false
 
     # check that exposure is 30 seconds or longer
-    explength=$(egrep "^\s?${overlapnum}" exposures.list | awk '{print $7}')
+    explength=$(egrep "^\s{0,}${overlapnum}" exposures.list | awk '{print $7}')
     explength=$(echo $explength | sed -e 's/\.[0-9]*//' )
     if [ $explength -lt 30 ]; then SKIP=true ; fi
     
@@ -502,7 +503,7 @@ do
     if [ $i == 1 ]; then
 	echo "this is the search image; dont apply teff cuts"
     else  
-	teff=$(egrep "^\s?${overlapnum}" exposures.list | awk '{print $10}')
+	teff=$(egrep "^\s{0,}${overlapnum}" exposures.list | awk '{print $10}')
         if [ "${teff}" == "NaN" ]; then
             SKIP=true
             echo "Invalid t_eff value for ${overlapnum}. We will not use this image."
@@ -535,9 +536,9 @@ do
     if [ $i == 1 ]; then 
         if [ "$SKIP" == "true" ] ; then echo "Cannot proceed without the search image!" ; exit 1 ; fi
         NITE=$overlapnite  # capitalized NITE is the search image nite
-        SEARCHMJD=$(egrep "^\s?${overlapnum}" exposures.list | awk '{print $3}')
+        SEARCHMJD=$(egrep "^\s{0,}${overlapnum}" exposures.list | awk '{print $3}')
     else
-        overlapmjd=$(egrep "^\s?${overlapnum}" exposures.list | awk '{print $3}')
+        overlapmjd=$(egrep "^\s{0,}${overlapnum}" exposures.list | awk '{print $3}')
 	if [ $TWINDOW_DISTINCT == 0 ]; then
             # skip if the overlap night is within one of the search exposure night
             if ( [ $(echo "$SEARCHMJD - $overlapmjd < $TWINDOW" | bc ) -eq 1 ] && [ $(echo "$overlapmjd - $SEARCHMJD < $TWINDOW" | bc ) -eq 1 ] )  || [ $overlapnite -lt $MIN_NITE ]  || [ $overlapnite -gt $MAX_NITE ] ; then
@@ -792,7 +793,7 @@ export TOPDIR_TEMPLATES=/data/des30.a/data/WSTemplates
 
 ############ check and do something special if the word hex is not present ############
 
-imageline=$(egrep "^\s?${EXPNUM}" exposures_${BAND}.list | awk '{print $4,$5}' )
+imageline=$(egrep "^\s{0,}${EXPNUM}" exposures_${BAND}.list | awk '{print $4,$5}' )
 SEARCHRA=`echo $imageline | cut -d " " -f 1`
 SEARCHDEC=`echo $imageline | cut -d " " -f 2`
 RA10=$(echo "${SEARCHRA}*10" | bc | cut -d "." -f 1)
