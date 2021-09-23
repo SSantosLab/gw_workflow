@@ -1179,6 +1179,7 @@ for c in $ccdlist; do
     echo "We are in $PWD"
     cp ${LOCDIR}/RUN* ${LOCDIR}/run* ./
     echo "LOCDIR for runs: $LOCDIR"
+    sed -i -e "s/autoScan.py/autoScan_noCtx.py/" RUN24_combined_autoScan
     chmod a+x RUN[0-9]* RUN_ALL* RUN*COMPRESS*
     # delete leftover logs from previous runs
     rm *.DONE *.LOG
