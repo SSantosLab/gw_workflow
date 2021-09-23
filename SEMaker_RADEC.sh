@@ -85,7 +85,7 @@ fetch_from_DESDM () {
 fetch_noao() {
 
 # first we need the RA and DEC of the image in question
-full_imageline=$(egrep "^\s?${overlapnum}" exposures_${BAND}.list)
+full_imageline=$(awk '($1=='${overlapnum}')' exposures_${BAND}.list)
 
 imageline=$(echo $full_imageline | awk '{print $4,$5}' )
 PROPID=$( echo  $full_imageline | awk '{print $8}' )
@@ -209,7 +209,7 @@ check_header() {
     
    ### first copy the file down
     $COPYDCMD /pnfs/des/scratch/${SCHEMA}/dts/${overlapnite}/DECam_`printf %08d ${overlapnum}`.fits.fz ./ && rm -f /pnfs/des/scratch/${SCHEMA}/dts/${overlapnite}/DECam_`printf %08d ${overlapnum}`.fits.fz
-       imageline=$(egrep "^\s?${overlapnum}" exposures_${BAND}.list | awk '{print $4,$5}' )
+       imageline=$(awk '($1=='${overlapnum}') {print $4,$5}' exposures_${BAND}.list)
     SEARCHRA=`echo $imageline | cut -d " " -f 1`
     SEARCHDEC=`echo $imageline | cut -d " " -f 2 | sed s/+//`
     RA10=$(echo "${SEARCHRA}*10" | bc | cut -d "." -f 1)
@@ -439,7 +439,7 @@ do
     if [ -z "${overlapnum}" ] && [ -z "${overlapnite}" ] ; then continue ;  fi
 
     # check that exposure is 30 seconds or longer
-    explength=$(egrep "^\s?${overlapnum}" exposures.list | awk '{print $7}')
+    explength=$(awk '($1=='${overlapnum}') {print $7}' exposures.list)
     explength=$(echo $explength | sed -e 's/\.[0-9]*//' )
     if [ $explength -lt 30 ]; then SKIP=true ; fi
 # set the TEFF cut based on the band
@@ -464,7 +464,7 @@ do
     # check that exposure's t_eff is greater than 0.25
    
    
-    teff=$(egrep "^\s?${overlapnum}" exposures.list | awk '{print $10}')
+    teff=$(awk '($1=='${overlapnum}') {print $10}' exposures.list)
     if [ "${teff}" == "NaN" ]; then
     SKIP=true
     echo "Invalid value for t_eff. We will not use this image."
