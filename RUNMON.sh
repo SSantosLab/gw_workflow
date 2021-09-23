@@ -127,8 +127,8 @@ setup autoscan
 
 #for IFDH
 export EXPERIMENT=des
-export PATH=${PATH}:/cvmfs/fermilab.opensciencegrid.org/products/common/db/../prd/cpn/v1_7/NULL/bin:/cvmfs/fermilab.opensciencegrid.org/products/common/db/../prd/ifdhc/v2_0_8/Linux64bit-2-6-2-12/bin
-export PYTHONPATH=${PYTHONPATH}:/cvmfs/fermilab.opensciencegrid.org/products/common/db/../prd/ifdhc/v2_0_8/Linux64bit-2-6-2-12/lib/python
+export PATH=${PATH}:/cvmfs/fermilab.opensciencegrid.org/products/common/db/../prd/cpn/v1_7/NULL/bin:/cvmfs/fermilab.opensciencegrid.org/products/common/db/../prd/ifdhc/v2_5_4/Linux64bit-2-6-2-12-python27/bin
+export PYTHONPATH=${PYTHONPATH}:/cvmfs/fermilab.opensciencegrid.org/products/common/db/../prd/ifdhc/v2_5_4/Linux64bit-2-6-2-12-python27/lib/python
 export IFDH_NO_PROXY=1
 export DES_SERVICES=~/.deservices.ini
 export DES_DB_SECTION=db-sn-test
@@ -137,7 +137,7 @@ export IFDH_CP_MAXRETRIES=2
 export IFDH_XROOTD_EXTRA="-f -N"
 export XRD_REDIRECTLIMIT=255
 export IFDH_CP_UNLINK_ON_ERROR=1
-export IFDHC_CONFIG_DIR=/cvmfs/fermilab.opensciencegrid.org/products/common/db/../prd/ifdhc_config/v2_0_8/NULL
+export IFDHC_CONFIG_DIR=/cvmfs/fermilab.opensciencegrid.org/products/common/db/../prd/ifdhc_config/v2_5_4/NULL
 
 # copy the list files and cut config files in first
 LISTFILES="/pnfs/des/${DESTCACHE}/${SCHEMA}/exp/${NITE}/${EXPNUM}/${procnum}/input_files/SN_cuts.filterObj `ifdh ls /pnfs/des/${DESTCACHE}/${SCHEMA}/exp/${NITE}/${EXPNUM}/${procnum}/SN_mon_${NITE}_${FIELD}'*.list' | grep fnal`"
