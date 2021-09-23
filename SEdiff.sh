@@ -716,7 +716,7 @@ done
 
 setup esutil
 setup numpy 1.9.1+8
-setup gw_utils 1.1
+setup gw_utils 1.1.1
 setup extralibs
 
 # run make starcat and difference imaging ccd-by-ccd (in case of comma-separated ccd list)
