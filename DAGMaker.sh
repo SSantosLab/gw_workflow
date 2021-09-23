@@ -886,10 +886,8 @@ touch $lisfile
 
 for myexp in $ALLEXPS
 do
-#echo "ROOT: /pnfs/des/${DESTCACHE}/${SCHEMA}/exp/${NITE}/${EXPNUM}" > $lisfile
-#echo "FILE: $FIELD $BAND $TILING $EXPNUM D00${EXPNUM}_${BAND}_\$CCD_${rpnum}_immask.fits " >> $lisfile
 echo "ROOT: /pnfs/des/${DESTCACHE}/${SCHEMA}/exp/${NITE}/${myexp}" >> $lisfile
-echo "FILE: $FIELD $BAND $TILING $myexp D00${myexp}_${BAND}_\$CCD_${rpnum}_immask.fits " >> $lisfile
+echo "FILE: $FIELD $BAND $TILING $myexp D$(printf "%08d" ${myexp})_${BAND}_\$CCD_${rpnum}_immask.fits " >> $lisfile
 done
 
 OPWD=$PWD
