@@ -232,6 +232,7 @@ do
     elif [[ $lsfile == *D$(printf %08d ${EXPNUM})_${BAND}_$(printf %02d ${CCDNUM_LIST})_r${RNUM}p${PNUM}_fullcat.fits ]]; then
 	psffiles="$psffiles $lsfile"
     elif [[ $lsfile == *allZP_D$(printf %08d ${EXPNUM})_r${RNUM}p${PNUM}.csv ]] || [[ $lsfile == *D$(printf %08d ${EXPNUM})_r${RNUM}p${PNUM}_ZP.csv ]] ; then
+	echo "AG TEST HERE10"
 	csvfiles="$csvfiles $lsfile"
     elif [[ $lsfile == /pnfs/des/${DESTCACHE}/${SCHEMA}/exp/${NITE}/${EXPNUM}/allZP_D$(printf %08d ${EXPNUM})_r${RNUM}p${PNUM}.csv ]] || [[ $lsfile ==  /pnfs/des/${DESTCACHE}/${SCHEMA}/exp/${NITE}/${EXPNUM}/Zero_D$(printf %08d ${EXPNUM})_$(printf %02d $CCDNUM_LIST)_r${RNUM}p${PNUM}.csv ]] || [[ $lsfile == /pnfs/des/${DESTCACHE}/${SCHEMA}/exp/${NITE}/${EXPNUM}/D$(printf %08d ${EXPNUM})_$(printf %02d $CCDNUM_LIST)_r${RNUM}p${PNUM}_ZP.csv ]] ; then
 	ccdcsvfiles="$ccdcsvfiles $lsfile"
@@ -665,7 +666,7 @@ export NITE=$NITE
 # copy over the copy_pairs script so we know the templates
 ifdh cp ${IFDHCP_OPT} -D /pnfs/des/${DESTCACHE}/${SCHEMA}/exp/${NITE}/${EXPNUM}/${procnum}/input_files/copy_pairs_for_${EXPNUM}.sh  /pnfs/des/${DESTCACHE}/${SCHEMA}/exp/${NITE}/${EXPNUM}/WS_diff.list ./ || { echo "failed to copy WS_diff.list and copy_paris_for_${EXPNUM}.sh files" ; exit 2 ; }  # do we want to exit here?
 
-TEMPLATEPATHS=`cat copy_pairs_for_${EXPNUM}.sh | sed -r -e "s/ifdh\ cp\ (\-\-force=xrootd\ )?\-D\ //" -e "s/[0-9]{6}\.out//g" | sed -e 's/\$TOPDIR_WSTEMPLATES\/pairs\///'`
+TEMPLATEPATHS=`cat copy_pairs_for_${EXPNUM}.sh | sed -r -e "s/ifdh\ cp\ (\-\-force=xrootd\ )?\-D\ //" -e "s/[0-9]{6,7}\.out//g" | sed -e 's/\$TOPDIR_WSTEMPLATES\/pairs\///'` ##AGTEST 6-->7
 
 baseccddotout=$(basename $ccddotoutfile)
 ifdh cp -D $dotoutfile $ccddotoutfile ./ || { echo "Failed to copy both combined .out file $dotoutfiles and CCD file ${ccddotoutfiles}. At least one is required. Exiting." ; exit 2 ; }
@@ -678,22 +679,21 @@ if [ ! -s ${EXPNUM}.out ]; then
 fi
 for templatedir in $TEMPLATEPATHS
 do
-    
-    tempexp=$(echo $templatedir | egrep -o "\/[0-9]{6}\/$" | tr -d "/")
+    tempexp=$(echo $templatedir | egrep -o "\/[0-9]{6,7}\/$" | tr -d "/")
     echo "Checking exposure $tempexp"
     dirfiles=$(ifdh ls $templatedir)
 #    echo "AG dirfiles "$dirfiles
     tempdotouts=""
     for dirfile in $dirfiles
     do
-	if [[ $dirfile =~ *.out ]]; then
+	if [[ $dirfile == *.out ]]; then 
 	    tempdotouts="$tempdotouts $dirfile"
-	    echo "AG temdotout "$tempdotouts
+	    #echo "AG temdotout "$tempdotouts 
 	fi
     done
     ifdh cp -D $tempdotouts . || echo "Error copying .out files for $tempexp."
     if [ ! -f ${tempexp}.out ] ; then
-	ccddots=$(ls ${tempexp}_[0-6][0-9].out 2>/dev/null)
+	ccddots=$(ls ${tempexp}_[0-9]*.out 2>/dev/null) #AGTEST [0-9]*
 	if [ ! -z "${ccddots}" ] ; then
 	    cat $ccddots > $TOPDIR_WSTEMPLATES/pairs/${tempexp}.out
 	fi
@@ -861,7 +861,7 @@ for c in $ccdlist; do
     # copy files and symlink them
     for overlapfile in $(cat ./${procnum}/input_files/copy_pairs_for_${EXPNUM}.sh)
     do
-        if [[ $overlapfile =~ [0-9]{6}.out$ ]] ; then
+        if [[ $overlapfile =~ [0-9]{6,7}.out$ ]] ; then 
         filebase=$(basename $overlapfile)
         if [ -s ${PWD}/overlap_outfiles/$filebase ]; then ln -s ${PWD}/overlap_outfiles/$filebase  $TOPDIR_WSTEMPLATES/pairs/ ; fi
         fi
@@ -880,7 +880,7 @@ for c in $ccdlist; do
     for templatedir in $TEMPLATEPATHS
     do
 	
-	tempexp=$(echo $templatedir | egrep -o "\/[0-9]{6}\/$" | tr -d "/")
+	tempexp=$(echo $templatedir | egrep -o "\/[0-9]{6,7}\/$" | tr -d "/") ##AGTEST
 	echo "Checking exposure $tempexp"
 	if [ ! -s  $TOPDIR_WSTEMPLATES/pairs/${tempexp}.out ] ; then
 	    dirfiles=$(ifdh ls $templatedir)
@@ -958,19 +958,20 @@ for c in $ccdlist; do
        
               # calculate angular distance (in degrees) of the 4 sides of each CCD
               # ${texp}.out -> ${texp}.sides
-              (${AWK} '{printf "%11.8f %11.8f  %11.8f %11.8f  %11.8f %11.8f  %11.8f %11.8f\n",$4*"'"${dtorad}"'",$5*"'"${dtorad}"'",$6*"'"${dtorad}"'",$7*"'"${dtorad}"'",$8*"'"${dtorad}"'",$9*"'"${dtorad}"'",$10*"'"${dtorad}"'",$11*"'"${dtorad}"'"}' ${CORNERDIR}/${texp}.out | ${AWK} '{printf "%10.8f %10.8f %10.8f %10.8f\n",sin($2)*sin($4)+cos($2)*cos($4)*cos($3-$1),sin($2)*sin($6)+cos($2)*cos($6)*cos($5-$1),sin($6)*sin($8)+cos($6)*cos($8)*cos($7-$5),sin($4)*sin($8)+cos($4)*cos($8)*cos($7-$3)}' | ${AWK} '{printf "%11.8f %11.8f %11.8f %11.8f\n",atan2(sqrt(1-$1*$1),$1),atan2(sqrt(1-$2*$2),$2),atan2(sqrt(1-$3*$3),$3),atan2(sqrt(1-$4*$4),$3)}' > ${texp}.sides) >& /dev/null
-       
+
+              (${AWK} '{printf "%11.8f %11.8f  %11.8f %11.8f  %11.8f %11.8f  %11.8f %11.8f\n",$4*"'"${dtorad}"'",$5*"'"${dtorad}"'",$6*"'"${dtorad}"'",$7*"'"${dtorad}"'",$8*"'"${dtorad}"'",$9*"'"${dtorad}"'",$10*"'"${dtorad}"'",$11*"'"${dtorad}"'"}' ${CORNERDIR}/${texp}.out | ${AWK} '{printf "%10.8f %10.8f %10.8f %10.8f\n",sin($2)*sin($4)+cos($2)*cos($4)*cos($3-$1),sin($2)*sin($6)+cos($2)*cos($6)*cos($5-$1),sin($6)*sin($8)+cos($6)*cos($8)*cos($7-$5),sin($4)*sin($8)+cos($4)*cos($8)*cos($7-$3)}' | ${AWK} '{printf "%11.8f %11.8f %11.8f %11.8f\n",atan2(sqrt(1-$1*$1),$1),atan2(sqrt(1-$2*$2),$2),atan2(sqrt(1-$3*$3),$3),atan2(sqrt(1-$4*$4),$3)}' > ${texp}.sides) >& /dev/null 
+
               # calculate angular distance from a1 d1 to each corner of template image
               # ${texp}.out -> ${texp}.dist
-             (${AWK} '{printf "%11.8f %11.8f  %11.8f %11.8f  %11.8f %11.8f  %11.8f %11.8f   %2d\n",$4*"'"${dtorad}"'",$5*"'"${dtorad}"'",$6*"'"${dtorad}"'",$7*"'"${dtorad}"'",$8*"'"${dtorad}"'",$9*"'"${dtorad}"'",$10*"'"${dtorad}"'",$11*"'"${dtorad}"'",$3}' ${CORNERDIR}/${texp}.out | ${AWK} '{printf "%10.8f %10.8f %10.8f %10.8f  %2d\n",sin("'"${d1}"'")*sin($2)+cos("'"${d1}"'")*cos($2)*cos("'"${a1}"'"-$1),sin("'"${d1}"'")*sin($4)+cos("'"${d1}"'")*cos($4)*cos("'"${a1}"'"-$3),sin("'"${d1}"'")*sin($6)+cos("'"${d1}"'")*cos($6)*cos("'"${a1}"'"-$5),sin("'"${d1}"'")*sin($8)+cos("'"${d1}"'")*cos($8)*cos("'"${a1}"'"-$7),$9}' | ${AWK} '{printf "%11.8f %11.8f %11.8f %11.8f  %2d\n",atan2(sqrt(1-$1*$1),$1),atan2(sqrt(1-$2*$2),$2),atan2(sqrt(1-$3*$3),$3),atan2(sqrt(1-$4*$4),$4),$5}' > ${texp}.dist) >& /dev/null
+             (${AWK} '{printf "%11.8f %11.8f  %11.8f %11.8f  %11.8f %11.8f  %11.8f %11.8f   %2d\n",$4*"'"${dtorad}"'",$5*"'"${dtorad}"'",$6*"'"${dtorad}"'",$7*"'"${dtorad}"'",$8*"'"${dtorad}"'",$9*"'"${dtorad}"'",$10*"'"${dtorad}"'",$11*"'"${dtorad}"'",$3}' ${CORNERDIR}/${texp}.out | ${AWK} '{printf "%10.8f %10.8f %10.8f %10.8f  %2d\n",sin("'"${d1}"'")*sin($2)+cos("'"${d1}"'")*cos($2)*cos("'"${a1}"'"-$1),sin("'"${d1}"'")*sin($4)+cos("'"${d1}"'")*cos($4)*cos("'"${a1}"'"-$3),sin("'"${d1}"'")*sin($6)+cos("'"${d1}"'")*cos($6)*cos("'"${a1}"'"-$5),sin("'"${d1}"'")*sin($8)+cos("'"${d1}"'")*cos($8)*cos("'"${a1}"'"-$7),$9}' | ${AWK} '{printf "%11.8f %11.8f %11.8f %11.8f  %2d\n",atan2(sqrt(1-$1*$1),$1),atan2(sqrt(1-$2*$2),$2),atan2(sqrt(1-$3*$3),$3),atan2(sqrt(1-$4*$4),$4),$5}' > ${texp}.dist) >& /dev/null 
+
         
              # protections for out-of-bounds results to cos/sin when image and template are exactly on top of each other 
-             (paste ${texp}.sides ${texp}.dist | ${AWK} -v eps=0.00000001 '{printf "%11.8f %11.8f %11.8f %11.8f  %2d\n",(cos($1)-cos($5)*cos($6))/(sin($5)*sin($6)+eps),(cos($2)-cos($5)*cos($7))/(sin($5)*sin($7)+eps),(cos($3)-cos($7)*cos($8))/(sin($7)*sin($8)+eps),(cos($4)-cos($6)*cos($8))/(sin($6)*sin($8)+eps),$9}' | while read one two three four five ; do eps=0.00000001 ; if [[ "$one" =~ ^[1-9] ]] ; then one=0.99999999 ; elif [[ "$one" =~ ^-[1-9] ]]; then one=-0.99999999 ; fi ; if [[ "$two" =~ ^[1-9] ]] ; then two=0.99999999 ; elif [[ "$two" =~ ^-[1-9] ]] ; then two=-0.99999999 ;  fi ; if [[ "$three" =~ ^[1-9] ]] ; then three=0.99999999 ;  elif [[ "$three" =~ ^-[1-9] ]] ;  then three=-0.99999999 ; fi ; if [[ "$four" =~ ^[1-9] ]] ; then four=0.99999999 ; elif [[ "$four" =~ ^-[1-9] ]] ;  then four=-0.99999999 ;  fi ; echo $one $two $three $four $five  ; done | ${AWK} '{printf "%11.8f %11.8f %11.8f %11.8f  %2d\n",atan2(sqrt(1-$1*$1),$1),atan2(sqrt(1-$2*$2),$2),atan2(sqrt(1-$3*$3),$3),atan2(sqrt(1-$4*$4),$4),$5}' | ${AWK} '($1<10)&&($2<10)&&($3<10)&&($4<10)&&($1+$2+$3+$4>"'"${twopi}"'"*0.95){printf "%8d  %2d  %8d  %2d\n","'"${sexp}"'","'"${sccd}"'","'"${texp}"'",$5}' >> tmp.tmp1) >& /dev/null
-        
+             (paste ${texp}.sides ${texp}.dist | ${AWK} -v eps=0.00000001 '{printf "%11.8f %11.8f %11.8f %11.8f  %2d\n",(cos($1)-cos($5)*cos($6))/(sin($5)*sin($6)+eps),(cos($2)-cos($5)*cos($7))/(sin($5)*sin($7)+eps),(cos($3)-cos($7)*cos($8))/(sin($7)*sin($8)+eps),(cos($4)-cos($6)*cos($8))/(sin($6)*sin($8)+eps),$9}' | while read one two three four five ; do eps=0.00000001 ; if [[ "$one" =~ ^[1-9] ]] ; then one=0.99999999 ; elif [[ "$one" =~ ^-[1-9] ]]; then one=-0.99999999 ; fi ; if [[ "$two" =~ ^[1-9] ]] ; then two=0.99999999 ; elif [[ "$two" =~ ^-[1-9] ]] ; then two=-0.99999999 ;  fi ; if [[ "$three" =~ ^[1-9] ]] ; then three=0.99999999 ;  elif [[ "$three" =~ ^-[1-9] ]] ;  then three=-0.99999999 ; fi ; if [[ "$four" =~ ^[1-9] ]] ; then four=0.99999999 ; elif [[ "$four" =~ ^-[1-9] ]] ;  then four=-0.99999999 ;  fi ; echo $one $two $three $four $five  ; done | ${AWK} '{printf "%11.8f %11.8f %11.8f %11.8f  %2d\n",atan2(sqrt(1-$1*$1),$1),atan2(sqrt(1-$2*$2),$2),atan2(sqrt(1-$3*$3),$3),atan2(sqrt(1-$4*$4),$4),$5}' | ${AWK} '($1<10)&&($2<10)&&($3<10)&&($4<10)&&($1+$2+$3+$4>"'"${twopi}"'"*0.95){printf "%8d  %2d  %8d  %2d\n","'"${sexp}"'","'"${sccd}"'","'"${texp}"'",$5}' >> tmp.tmp1) >& /dev/null 
               j=$[$j+1]
 
             done # while j [[ ...
-
+	    
             cat tmp.tmp1 | uniq > tmp.tmp2
         mv tmp.tmp2 tmp.tmp1
             n=`wc -l tmp.tmp1 | ${AWK} '{print $1}'`
@@ -983,7 +984,7 @@ for c in $ccdlist; do
               ${AWK} '(NR>1){printf "  %2d",$4}' tmp.tmp1 >> ${outpair}
               echo hi | ${AWK} '{printf "\n"}' >> ${outpair}
             fi
-        rm -f ${texp}.{sides,dist} tmp.tmp1
+        rm -f ${texp}.{sides,dist} tmp.tmp1 
             i=$[$i+1]
           #done #  sccd
       
@@ -1105,7 +1106,7 @@ for c in $ccdlist; do
 		    if [ $? -eq 0 ]; then
 			cd  ${TOPDIR_WSDIFF}/data/DECam_${overlapexp}/
 			ln -s D`printf %08d $overlapexp`_${BAND}_`printf %02d $overlapccd`_${rpnum}_immask.fits DECam_`printf %08d ${overlapexp}`_`printf %02d $overlapccd`.fits
-			ln -s D`printf %08d $overlapexp`_${BAND}_`printf %02d $overlapccd`_${rpnum}_immask.fits DECam_`printf %06d ${overlapexp}`_`printf %02d $overlapccd`.fits
+			ln -s D`printf %08d $overlapexp`_${BAND}_`printf %02d $overlapccd`_${rpnum}_immask.fits DECam_`printf %d ${overlapexp}`_`printf %02d $overlapccd`.fits ##AGTEST 6-->d
 			fthedit  D`printf %08d $overlapexp`_${BAND}_`printf %02d $overlapccd`_${rpnum}_immask.fits[0] DOYT delete
 			if [ -d  ${TOPDIR_WSDIFF}/data/DECam_${overlapexp}_empty ]; then
 			    rmdir  ${TOPDIR_WSDIFF}/data/DECam_${overlapexp}_empty
@@ -1122,7 +1123,7 @@ for c in $ccdlist; do
                     cd  ${TOPDIR_WSDIFF}/data/DECam_${overlapexp}/
                     # make symlinks to fit naming convention to the expectation of the pipeline
                     ln -s D`printf %08d $overlapexp`_${BAND}_`printf %02d $overlapccd`_${rpnum}_immask.fits DECam_`printf %08d ${overlapexp}`_`printf %02d $overlapccd`.fits
-                    ln -s D`printf %08d $overlapexp`_${BAND}_`printf %02d $overlapccd`_${rpnum}_immask.fits DECam_`printf %06d ${overlapexp}`_`printf %02d $overlapccd`.fits
+                    ln -s D`printf %08d $overlapexp`_${BAND}_`printf %02d $overlapccd`_${rpnum}_immask.fits DECam_`printf %d ${overlapexp}`_`printf %02d $overlapccd`.fits ##AGTEST 6-->d
                     fthedit  D`printf %08d $overlapexp`_${BAND}_`printf %02d $overlapccd`_${rpnum}_immask.fits[0] DOYT delete
 		    if [ -d  ${TOPDIR_WSDIFF}/data/DECam_${overlapexp}_empty ]; then
 			rmdir  ${TOPDIR_WSDIFF}/data/DECam_${overlapexp}_empty
@@ -1154,7 +1155,7 @@ for c in $ccdlist; do
 		
 	    fi
 	    # final check for an empty csv file
-	    if [ $(wc -l D${overlapexp8}_r${RNUM}p${PNUM}_ZP.csv | awk '{print $1}') -lt 2 ]; then rm D${overlapexp8}_r${RNUM}p${PNUM}_ZP.csv ; fi
+	    if [ $(wc -l D${overlapexp8}_r${RNUM}p${PNUM}_ZP.csv | awk '{print $1}') -lt 2 ]; then rm D${overlapexp8}_r${RNUM}p${PNUM}_ZP.csv ; echo "AG TEST11"; fi
 	fi
     done
     # makestarcat
@@ -1223,7 +1224,7 @@ for c in $ccdlist; do
     fi
     # if we are outside the footprint (then SNSTAR_FILENAME and SNVETO_FILENAME are set), we make our own starcat (with gaia), using the BLISS.py outputs
     if [ ! -z "$SNSTAR_FILENAME" ]; then
-        cp ${DIFFIMG_DIR}/bin/makeWSTemplates.sh ./
+        cp ${DIFFIMG_DIR}/bin/makeWSTemplates.sh ./ 
         export PATH=${PWD}:${PATH}
         if [ -s ${SNSTAR_FILENAME} ]; then
             echo "using local copy of SNSTAR"
@@ -1286,7 +1287,7 @@ for c in $ccdlist; do
             MAKESTARCAT_RESULT=$?
 	else
             python ${GW_UTILS_DIR}/code/makestarcat.py -e $EXPNUM -n $NITE -r $RNUM -p $PNUM -b $BAND --ccd $c -s `echo $procnum | sed -e s/dp//` -snstar $STARCAT_NAME -snveto $SNVETO_NAME
-        #python makestarcat.py -e $EXPNUM -n $NITE -r $RNUM -p $PNUM -b $BAND --ccd $c -s `echo $procnum | sed -e s/dp//` -snstar $STARCAT_NAME -snveto $SNVETO_NAME
+            #python makestarcat.py -e $EXPNUM -n $NITE -r $RNUM -p $PNUM -b $BAND --ccd $c -s `echo $procnum | sed -e s/dp//` -snstar $STARCAT_NAME -snveto $SNVETO_NAME
             MAKESTARCAT_RESULT=$?
 	fi
 	
