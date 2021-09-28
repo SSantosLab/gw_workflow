@@ -120,5 +120,5 @@ if __name__ == '__main__':
     os.system('ifdh mkdir '+str(dir_nite) )
     os.system('ifdh mkdir '+str(dir_final) )
     cmd = 'ifdh cp --force=xrootd -D *.out *fullcat* *_immask.fits.fz ' +str(dir_final)
-    print cmd
+    print(cmd)
     os.system(cmd)
