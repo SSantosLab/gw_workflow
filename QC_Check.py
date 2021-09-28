@@ -82,7 +82,7 @@ class QC_Check:
         try:
             psf_fwhm = float(psfhdr['PSF_FWHM'])
         except:
-            print "PSF_FWHM not fount \n"
+            print("PSF_FWHM not fount \n")
         return psf_fwhm
     
     def getSkybrite(self,fitsfile):
@@ -107,26 +107,26 @@ class QC_Check:
             gainb = float(imhdr['GAINB'])
             ZD = float(imhdr['ZD'])
         except:
-            print "SKYBRITE not fount \n"
+            print("SKYBRITE not fount \n")
         try:
             exptime = float(imhdr['EXPTIME'])
         except:
             exptime=90.
-            print "EXPTIME not found \n"
+            print("EXPTIME not found \n")
         try:
             mjd_obs = float(imhdr['MJD-OBS'])
         except:
-            print " MJD-OBS not found \n"
+            print(" MJD-OBS not found \n")
         try:
             airmass = float(imhdr['AIRMASS'])
         except:
-#            print " AIRMASS not found set default value 1.3\n"
+#            print(" AIRMASS not found set default value 1.3\n")
             airmass = 1./np.cos(np.radians(ZD))
-        if (exptime>0.01):
+        if exptime>0.01:
             efactor=exptime
         else:
             efactor=1.0
-#        print " gaina=%f gainb=%f \n" % (gaina,gainb)
+#        print(" gaina=%f gainb=%f \n" % (gaina,gainb))
         gtesta=gaina-1.
         gtestb=gainb-1.
         if ((abs(gtesta)<0.5)and(abs(gtestb)<0.5)):
@@ -158,7 +158,7 @@ class QC_Check:
             nobj = float(hdr['NAXIS2'])
  
         except:
-            print "NAXIS2 not fount \n"
+            print("NAXIS2 not fount \n")
 
         return nobj
      
@@ -177,7 +177,7 @@ class QC_Check:
     def getDmagPar(self,bmjd,band):
 
         bandpar = self.DougD[bmjd]
-        print bandpar
+        print(bandpar)
         a_0 = bandpar[band][0]
         a_1 = (self.DougD[bmjd])[band][1]
         k =  (self.DougD[bmjd])[band][2]
@@ -197,12 +197,12 @@ class QC_Check:
         line = sort_list[0]
         self.prefix= string.split(line,'_')[0]
         self.band = string.split(line,'_')[1]
-        print nccd
+        print(nccd)
         if nccd > 60:
             self.head_File = self.base_dir+self.band+'no61.head'
         else:
             self.head_File = self.base_dir+self.band+'no2no61.head'
-        print self.head_File
+        print(self.head_File)
         self.default_scamp = self.base_dir+'default2.scamp.20140423'
 
         self.outputFile = self.prefix+'allcat.fits' 
@@ -215,7 +215,7 @@ class QC_Check:
         cmd.append(self.outputFile)
 
         retval = subprocess.call(cmd)
-        print retval
+        print(retval)
         self.catalog_ref = 'GAIA-DR1'
         cmd = 'scamp ' + self.outputFile +\
         ' ' + '-AHEADER_GLOBAL ' + self.head_File +\
@@ -224,7 +224,7 @@ class QC_Check:
         ' -WRITE_XML Y -XML_NAME scamp.xml -MOSAIC_TYPE SAME_CRVAL -ASTREF_BAND DEFAULT -POSITION_MAXERR 10.0 -NTHREADS 1' +\
         ' -REF_SERVER cocat1.u-strasbg.fr,vizier.nao.ac.jp,vizier.cfa.harvard.edu '
 
-        print '\n',cmd,'\n'
+        print('\n',cmd,'\n')
         retval=''
         try:
             retval = subprocess.check_output(cmd.split(),stderr=subprocess.STDOUT)
@@ -236,7 +236,7 @@ class QC_Check:
         nlines = len(lines)
         for i in range(nlines):
             line = lines[i]
-#            print line
+#            print(line)
             if string.find(line,'Astrometric stats (external):') > 0:
                 n+=1
                 tokens = string.split(lines[i+4])
@@ -244,10 +244,10 @@ class QC_Check:
                 dy = float(string.split(tokens[7],'"')[0])
                 chi2 = float(tokens[8])
                 nstars = int(tokens[9])
-#                print tokens
+#                print(tokens)
                 break
         scamptime = timeit.default_timer() - start
-        print "Scamp time= %f \n" % scamptime
+        print("Scamp time= %f \n" % scamptime)
         return (dx,dy,chi2,nstars)
     
     def unpackLog(self,logFile):
@@ -267,7 +267,7 @@ class QC_Check:
                 dy = float(string.split(tokens[7],'"')[0])
                 chi2 = float(tokens[8])
                 nstars = int(tokens[9])
-#                print tokens
+#                print(tokens)
                 break
         return (dx,dy,chi2,nstars)
         
@@ -300,7 +300,7 @@ if __name__ == "__main__":
     writer.writerow(out_row)
 
     qct = QC_Check()
-    print "expnum=%s nite=%s band=%s \n" % (expnum,nite,bandIn)
+    print("expnum=%s nite=%s band=%s \n" % (expnum,nite,bandIn))
 
 
     pi=3.141592654
@@ -333,8 +333,8 @@ if __name__ == "__main__":
 #   Set seeing cutoff to be 1.6 times Kolmogov except at "Y" which should
 #   be forced to match that at g-band
 #
-    for bandi in ["u","g","r","i","z","Y","VR"]:
-        if (bandi == "Y"):
+    for bandi in ("u","g","r","i","z","Y","VR"):
+        if bandi == "Y":
             seeing_lim[bandi]=1.6*kolmogorov["g"]
         else:
             seeing_lim[bandi]=1.6*kolmogorov[bandi]
@@ -379,9 +379,9 @@ if __name__ == "__main__":
             sys.exit(-1)
     else:
         sys.exit(-1)
-#    print csvfiles
+#    print(csvfiles)
     d = pd.read_csv(csvfiles[0])
-#    print d
+#    print(d)
     exp_rec = {}
     exp_rec['expnum'] = expnum
     exp_rec['nite'] = nite
@@ -397,20 +397,20 @@ if __name__ == "__main__":
         (dx,dy,chi2,ns) = qct.unpackLog(logFile)
     else:
         (dx,dy,chi2,ns) = qct.scamp()
-    print (dx,dy,chi2,ns) 
+    print(dx,dy,chi2,ns) 
     logtime = timeit.default_timer() - start
-    print " Log analysis time= %f \n" % logtime
-#    print exp_rec
+    print(" Log analysis time= %f \n" % logtime)
+#    print(exp_rec)
     start=timeit.default_timer()
     allPsf = glob.glob('*.psf')
     psf_width = []
     for psfFile in allPsf:
         psf_width.append(qct.getPSF_fwhm(psfFile))
     psf_fwhm = np.median(np.array(psf_width))
-#    print ' PSF_FWHM=%f n ' % psf_fwhm
+#    print(' PSF_FWHM=%f n ' % psf_fwhm)
     exp_rec['psfex_fwhm'] = psf_fwhm*pixsize 
     psftime = timeit.default_timer() - start
-    print "PSF extraction time=%f \n" % psftime
+    print("PSF extraction time=%f \n" % psftime)
     skybritness = []
     mjd_obs = []
     airmass = []
@@ -433,7 +433,7 @@ if __name__ == "__main__":
     airm =  np.median(np.array(airmass))
     exptime = np.median(np.array(exptimes))
     imagetime =  timeit.default_timer() - start
-    print " Image proc time %f \n" % imagetime
+    print(" Image proc time %f \n" % imagetime)
     detObj = []
     start=timeit.default_timer()
     allCat = glob.glob('*_fullcat.fits')
@@ -446,10 +446,10 @@ if __name__ == "__main__":
     exp_rec['N_OBJ'] = allObj
     exp_rec['skyb_avg'] = skyb
     cattime =  timeit.default_timer() - start
-    print "Catalog proc time %f \n" % cattime
+    print("Catalog proc time %f \n" % cattime)
     start=timeit.default_timer()   
     mjd0 = qct.getBaseMJD(MJD)
-    print ' MJD=%f bmjd=%f \n' %(MJD,mjd0)
+    print(' MJD=%f bmjd=%f \n' %(MJD,mjd0))
     fpars = qct.getDmagPar(mjd0,bandIn)
     a_0 = fpars[0]
     a_1 = fpars[1]
@@ -457,10 +457,10 @@ if __name__ == "__main__":
     dmag = a_0 + a_1*(MJD - mjd0) + k*airm
 #    zp_eff = -2.5*math.log10(exptime) - float(exp_rec['zp']) + qct.ki[exp_rec['band']]*airm
     zp_eff = -2.5*math.log10(exptime) - float(exp_rec['zp']) - qct.ki[exp_rec['band']]*airm
-#    print 'Comp mag zp_eff = %f \n' % zp_eff
+#    print('Comp mag zp_eff = %f \n' % zp_eff)
 #    exp_rec["magdiff"] = zp_eff - dmag
     exp_rec["magdiff"] = dmag -zp_eff
-#    print ' dmag=%f magdiff=%f \n' % (dmag,exp_rec["magdiff"])
+#    print(' dmag=%f magdiff=%f \n' % (dmag,exp_rec["magdiff"]))
 ###############################################################################
 #   Now the calculations for the Teff (and of course the individual components)
 #
@@ -473,12 +473,12 @@ if __name__ == "__main__":
 
 #    use_fwhm=exp_rec['psfex_fwhm']+fwhm_DMtoQC_offset_psfex
     use_fwhm=exp_rec['psfex_fwhm']
-#    print 'use_fwhm=%f \n' % use_fwhm
+#    print('use_fwhm=%f \n' % use_fwhm)
 #
 #   OK so I lied above... calculate F_eff (NOW!)
 #
     if (use_fwhm > 0.0):
-#        print 'seeing_fid = %f \n' % seeing_fid[exp_rec["band"]]
+#        print('seeing_fid = %f \n' % seeing_fid[exp_rec["band"]])
         exp_rec["teff_f"]=(seeing_fid[exp_rec["band"]]*seeing_fid[exp_rec["band"]]/(use_fwhm*use_fwhm))
     else:
         print("# WARNING:  No FWHM measure available. F_EFF set to -1.0")
@@ -520,7 +520,7 @@ if __name__ == "__main__":
         exp_rec["teff"]=value_teff
     t7=time.time()
     calctime=timeit.default_timer() - start
-    print " Teff calculation time=%f \n" % calctime
+    print(" Teff calculation time=%f \n" % calctime)
     print("# ")
     print("# ")
     print("#              FWHM Summary   ")
@@ -581,4 +581,4 @@ if __name__ == "__main__":
     out_row.append(exp_rec["N_OBJ"])
     writer.writerow(out_row)  
     qctime = timeit.default_timer() - qc_start
-    print " total qc_time=%f \n" % qctime
+    print(" total qc_time=%f \n" % qctime)
