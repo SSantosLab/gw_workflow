@@ -3,7 +3,7 @@ import logging
 import numpy as np
 import pyfits
 import os
-import ConfigParser
+import configparser
 import sys
 import argparse
 from despyfits.DESImage import DESImage
@@ -23,7 +23,7 @@ class SEProc():
 
 ###########  Configuration ############
 
-        self.Config = ConfigParser.ConfigParser()
+        self.Config = configparser.ConfigParser()
         self.configFile = self.args.confFile 
         self.Config.read(self.configFile)
         self.template_file = self.ConfigSectionMap("General")['template']
@@ -126,7 +126,7 @@ class SEProc():
                 dict1[option] = self.Config.get(section, option)
                 if dict1[option] == -1:
 #                DebugPrint("skip: %s" % option)
-                    print "skip: %s" % option
+                    print("skip: %s" % option)
             except:
                 print("exception on %s!" % option)
                 dict1[option] = None
@@ -603,12 +603,12 @@ class SEProc():
         else:
             if count%2:
             # Odd number of elements
-                fwhm_med = fwhm_sel[count/2]
-                ellp_med = ellp_sel[count/2]
+                fwhm_med = fwhm_sel[count//2]
+                ellp_med = ellp_sel[count//2]
             else:
         # Even number of elements
-                fwhm_med = 0.5 * (fwhm_sel[count/2]+fwhm_sel[count/2-1])
-                ellp_med = 0.5 * (ellp_sel[count/2]+ellp_sel[count/2-1])
+                fwhm_med = 0.5 * (fwhm_sel[count//2]+fwhm_sel[count//2-1])
+                ellp_med = 0.5 * (ellp_sel[count//2]+ellp_sel[count//2-1])
 
         if debug:
             print("FWHM=%.4f" % fwhm_med)
