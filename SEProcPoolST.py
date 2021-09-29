@@ -29,7 +29,8 @@ from matplotlib.rcsetup import ValidateInStrings
 import pathos
 from pathos.multiprocessing import ProcessingPool as Pool
 from scipy.weave.catalog import os_dependent_catalog_name
-from setuptools.command.easy_install import sys_executable
+# RM: I don't think this will work in py3, but looks like it's not used.
+# from setuptools.command.easy_install import sys_executable
 import shutil
 
 
