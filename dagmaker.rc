@@ -53,7 +53,7 @@ TWINDOW=15
 #MIN_NITE=20100101
 
 #### Use only if you want to avoid using images taken after MAX_NITE as templates.
-MAX_NITE=20170901
+#MAX_NITE=20170901
 
 #this variable tells DAGMaker to remove as templates any images that it sees as missing SE output. This should only
 #only be used when you are certain you do not want to use any non-DES images and have already fetched all SE outputs from DESDM.
