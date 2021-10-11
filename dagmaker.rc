@@ -14,11 +14,11 @@ PNUM=7
 # Seasons from 100 so far correspond to GW events. E.g. seasons 1XX are for GW event 1, seasons 2XX for event 2, etc.
 # As of the end of LIGO O2 we had 5 events, so the first O3 event will be season 600.
 # Season 5000 is reserved for DES nightly difference imaging on the wide survey in Y5 (2017-2018)
-# Season 5500 is reserved for DES nightly difference imaging on the wide survey in Y5.5 (2018-2019)
+# Season 6000 is reserved for DES nightly difference imaging on the wide survey in Y6 (2018-2019)
 ##############
-SEASON=417
+SEASON=33
 
-DIFFIMG_EUPS_VERSION=gw2
+DIFFIMG_EUPS_VERSION=gw7
 
 # WRITEDB should be off for initial testing, but on for any production running.
 WRITEDB=on

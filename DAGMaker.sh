@@ -189,17 +189,18 @@ check_header() {
     NEWTILING=1
     NEWOBJECT="DESWS hex $NEWFIELD tiling $NEWTILING"
     
-    echo "OBJECT = '${NEWOBJECT}'/ Object name" > editfile
-    echo "FIELD = '${NEWFIELD}'" >> editfile
-    echo "TILING = 1" >> editfile
+    echo "OBJECT = '${NEWOBJECT}'/ Object name" > editfile_$$
+    echo "FIELD = '${NEWFIELD}'" >> editfile_$$
+    echo "TILING = 1" >> editfile_$$
     
    ### first copy the file down
     $COPYDCMD /pnfs/des/scratch/${SCHEMA}/dts/${NITE}/DECam_`printf %08d ${EXPNUM}`.fits.fz ./ && rm -f /pnfs/des/scratch/${SCHEMA}/dts/${NITE}/DECam_`printf %08d ${EXPNUM}`.fits.fz
     chmod u+w DECam_`printf %08d ${EXPNUM}`.fits.fz
     for hdr in {1..9} {10..70} 
     do
-	fthedit "DECam_$(printf %08d ${EXPNUM}).fits.fz[${hdr}]"  @editfile || echo "Error running fthedit for  DECam_`printf %08d ${EXPNUM}`[${hdr}].fits.fz"
+	fthedit "DECam_$(printf %08d ${EXPNUM}).fits.fz[${hdr}]"  @editfile_$$ || echo "Error running fthedit for  DECam_`printf %08d ${EXPNUM}`.fits.fz[${hdr}]"
     done
+    rm editfile_$$
     
     $COPYCMD DECam_`printf %08d ${EXPNUM}`.fits.fz /pnfs/des/scratch/${SCHEMA}/dts/${NITE}/DECam_`printf %08d ${EXPNUM}`.fits.fz
     
@@ -770,6 +771,9 @@ echo "ifdh cp -D $DOTOUTFILES \$TOPDIR_WSTEMPLATES/pairs/" > $templatecopyfile
 # check if there are templates or if diffimg will fail
 if [ $(awk '{print $1}' mytemp_${EXPNUM}/KH_diff.list1 ) -le 1 ]; then
     echo "There appear to be no templates for this exposure $EXPNUM. Diffimg will fail."
+    NOTEMPS=1
+else
+    NOTEMPS=0
 fi
 
 export DES_SERVICES=~/.desservices.ini
@@ -1051,6 +1055,10 @@ else
 fi
 rm -f /pnfs/des/${DESTCACHE}/${SCHEMA}/exp/${NITE}/${EXPNUM}/WS_diff.list
 $COPYCMD mytemp_${EXPNUM}/KH_diff.list1  /pnfs/des/${DESTCACHE}/${SCHEMA}/exp/${NITE}/${EXPNUM}/WS_diff.list
+
+if [ $NOTEMPS -eq 1 ]; then
+    echo "NO TEMPLATE IMAGES, DIFFIMG WILL FAIL"
+fi
 
 echo "To submit this DAG do"
 echo "jobsub_submit_dag -G des --role=DESGW file://${outfile}"
