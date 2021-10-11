@@ -232,7 +232,6 @@ do
     elif [[ $lsfile == *D$(printf %08d ${EXPNUM})_${BAND}_$(printf %02d ${CCDNUM_LIST})_r${RNUM}p${PNUM}_fullcat.fits ]]; then
 	psffiles="$psffiles $lsfile"
     elif [[ $lsfile == *allZP_D$(printf %08d ${EXPNUM})_r${RNUM}p${PNUM}.csv ]] || [[ $lsfile == *D$(printf %08d ${EXPNUM})_r${RNUM}p${PNUM}_ZP.csv ]] ; then
-	echo "AG TEST HERE10"
 	csvfiles="$csvfiles $lsfile"
     elif [[ $lsfile == /pnfs/des/${DESTCACHE}/${SCHEMA}/exp/${NITE}/${EXPNUM}/allZP_D$(printf %08d ${EXPNUM})_r${RNUM}p${PNUM}.csv ]] || [[ $lsfile ==  /pnfs/des/${DESTCACHE}/${SCHEMA}/exp/${NITE}/${EXPNUM}/Zero_D$(printf %08d ${EXPNUM})_$(printf %02d $CCDNUM_LIST)_r${RNUM}p${PNUM}.csv ]] || [[ $lsfile == /pnfs/des/${DESTCACHE}/${SCHEMA}/exp/${NITE}/${EXPNUM}/D$(printf %08d ${EXPNUM})_$(printf %02d $CCDNUM_LIST)_r${RNUM}p${PNUM}_ZP.csv ]] ; then
 	ccdcsvfiles="$ccdcsvfiles $lsfile"
@@ -1051,6 +1050,15 @@ for c in $ccdlist; do
     ls ${TOPDIR_WSDIFF}/pairs/${EXPNUM}-*.out
     echo "-----"
     # determine overlap ccd by ccd
+    overlapfiles=$(ls ${TOPDIR_WSDIFF}/pairs/${EXPNUM}-*.out)
+    if [ -z "$overlapfiles" ]; then
+	echo "${JOBSUBJOBID} ${JOBSUBPARENTJOBID} $(/bin/hostname)" > NOOVERLAPS.FAIL
+	ifdh cp ${IFDHCP_OPT} -D NOOVERLAPS.FAIL /pnfs/des/${DESTCACHE}/${SCHEMA}/exp/$NITE/$EXPNUM/$LOCDIR/
+	echo "FOUND NO OVERLAPS, EXITING"
+	echo "If you were just trying to do SE processing, try using the -t option"
+	exit 1
+    fi
+
     for overlapfile in `ls ${TOPDIR_WSDIFF}/pairs/${EXPNUM}-*.out`
     do
         overlapexp=`basename $overlapfile | sed -e s/${EXPNUM}\-// -e s/\.out//`
