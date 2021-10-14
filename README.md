@@ -1,4 +1,5 @@
 # gw_workflow
+#
 Image processing portion of the DES-GW pipeline. Currently consists of single-epoch (SE) processing and difference imaging. 
 
 * [Introduction](#introduction)  
