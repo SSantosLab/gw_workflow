@@ -1,9 +1,9 @@
 #!/bin/bash
 
-#. /cvmfs/des.opensciencegrid.org/eeups/startupcachejob31i.sh
-#setup ftools v6.17
-#export HEADAS=$FTOOLS_DIR
-#setup wcstools
+. /cvmfs/des.opensciencegrid.org/eeups/startupcachejob31i.sh
+setup ftools v6.17
+export HEADAS=$FTOOLS_DIR
+setup wcstools
 
 
 RNUM="2"
