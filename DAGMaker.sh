@@ -364,9 +364,9 @@ setup despydb 2.0.0+4
 export DIFFIMG_HOST=FNAL
 #for IFDH
 export EXPERIMENT=des
-export PATH=${PATH}:/cvmfs/fermilab.opensciencegrid.org/products/common/db/../prd/cpn/v1_7/NULL/bin:/cvmfs/fermilab.opensciencegrid.org/products/common/prd/ifdhc/v2_3_8/Linux64bit-2-6-2-12/bin
-export PYTHONPATH=${PYTHONPATH}:/cvmfs/fermilab.opensciencegrid.org/products/common/prd/ifdhc/v2_3_8/Linux64bit-2-6-2-12/lib/python
-export IFDHC_CONFIG_DIR=/cvmfs/fermilab.opensciencegrid.org/products/common/prd/ifdhc_config/v2_3_8/NULL
+export PATH=${PATH}:/cvmfs/fermilab.opensciencegrid.org/products/common/db/../prd/cpn/v1_7/NULL/bin:/cvmfs/fermilab.opensciencegrid.org/products/common/prd/ifdhc/v2_6_1/Linux64bit-3-10-2-17/bin
+export PYTHONPATH=${PYTHONPATH}:/cvmfs/fermilab.opensciencegrid.org/products/common/prd/ifdhc/v2_6_1/Linux64bit-3-10-2-17/lib/python
+export IFDHC_CONFIG_DIR=/cvmfs/fermilab.opensciencegrid.org/products/common/prd/ifdhc_config/v2_6_1a/NULL
 export IFDH_NO_PROXY=1
 export IFDH_CP_UNLINK_ON_ERROR=1
 export IFDH_CP_MAXRETRIES=2
@@ -406,7 +406,7 @@ else
     	fi
     done
 fi
-BAND=`egrep "^\s{0,}${EXPNUM}" exposures.list | awk '{print $6}'`
+BAND=$(awk '($1=='${EXPNUM}') {print $6}' exposures.list)
 if [ -z "${BAND}" ]; then
     echo "Error with setting band. Check exposures.list to see if there is a problem with this exposure. Exiting..."
     exit 1
@@ -464,7 +464,7 @@ touch $templatecopyfile
 echo "<parallel>" >> $outfile
 
 # stick a dummy job in here so that there is something just in case there ends up being nothing to do for parallel processing
-echo "jobsub -n --group=des --OS=SL6,SL7  --resource-provides=usage_model=${RESOURCES} --memory=500MB --disk=100MB --expected-lifetime=600s file://dummyjob.sh" >> $outfile
+echo "jobsub -n --group=des --resource-provides=usage_model=${RESOURCES} --memory=500MB --disk=100MB --expected-lifetime=600s file://dummyjob.sh" >> $outfile
 
 
 # initialize empty list of files for the copy pairs output
@@ -496,7 +496,7 @@ do
     SKIP=false
 
     # check that exposure is 30 seconds or longer
-    explength=$(egrep "^\s{0,}${overlapnum}" exposures.list | awk '{print $7}')
+    explength=$(awk '($1=='${overlapnum}') {print $7}' exposures.list)
     explength=$(echo $explength | sed -e 's/\.[0-9]*//' )
     if [ $explength -lt 30 ]; then SKIP=true ; fi
     
@@ -504,7 +504,7 @@ do
     if [ $i == 1 ]; then
 	echo "this is the search image; dont apply teff cuts"
     else  
-	teff=$(egrep "^\s{0,}${overlapnum}" exposures.list | awk '{print $10}')
+	teff=$(awk '($1=='${overlapnum}') {print $10}' exposures.list)
         if [ "${teff}" == "NaN" ]; then
             SKIP=true
             echo "Invalid t_eff value for ${overlapnum}. We will not use this image."
@@ -537,9 +537,9 @@ do
     if [ $i == 1 ]; then 
         if [ "$SKIP" == "true" ] ; then echo "Cannot proceed without the search image!" ; exit 1 ; fi
         NITE=$overlapnite  # capitalized NITE is the search image nite
-        SEARCHMJD=$(egrep "^\s{0,}${overlapnum}" exposures.list | awk '{print $3}')
+        SEARCHMJD=$(awk '($1=='${overlapnum}') {print $3}' exposures.list)
     else
-        overlapmjd=$(egrep "^\s{0,}${overlapnum}" exposures.list | awk '{print $3}')
+        overlapmjd=$(awk '($1=='${overlapnum}') {print $3}' exposures.list)
 	if [ $TWINDOW_DISTINCT == 0 ]; then
             # skip if the overlap night is within one of the search exposure night
             if ( [ $(echo "$SEARCHMJD - $overlapmjd < $TWINDOW" | bc ) -eq 1 ] && [ $(echo "$overlapmjd - $SEARCHMJD < $TWINDOW" | bc ) -eq 1 ] )  || [ $overlapnite -lt $MIN_NITE ]  || [ $overlapnite -gt $MAX_NITE ] ; then
@@ -733,24 +733,13 @@ do
                 do
                     if [ $ichip -ne 2 ] && [ $ichip -ne 31 ] && [ $ichip -ne 61 ] ; then
 			# CHANGE 11-20-18 TO RUN SEDiff ON ALL EXPOSURES EXPLIST --> overlapnum
-                        echo "jobsub -n --group=des --lines='+SingularityImage=\\\"/cvmfs/singularity.opensciencegrid.org/fermilab/fnal-wn-sl6:latest\\\"' --resource-provides=usage_model=${RESOURCES} $JOBSUB_OPTS --append_condor_requirements='(TARGET.GLIDEIN_Site==\\\"FermiGrid\\\"||(TARGET.HAS_SINGULARITY==true&&TARGET.HAS_CVMFS_des_opensciencegrid_org==true&&TARGET.HAS_CVMFS_des_osgstorage_org==true)${STASHVER})' file://SEdiff.sh -r $RNUM -p $PNUM -E $EXPLIST -v $DIFFIMG_EUPS_VERSION -b $BAND -n $overlapnite $JUMPTOEXPCALIBOPTION -d $DESTCACHE -m $SCHEMA $SEARCH_OPTS -c $ichip -S $procnum $(echo $SNSTAR_OPTS | sed -e "s/\${CCDNUM_LIST}/${ichip}/") $(echo $SNVETO_OPTS | sed -e "s/\${CCDNUM_LIST}/${ichip}/")" >> $searchfile
-                        #echo "jobsub -n --group=des --OS=SL6 --resource-provides=usage_model=${RESOURCES} $JOBSUB_OPTS --append_condor_requirements='(TARGET.GLIDEIN_Site==\\\"FermiGrid\\\"||(TARGET.HAS_CVMFS_des_opensciencegrid_org==true&&TARGET.HAS_CVMFS_des_osgstorage_org==true)${STASHVER})' file://SEdiff.sh -r $RNUM -p $PNUM -E $overlapnum -b $BAND -n $overlapnite $JUMPTOEXPCALIBOPTION -d $DESTCACHE -m $SCHEMA $SEARCH_OPTS -c $ichip -S $procnum $(echo $SNSTAR_OPTS | sed -e "s/\${CCDNUM_LIST}/${ichip}/") $(echo $SNVETO_OPTS | sed -e "s/\${CCDNUM_LIST}/${ichip}/")" >> $searchfile
- #                       echo wrote chip $ichip to $searchfile
+                        echo "jobsub -n --group=des --lines='+SingularityImage=\\\"/cvmfs/singularity.opensciencegrid.org/fermilab/fnal-wn-sl7:latest\\\"' --resource-provides=usage_model=${RESOURCES} $JOBSUB_OPTS --append_condor_requirements='(TARGET.GLIDEIN_Site==\\\"FermiGrid\\\"||(TARGET.HAS_SINGULARITY==true&&TARGET.HAS_CVMFS_des_opensciencegrid_org==true&&TARGET.HAS_CVMFS_des_osgstorage_org==true)${STASHVER})' file://SEdiff.sh -r $RNUM -p $PNUM -E $EXPLIST -v $DIFFIMG_EUPS_VERSION -b $BAND -n $overlapnite $JUMPTOEXPCALIBOPTION -d $DESTCACHE -m $SCHEMA $SEARCH_OPTS -c $ichip -S $procnum $(echo $SNSTAR_OPTS | sed -e "s/\${CCDNUM_LIST}/${ichip}/") $(echo $SNVETO_OPTS | sed -e "s/\${CCDNUM_LIST}/${ichip}/")" >> $searchfile
+    #                       echo wrote chip $ichip to $searchfile
                     fi    
                 done
 #                cat $searchfile
             else		
-		echo "jobsub -n --group=des --lines='+SingularityImage=\\\"/cvmfs/singularity.opensciencegrid.org/fermilab/fnal-wn-sl6:latest\\\"' --resource-provides=usage_model=${RESOURCES} $JOBSUB_OPTS -N 60 --append_condor_requirements='(TARGET.GLIDEIN_Site==\\\"FermiGrid\\\"||(TARGET.HAS_SINGULARITY==true&&TARGET.HAS_CVMFS_des_opensciencegrid_org==true&&TARGET.HAS_CVMFS_des_osgstorage_org==true))' file://SEdiff.sh -r $RNUM -p $PNUM -E $overlapnum -v $DIFFIMG_EUPS_VERSION -b $BAND -n $overlapnite $JUMPTOEXPCALIBOPTION -d $DESTCACHE -m $SCHEMA -c 0 -t $TEMP_OPTS -S $procnum" >> $outfile
-                # template SE jobs (with -t option)
-#                for (( ichip=1;ichip<63;ichip++ ))
-#                do
-##                if [ $ichip -ne 2 ] && [ $ichip -ne 31 ] && [ $ichip -ne 61 ] ; then
-#                if [ $ichip -ne 2 ] && [ $ichip -ne 61 ] ; then
-#		    # CHANGE 11-20-18 TO RUN SEDiff ON ALL EXPOSURES
-#                    echo "jobsub -n --group=des --OS=SL6 --resource-provides=usage_model=${RESOURCES} $JOBSUB_OPTS --append_condor_requirements='(TARGET.GLIDEIN_Site==\\\"FermiGrid\\\"||(TARGET.HAS_CVMFS_des_opensciencegrid_org==true&&TARGET.HAS_CVMFS_des_osgstorage_org==true))' file://SEdiff.sh -r $RNUM -p $PNUM -E $overlapnum -v $DIFFIMG_EUPS_VERSION -b $BAND -n $overlapnite $JUMPTOEXPCALIBOPTION -d $DESTCACHE -m $SCHEMA -t $TEMP_OPTS -c $ichip -S $procnum" >> $outfile
-#
-#                fi    
-#                done
+		echo "jobsub -n --group=des --lines='+SingularityImage=\\\"/cvmfs/singularity.opensciencegrid.org/fermilab/fnal-wn-sl7:latest\\\"' --resource-provides=usage_model=${RESOURCES} $JOBSUB_OPTS -N 60 --append_condor_requirements='(TARGET.GLIDEIN_Site==\\\"FermiGrid\\\"||(TARGET.HAS_SINGULARITY==true&&TARGET.HAS_CVMFS_des_opensciencegrid_org==true&&TARGET.HAS_CVMFS_des_osgstorage_org==true))' file://SEdiff.sh -r $RNUM -p $PNUM -E $overlapnum -v $DIFFIMG_EUPS_VERSION -b $BAND -n $overlapnite $JUMPTOEXPCALIBOPTION -d $DESTCACHE -m $SCHEMA -c 0 -t $TEMP_OPTS -S $procnum" >> $outfile
             fi
             # add the .out file for this overlap image to the list to be copied
             DOTOUTFILES="${DOTOUTFILES} /pnfs/des/${DESTCACHE}/${SCHEMA}/exp/$overlapnite/$overlapnum/${overlapnum}.out"
@@ -797,7 +786,7 @@ export TOPDIR_TEMPLATES=/data/des30.a/data/WSTemplates
 
 ############ check and do something special if the word hex is not present ############
 
-imageline=$(egrep "^\s{0,}${EXPNUM}" exposures_${BAND}.list | awk '{print $4,$5}' )
+imageline=$(awk '($1=='${EXPNUM}') {print $4,$5}' exposures_${BAND}.list)
 SEARCHRA=`echo $imageline | cut -d " " -f 1`
 SEARCHDEC=`echo $imageline | cut -d " " -f 2`
 RA10=$(echo "${SEARCHRA}*10" | bc | cut -d "." -f 1)
@@ -813,49 +802,11 @@ FIELD_TILING="${FIELD} ${TILING}"
 if [ $DO_HEADER_CHECK -eq 1 ]; then
     check_header
 fi
-########## 
-#elif [[ $FIELD_TILING =~ ^BLISS ]]; then
-#    echo "HERE!"
-#    FIELD_TILING=$(gethead /pnfs/des/scratch/${SCHEMA}/dts/${NITE}/DECam_`printf %08d ${EXPNUM}`.fits.fz OBJECT | sed -r -e 's/BLISS field:\s*//' )
-#    echo "FIELD_TIlING now $FIELD_TILING"
-#    FIELD=$(echo $FIELD_TILING | cut -d "-" -f 1)
-#    TILING=$(echo $FIELD_TILING | cut -d "-" -f 2)
-#    check_header
-#    
-#else
-#    FIELD=$( echo $FIELD_TILING | cut -d " " -f 1)
-#    TILING=$( echo $FIELD_TILING | cut -d " " -f 2)
-#
-## now we do the replacement.
-#    imageline=$(egrep "^\s?${EXPNUM}" exposures_${BAND}.list | awk '{print $4,$5}' )
-#    SEARCHRA=`echo $imageline | cut -d " " -f 1`
-#    SEARCHDEC=`echo $imageline | cut -d " " -f 2`
-#    RA10=$(echo "${SEARCHRA}*10" | bc | cut -d "." -f 1)
-#    DEC10=$(echo "$SEARCHDEC * 10" | bc | cut -d "." -f 1)
-#    if [ $DEC10 -ge 0 ]; then 
-#   DEC10="+${DEC10}"
-#    fi
-#    FIELD="GW${RA10}${DEC10}"
-#    TILING=1
-#    FIELD_TILING="${FIELD} ${TILING}"
-#    echo "FIELD = $FIELD"
-#    echo "TILING = $TILING"
-#    if [ "x${TILING}" == "x" ]; then
-#	echo "TILING not set because it was not in the database. Defaulting to 1."
-#	TILING=1
-#    fi
-#    if [ "$FIELD" == "$TILING" ]; then
-#	echo "FIELD and TILING are the same value ($FIELD)! This is probably because the field doesn't say 'something tiling something'."
-#	echo " Setting TILING to 1 in this case."
-#	TILING=1
-#    fi
-#    check_header
-#fi
 
 if [ $(awk '{print $1}' mytemp_${EXPNUM}/KH_diff.list1 ) -gt 1 ]; then
 # Add the runmon step at the end of the dag. wait until now because we need to determine the field first. Only do it if there are templates though, since there will be no diffimg jobs otherwise.
 echo "<serial>" >> $outfile
-echo "jobsub -n --group=des --OS=SL6,SL7  --resource-provides=usage_model=$RESOURCES $JOBSUB_OPTS --expected-lifetime=7200s  --append_condor_requirements='(TARGET.GLIDEIN_Site==\\\"FermiGrid\\\"||TARGET.HAS_CVMFS_des_opensciencegrid_org==true)' file://RUNMON.sh -r $rpnum -p $procnum -E $EXPNUM -n $NITE -f $FIELD -d $DESTCACHE -m $SCHEMA" >> $outfile
+echo "jobsub -n --group=des --lines='+SingularityImage=\\\"/cvmfs/singularity.opensciencegrid.org/fermilab/fnal-wn-sl7:latest\\\"' --resource-provides=usage_model=$RESOURCES $JOBSUB_OPTS --expected-lifetime=7200s  --append_condor_requirements='(TARGET.GLIDEIN_Site==\\\"FermiGrid\\\"||TARGET.HAS_CVMFS_des_opensciencegrid_org==true)' file://RUNMON.sh -r $rpnum -p $procnum -E $EXPNUM -n $NITE -f $FIELD -d $DESTCACHE -m $SCHEMA" >> $outfile
 echo "</serial>" >> $outfile
 fi
 # edit the template files to match this exposure
