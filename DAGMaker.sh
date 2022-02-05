@@ -174,7 +174,7 @@ check_header() {
     
     IMGOBJECT=$(gethead /pnfs/des/scratch/${SCHEMA}/dts/${NITE}/DECam_`printf %08d ${EXPNUM}`.fits.fz OBJECT)
     IMGTILING=$(gethead /pnfs/des/scratch/${SCHEMA}/dts/${NITE}/DECam_`printf %08d ${EXPNUM}`.fits.fz TILING)
-    imageline=$(egrep "^\s{0,}${EXPNUM}" exposures_${BAND}.list | awk '{print $4,$5}' )
+    imageline=$(awk '($1=='${EXPNUM}') {print $4,$5}'  exposures_${BAND}.list)
     SEARCHRA=`echo $imageline | cut -d " " -f 1`
     SEARCHDEC=`echo $imageline | cut -d " " -f 2 | sed s/+//`
     RA10=$(echo "${SEARCHRA}*10" | bc | cut -d "." -f 1)
