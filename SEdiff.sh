@@ -283,9 +283,9 @@ if [ "$SKIPSE" == "false" ] ; then # if statement allows SE to be skipped if SE 
     fi
     
     ifdh cp -D /pnfs/des/resilient/gw/code/MySoft4.tar.gz  /pnfs/des/resilient/gw/code/test_mysql_libs.tar.gz ./ || { echo "Error copying input files. Exiting." ; exit 2 ; }
-    #tar xzf ./MySoft4.tar.gz
+    tar xzf ./MySoft4.tar.gz
     
-    #tar xzfm ./test_mysql_libs.tar.gz
+    tar xzfm ./test_mysql_libs.tar.gz
        
     chmod +x make_red_catlist.py BLISS-expCalib_Y3apass.py BLISS-expCalib_Y3apass-old.py getcorners.sh
     
