@@ -339,27 +339,25 @@ chmod a+x dummyjob.sh
 
 echo "set up environment, and handy commands"
 
-# pull the setps from setup-diffImg
-. /cvmfs/des.opensciencegrid.org/2015_Q2/eeups/SL6/eups/desdm_eups_setup.sh
-export EUPS_PATH=/cvmfs/des.opensciencegrid.org/eeups/fnaleups:$EUPS_PATH
-
-# setup a specific version of perl so that we know what we're getting
-setup perl 5.18.1+6 || exit 134
-
-# setup other useful packages and env variables
-setup Y2Nstack
-setup diffimg $DIFFIMG_EUPS_VERSION
-## use Ken's development version of the diffimg code:
-#export DIFFIMG_DIR=/data/des40.b/data/kherner/Diffimg-devel/diffimg-trunk
-#export PATH=$DIFFIMG_DIR/bin:$PATH
-
-setup ftools v6.17
+source /cvmfs/des.opensciencegrid.org/ncsa/centos7/finalcut/Y6A1+2/eups/desdm_eups_setup.sh
+# source /cvmfs/des.opensciencegrid.org/eeups/startupcachejob31i.sh 
+setup oracleclient
+setup wcslib
+setup cfitsio
+setup cfitsio_shared
+setup gsl
+export COREUTILS_DIR=/data/des40.b/data/kherner/Diffimg-devel_Sep2021/CoreUtils-1.0.1
+export PYTHONPATH=/data/des40.b/data/kherner/Diffimg-devel_Sep2021/CoreUtils-1.0.1/python:${PYTHONPATH}
+export PATH=/data/des40.b/data/kherner/Diffimg-devel_Sep2021/CoreUtils-1.0.1/bin:${PATH}
+export DIFFIMG_DIR=/data/des40.b/data/kherner/Diffimg-devel_Sep2021/trunk
+export WCS_INC=-I${WCSLIB_DIR}/include/wcslib
+export WCSTOOLS_DIR=/data/des40.b/data/kherner/Diffimg-devel_Sep2021/wcstools
+export SNANA_DIR=/cvmfs/des.opensciencegrid.org/eeups/fnaleups/Linux64/SNANA/v11_03e
+export EUPS_PATH=${EUPS_PATH}:/cvmfs/des.opensciencegrid.org/eeups/fnaleups
+setup -j ftools v6.17
 export HEADAS=$FTOOLS_DIR
-setup wcstools
-setup autoscan
-setup astropy
-setup numpy 1.9.1+8
-setup despydb 2.0.0+4
+export PATH=$DIFFIMG_DIR/bin:$PATH
+export PATH=${WCSTOOLS_DIR}/bin:${PATH}
 
 export DIFFIMG_HOST=FNAL
 #for IFDH

@@ -2,7 +2,7 @@ from desdmLiby1e2 import *
 import numpy as np
 import os
 import glob
-from joblib import Parallel, delayed
+#from joblib import Parallel, delayed
 
 
 #for ccd in CCD:
@@ -94,14 +94,22 @@ if __name__ == '__main__':
     if not os.path.exists('default.psf'):
         copy_from_Dcache(data_conf+'default.psf')
 
-    Parallel(n_jobs=NPARALLEL)(delayed(run_stage_1)(ccd) for ccd in CCD)
+    for ccd in CCD:
+        run_stage_1(ccd)
 
-    Parallel(n_jobs=NPARALLEL)(delayed(run_stage_2)(ccd) for ccd in CCD)
+    for ccd in CCD:
+        run_stage_2(ccd)
+
+    ##Parallel(n_jobs=NPARALLEL)(delayed(run_stage_1)(ccd) for ccd in CCD)
+
+    ##Parallel(n_jobs=NPARALLEL)(delayed(run_stage_2)(ccd) for ccd in CCD)
 
 #use the entire image to get skyfit
     skyCombineFit('bleedmask-mini','bleedmask-mini-fp','skyfit-binned-fp',**args)
 
-    Parallel(n_jobs=NPARALLEL)(delayed(run_stage_3)(ccd) for ccd in CCD)
+    ##Parallel(n_jobs=NPARALLEL)(delayed(run_stage_3)(ccd) for ccd in CCD)
+    for ccd in CCD:
+        run_stage_3(ccd)
 
 #    Parallel(n_jobs=NPARALLEL)(delayed(run_stage_4)(ccd) for ccd in CCD)
 
