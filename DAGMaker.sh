@@ -247,7 +247,7 @@ PNUM="01"
 SEASON="11"
 JOBSUB_OPTS="--memory=3000MB --expected-lifetime=medium --cpu=4 --mail_on_error --email-to=kherner@fnal.gov"
 RESOURCES="DEDICATED,OPPORTUNISTIC,OFFSITE"
-DIFFIMG_EUPS_VERSION="gwdevel10"
+DIFFIMG_EUPS_VERSION="gw8"
 WRITEDB="off"
 RM_MYTEMP="false"
 IGNORECALIB="false"
@@ -322,12 +322,6 @@ SNVETO_OPTS=""
 SNSTAR_FILENAME=`egrep "^\s*SNSTAR_FILENAME" MAKESCRIPT_DIFFIMG_TEMPLATE.INPUT | cut -d ":" -f 2- | sed -r -e  "s/\#.*//" -e "s/^\ *//" -e "s/(\ )*$//" | sed -e "s/THEEXP/${EXPNUM}/" -e "s/THERNUM/${RNUM}/" -e "s/THEPNUM/${PNUM}/" -e "s/THECCDNUM/\\\${CCDNUM_LIST}/"`
 SNVETO_FILENAME=`egrep "^\s*SNVETO_FILENAME" MAKESCRIPT_DIFFIMG_TEMPLATE.INPUT | cut -d ":" -f 2- | sed -r -e  "s/\#.*//" -e "s/^\ *//" -e "s/(\ )*$//" | sed -e "s/THEEXP/${EXPNUM}/" -e "s/THERNUM/${RNUM}/" -e "s/THEPNUM/${PNUM}/" -e "s/THECCDNUM/\\\${CCDNUM_LIST}/"`
 
-#SNSTAR_FILENAME=`egrep "^\s*SNSTAR_FILENAME" MAKESCRIPT_DIFFIMG_TEMPLATE.INPUT | cut -d ":" -f 2- | sed -r -e  "s/\#.*//" -e "s/^\ *//" -e "s/(\ )*$//" | sed -e "s/THEEXP/${EXPNUM}/" -e "s/THERNUM/${RNUM}/" -e "s/THEPNUM/${PNUM}/"`
-#SNSTAR_FILENAME=`echo $SNSTAR_FILENAME | sed -e 's/THECCDNUM/$(eval\ "echo\ $SNSTAR_FILENAME")/'`
-#echo "SNSTAR_FILENAME $SNSTAR_FILENAME"
-#SNVETO_FILENAME=`egrep "^\s*SNVETO_FILENAME" MAKESCRIPT_DIFFIMG_TEMPLATE.INPUT | cut -d ":" -f 2- | sed -r -e  "s/\#.*//" -e "s/^\ *//" -e "s/(\ )*$//" | sed -e "s/THEEXP/${EXPNUM}/" -e "s/THERNUM/${RNUM}/" -e "s/THEPNUM/${PNUM}/"`
-#SNVETO_FILENAME=`echo $SNVETO_FILENAME | sed -e 's/THECCDNUM/$(eval\ "echo\ $SNVETO_FILENAME")/'`
-
 if [ -z "$SNSTAR_FILENAME" ]; then unset SNSTAR_FILENAME ; fi
 ## Above line was added on 20171208 by Ken suggestion to fix an error in Francisco submission
 ### dummy job
@@ -341,24 +335,22 @@ echo "set up environment, and handy commands"
 
 source /cvmfs/des.opensciencegrid.org/ncsa/centos7/finalcut/Y6A1+2/eups/desdm_eups_setup.sh
 # source /cvmfs/des.opensciencegrid.org/eeups/startupcachejob31i.sh 
+export EUPS_PATH=/cvmfs/des.opensciencegrid.org/ncsa/centos7/finalcut/Y6A1+2/eups/packages:/cvmfs/des.opensciencegrid.org/eeups/fnaleups:/cvmfs/des.opensciencegrid.org/2015_Q2/eeups/SL6/eups/packages
 setup oracleclient
 setup wcslib
 setup cfitsio
 setup cfitsio_shared
 setup gsl
-export COREUTILS_DIR=/data/des40.b/data/kherner/Diffimg-devel_Sep2021/CoreUtils-1.0.1
-export PYTHONPATH=/data/des40.b/data/kherner/Diffimg-devel_Sep2021/CoreUtils-1.0.1/python:${PYTHONPATH}
-export PATH=/data/des40.b/data/kherner/Diffimg-devel_Sep2021/CoreUtils-1.0.1/bin:${PATH}
-export DIFFIMG_DIR=/data/des40.b/data/kherner/Diffimg-devel_Sep2021/trunk
+setup diffimg gw8
+setup CoreUtils 1.0.1+0
+setup wcstools 3.9.6+0
 export WCS_INC=-I${WCSLIB_DIR}/include/wcslib
-export WCSTOOLS_DIR=/data/des40.b/data/kherner/Diffimg-devel_Sep2021/wcstools
 export SNANA_DIR=/cvmfs/des.opensciencegrid.org/eeups/fnaleups/Linux64/SNANA/v11_03e
 export EUPS_PATH=${EUPS_PATH}:/cvmfs/des.opensciencegrid.org/eeups/fnaleups
 setup -j ftools v6.17
 export HEADAS=$FTOOLS_DIR
 export PATH=$DIFFIMG_DIR/bin:$PATH
 export PATH=${WCSTOOLS_DIR}/bin:${PATH}
-
 export DIFFIMG_HOST=FNAL
 #for IFDH
 export EXPERIMENT=des

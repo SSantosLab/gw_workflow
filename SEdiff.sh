@@ -9,7 +9,7 @@ OLDHOME=$HOME
 export HOME=$PWD
 DESTCACHE="persistent"
 SCHEMA="gw" 
-DIFFIMG_VERSION="gwdevel13" # can change this with parameter -v <diffimg_version>
+DIFFIMG_VERSION="gw8" # can change this with parameter -v <diffimg_version>
 ulimit -a
 OVERWRITE=false
 SKIPSE=false
@@ -62,7 +62,7 @@ export HOME=$PWD
 # set environment
 source /cvmfs/des.opensciencegrid.org/eeups/startupcachejob31i.sh
 source /cvmfs/des.opensciencegrid.org/ncsa/centos7/finalcut/Y6A1+2/eups/desdm_eups_setup.sh
-#export EUPS_PATH=${EUPS_PATH}:/cvmfs/des.opensciencegrid.org/eeups/fnaleups
+export EUPS_PATH=/cvmfs/des.opensciencegrid.org/ncsa/centos7/finalcut/Y6A1+2/eups/packages:/cvmfs/des.opensciencegrid.org/eeups/fnaleups:/cvmfs/des.opensciencegrid.org/2015_Q2/eeups/SL6/eups/packages
 
 export IFDH_CP_MAXRETRIES=2
 export IFDH_XROOTD_EXTRA="-f -N"
@@ -76,11 +76,6 @@ export IFDH_NO_PROXY=1
 
 export IFDH_GRIDFTP_EXTRA="-st 1800"
 export XRD_REQUESTTIMEOUT=1200
-
-
-#export CONDA_DIR=/cvmfs/des.opensciencegrid.org/fnal/anaconda2
-#source $CONDA_DIR/etc/profile.d/conda.sh
-#conda activate des18a
 
 # parse arguments and flags
 ARGS="$@"
@@ -282,8 +277,8 @@ if [ "$SKIPSE" == "false" ] ; then # if statement allows SE to be skipped if SE 
         fi
     fi
     
-    ifdh cp -D /pnfs/des/resilient/gw/code/MySoft4.tar.gz  /pnfs/des/resilient/gw/code/test_mysql_libs.tar.gz ./ || { echo "Error copying input files. Exiting." ; exit 2 ; }
-    tar xzf ./MySoft4.tar.gz
+    ifdh cp -D /pnfs/des/resilient/gw/code/MySoft4_v2.tar.gz  /pnfs/des/resilient/gw/code/test_mysql_libs.tar.gz ./ || { echo "Error copying input files. Exiting." ; exit 2 ; }
+    tar xzf ./MySoft4_v2.tar.gz
     
     tar xzfm ./test_mysql_libs.tar.gz
        
@@ -531,8 +526,10 @@ EOF
     sed -i -e "/^nite\:/ s/nite\:.*/nite\: ${NITE}/" -e "/^expnum\:/ s/expnum\:.*/expnum\: ${EXPNUM}/" -e "/^filter\:/ s/filter:.*/filter\: ${BAND}/" -e "/^r\:/ s/r:.*/r\: ${RNUM}/" -e "/^p\:/ s/p:.*/p\: ${PNUM}/" confFile
     
     setup finalcut Y6A1+2
-    export WCSTOOLS_DIR=/data/des40.b/data/kherner/Diffimg-devel_Sep2021/wcstools
-    export PATH=export PATH=${WCSTOOLS_DIR}/bin:${PATH}
+    setup diffimg gw8
+    setup CoreUtils 1.0.1+0
+    setup wcstools 3.9.6+0
+    export PATH=${WCSTOOLS_DIR}/bin:${PATH}
     setup -j ftools v6.17; export HEADAS=$FTOOLS_DIR
     
     export LD_LIBRARY_PATH=${LD_LIBRARY_PATH}:${PWD}/usr/lib64/mysql
@@ -640,58 +637,11 @@ TEMPLATEPATHS=`cat copy_pairs_for_${EXPNUM}.sh | sed -r -e "s/ifdh\ cp\ (\-\-for
 baseccddotout=$(basename $ccddotoutfile)
 ifdh cp -D $dotoutfile $ccddotoutfile ./ || { echo "Failed to copy both combined .out file $dotoutfiles and CCD file ${ccddotoutfiles}. At least one is required. Exiting." ; exit 2 ; }
 #AG change
-#if [ ! -f ${EXPNUM}.out ]; then
 if [ ! -s ${EXPNUM}.out ]; then
     if [ -s $baseccddotout ]; then
         cp ${baseccddotout} ${EXPNUM}.out || echo "Error copying ${baseccdotout}."
     fi
 fi
-
-##for templatedir in $TEMPLATEPATHS
-##do
-##    tempexp=$(echo $templatedir | egrep -o "\/[0-9]{6,7}\/$" | tr -d "/")
-##    echo "Checking exposure $tempexp"
-##    dirfiles=$(ifdh ls $templatedir)
-##    tempdotouts=""
-##    for dirfile in $dirfiles
-##    do
-##	if [[ $dirfile == *.out ]]; then 
-##	    tempdotouts="$tempdotouts $dirfile"
-##	fi
-##    done
-##    ifdh cp -D $tempdotouts . || echo "Error copying .out files for $tempexp."
-##    if [ ! -f ${tempexp}.out ] ; then
-##	ccddots=$(ls ${tempexp}_[0-9]*.out 2>/dev/null) #AGTEST [0-9]*
-##	if [ ! -z "${ccddots}" ] ; then
-##	    cat $ccddots > $TOPDIR_WSTEMPLATES/pairs/${tempexp}.out
-##	fi
-##    fi
-### note that $templatedir has a trailing slash already
-##done
-
-
-export TOPDIR_WSTEMPLATES=${PWD}/WSTemplates
-for templatedir in $TEMPLATEPATHS
-do
-    tempexp=$(echo $templatedir | egrep -o "\/[0-9]{6,7}\/$" | tr -d "/") ##AGTEST                                                             
-    echo "Checking exposure $tempexp"
-    if [ ! -s  $TOPDIR_WSTEMPLATES/pairs/${tempexp}.out ] ; then
-        dirfiles=$(ifdh ls $templatedir)
-        tempdotouts=""
-        for dirfile in $dirfiles
-        do
-            if [[ $dirfile == *.out ]]; then
-                tempdotouts="$tempdotouts $dirfile"
-            fi
-        done
-        ifdh cp -D $tempdotouts . || echo "Error copying .out files for $tempexp."
-        ccddots=$(ls ${tempexp}_[0-9]*.out 2>/dev/null)
-        if [ ! -z "${ccddots}" ] ; then
-            cat $ccddots > $TOPDIR_WSTEMPLATES/pairs/${tempexp}.out
-        fi
-    fi
-done
-
 
     
 # if any of them failed remove them from WS_diff.list
@@ -705,10 +655,6 @@ do
     sed -i -e s/${OLDCOUNT}/${NEWCOUNT}/ WS_diff.list
 done
 
-#setup esutil
-#setup numpy 1.9.1+8
-#setup gw_utils 1.1.1
-#setup extralibs
 
 # run make starcat and difference imaging ccd-by-ccd (in case of comma-separated ccd list)
 # in most cases, this list will only be 1 ccd long (and the 1-ccd runs will be run in parallel)
@@ -762,16 +708,16 @@ for c in $ccdlist; do
     
 
     # Setup
-    ##source /cvmfs/des.opensciencegrid.org/ncsa/centos7/finalcut/Y6A1+2/eups/desdm_eups_setup.sh
-    ###setup oracleclient 11.2.0.3.0+5 -Z /cvmfs/des.opensciencegrid.org/2015_Q2/eeups/SL6/eups/packages
+    setup diffimg gw8
+    setup CoreUtils 1.0.1+0
+    setup wcstools 3.9.6+0
     setup -j easyaccess -Z /cvmfs/des.opensciencegrid.org/eeups/fnaleups
     setup cxOracle
     setup oracleclient
     setup fitsio
     setup astropy
     setup scipy
-    setup -j sep -Z /cvmfs/des.opensciencegrid.org/2015_Q2/eeups/SL6/eups/packages
-
+    setup -j sep -Z /cvmfs/des.opensciencegrid.org/eeups/fnaleups
     setup wcslib
     setup cfitsio
     setup cfitsio_shared
@@ -781,48 +727,17 @@ for c in $ccdlist; do
     setup scamp
     setup psfex
     setup gw_utils -Z /cvmfs/des.opensciencegrid.org/eeups/fnaleups
-    export COREUTILS_DIR=/data/des40.b/data/kherner/Diffimg-devel_Sep2021/CoreUtils-1.0.1
-    export PYTHONPATH=/data/des40.b/data/kherner/Diffimg-devel_Sep2021/CoreUtils-1.0.1/python:${PYTHONPATH}
-    export PATH=/data/des40.b/data/kherner/Diffimg-devel_Sep2021/CoreUtils-1.0.1/bin:${PATH}
-    export DIFFIMG_DIR=/data/des40.b/data/kherner/Diffimg-devel_Sep2021/trunk
     export PATH=$DIFFIMG_DIR/bin:$PATH
     export WCS_INC=-I${WCSLIB_DIR}/include/wcslib
-    export WCSTOOLS_DIR=/data/des40.b/data/kherner/Diffimg-devel_Sep2021/wcstools
     export SNANA_DIR=/cvmfs/des.opensciencegrid.org/eeups/fnaleups/Linux64/SNANA/v11_03e
-    export EUPS_PATH=${EUPS_PATH}:/cvmfs/des.opensciencegrid.org/eeups/fnaleups
-    #export EUPS_PATH=${EUPS_PATH}:/cvmfs/des.opensciencegrid.org/2015_Q2/eeups/SL6/eups/packages
     setup -j ftools v6.17
+    setup extralibs
     export HEADAS=$FTOOLS_DIR
     export PATH=${WCSTOOLS_DIR}/bin:${PATH}
     export IFDHC_CONFIG_DIR=/cvmfs/fermilab.opensciencegrid.org/products/common/prd/ifdhc_config/v2_6_1c/NULL
     setup -j autoscan v3.2.1+0 -Z /cvmfs/des.opensciencegrid.org/eeups/fnaleups
     setup -j joblib -Z /cvmfs/des.opensciencegrid.org/2015_Q2/eeups/SL6/eups/packages
     setup -j scikitlearn -Z /cvmfs/des.opensciencegrid.org/2015_Q2/eeups/SL6/eups/packages
-
-    # setup scripts
-    ##source /cvmfs/des.opensciencegrid.org/2015_Q2/eeups/SL6/eups/desdm_eups_setup.sh
-    ##export EUPS_PATH=/cvmfs/des.opensciencegrid.org/eeups/fnaleups:$EUPS_PATH
-    
-    # setup a specific version of perl so that we know what we're getting
-    ##setup perl 5.18.1+6 || exit 134
-
-    ###### any additional required setups go here #####
-
-    #we will want the GW version of diffimg for sure
-    ##setup perl 5.18.1+6
-    ##setup Y2Nstack 1.0.6+18
-    ##setup diffimg $DIFFIMG_VERSION #whatever the version number ends up being
-    ##setup ftools v6.17  # this is the heasoft stuff
-    ##export HEADAS=$FTOOLS_DIR
-    ##setup autoscan v3.2+0
-    ##setup easyaccess
-    ##setup extralibs 1.0
-    ##setup numpy 1.9.1+8
-    #setup gw_utils
-    ##setup scamp 2.6.10+0
-    ##setup python 2.7.9+1
-    ##export EUPS_PATH=/cvmfs/des.opensciencegrid.org/eeups/fnaleups:$EUPS_PATH
-    ##export SCAMP_CATALOG_DIR=/cvmfs/des.osgstorage.org/stash/fnal/SNscampCatalog
 
     # have to set the PFILES variable to be a local dir and not something in CVMFS
     mkdir syspfiles
@@ -904,7 +819,6 @@ for c in $ccdlist; do
     fi
     if [ -s ${EXPNUM}.out ] && [ -f ${EXPNUM}.out ]  && [ ! "$(ls -A $TOPDIR_WSTEMPLATES/pairs/)" ]; then
         cp ${EXPNUM}.out $TOPDIR_WSTEMPLATES/pairs/
-#	echo "AG expnum.out exists"
     fi
 
     for templatedir in $TEMPLATEPATHS
@@ -926,8 +840,6 @@ for c in $ccdlist; do
 		cat $ccddots > $TOPDIR_WSTEMPLATES/pairs/${tempexp}.out
 	    fi
 	fi
-# note that $templatedir has a trailing slash already
-##    fi
     done
     
     #show output of copy
@@ -1435,12 +1347,7 @@ fi
     echo "start pipeline"
     #### THIS IS THE PIPELINE!!! #####
     export CCDNUM_LIST
-    ##setup glib 2.29.2+11
-
-    #echo $EUPS_PATH
-    #echo $PATH
     export LD_LIBRARY_PATH=${LD_LIBRARY_PATH}:/cvmfs/des.opensciencegrid.org/2015_Q2/eeups/SL6/eups/packages/Linux64/oracleclient/11.2.0.3.0+5
-    #echo $LD_LIBRARY_PATH
     
     ./RUN_ALL-${BAND}_`printf %02d ${CCDNUM_LIST}` $ARGS
 
