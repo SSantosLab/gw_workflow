@@ -18,7 +18,7 @@ PNUM=7
 ##############
 SEASON=33
 
-DIFFIMG_EUPS_VERSION=gw7
+DIFFIMG_EUPS_VERSION=gw8
 
 # WRITEDB should be off for initial testing, but on for any production running.
 WRITEDB=on
