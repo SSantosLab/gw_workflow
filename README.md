@@ -55,11 +55,11 @@ export CONDA_DIR=/cvmfs/des.opensciencegrid.org/fnal/anaconda2
 source $CONDA_DIR/etc/profile.d/conda.sh
 conda activate des18a
 
-# ONLY RUN if you are not logged in as the desgw user
+# ONLY RUN if you are NOT logged in as the desgw user
 kx509
 voms-proxy-init -rfc -noregen -voms des:/des/Role=Analysis -valid 24:00
 
-source /cvmfs/des.opensciencegrid.org/eeups/startupcachejob21i.sh
+source /cvmfs/des.opensciencegrid.org/eeups/startupcachejob31i.sh
 ```
 
 ### Running the full Image Processing Pipeline (`SEdiff.sh`)
@@ -76,7 +76,7 @@ jobsub_submit_dag -G des file://desgw_pipeline_EXPNUM.dag
 
 The steps contained in the DAG file (i.e. the image processing pipeline) can also be executed manually, for example:
 ```
-./SEdiff.sh -r 4 -p 7 -E 668443 -b i -n 20170817 -d persistent -m gw -v gw6 -C -O -c 33 -S dp67 -V SNVETO_668443_33_r4p7.LIST -T SNSTAR_668443_33_r4p7.LIST
+./SEdiff.sh -r 4 -p 7 -E 668443 -b i -n 20170817 -d persistent -m gw -v gw8 -C -O -c 33 -S dp67 -V SNVETO_668443_33_r4p7.LIST -T SNSTAR_668443_33_r4p7.LIST
 ```
 
 #### Flags
@@ -103,7 +103,7 @@ The following flags do not require arguments:
 * `Y`: Turn on `SPECIALY4`
 * `F`: Turn on `FULLCOPY`
 * `O`: Fetch all files again, overwriting those already in the current directory (essentially re-does SE processing even if it has already been completed)
-* `t`: Run SE for a template image (exits after SE, skipping verification and diffimg)
+* `t`: Run only SE for a template image (exits after SE, skipping verification and diffimg)
 * `h`: Help
 
 ### Running subsets of the pipeline
