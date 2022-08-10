@@ -66,7 +66,6 @@ export EUPS_PATH=/cvmfs/des.opensciencegrid.org/ncsa/centos7/finalcut/Y6A1+2/eup
 
 export IFDH_CP_MAXRETRIES=2
 export IFDH_XROOTD_EXTRA="-f -N"
-# export IFDH_XROOTD_EXTRA="-S 4 -f -N" #TODO from verifySE.sh
 export XRD_REDIRECTLIMIT=255
 export IFDH_CP_UNLINK_ON_ERROR=1
 #for IFDH
@@ -211,26 +210,29 @@ for lsfile in $lsfiles
 do
     if [[ $lsfile == *D$(printf %08d ${EXPNUM})_${BAND}_$(printf %02d ${CCDNUM_LIST})_r${RNUM}p${PNUM}_immask.fits.fz ]]; then
 	immaskfiles="$immaskfiles $lsfile"
+    echo "AG MA TEST ZP 1"
     elif [[ $lsfile == *D$(printf %08d ${EXPNUM})_${BAND}_$(printf %02d ${CCDNUM_LIST})_r${RNUM}p${PNUM}_fullcat.fits ]]; then
 	psffiles="$psffiles $lsfile"
+    echo "AG MA TEST ZP 2"
     elif [[ $lsfile == *allZP_D$(printf %08d ${EXPNUM})_r${RNUM}p${PNUM}.csv ]] || [[ $lsfile == *D$(printf %08d ${EXPNUM})_r${RNUM}p${PNUM}_ZP.csv ]] ; then
 	csvfiles="$csvfiles $lsfile"
+    echo "AG MA TEST ZP 3"
     elif [[ $lsfile == /pnfs/des/${DESTCACHE}/${SCHEMA}/exp/${NITE}/${EXPNUM}/allZP_D$(printf %08d ${EXPNUM})_r${RNUM}p${PNUM}.csv ]] || [[ $lsfile ==  /pnfs/des/${DESTCACHE}/${SCHEMA}/exp/${NITE}/${EXPNUM}/Zero_D$(printf %08d ${EXPNUM})_$(printf %02d $CCDNUM_LIST)_r${RNUM}p${PNUM}.csv ]] || [[ $lsfile == /pnfs/des/${DESTCACHE}/${SCHEMA}/exp/${NITE}/${EXPNUM}/D$(printf %08d ${EXPNUM})_$(printf %02d $CCDNUM_LIST)_r${RNUM}p${PNUM}_ZP.csv ]] ; then
 	ccdcsvfiles="$ccdcsvfiles $lsfile"
+    echo "AG MA TEST ZP 4"
     elif [[ $lsfile == */${EXPNUM}.out ]]; then
 	dotoutfile=$lsfile
+    echo "AG MA TEST ZP 5"
     elif [[ $lsfile == */${EXPNUM}_$(printf %d ${ccdlist}).out ]]; then
     	ccddotoutfile=$lsfile
+        echo "AG MA TEST ZP 6"
     fi
 done
 # get filenames
-#immaskfiles="$(ifdh ls  /pnfs/des/${DESTCACHE}/${SCHEMA}/exp/${NITE}/${EXPNUM}/D$(printf %08d ${EXPNUM})_${BAND}_$(printf %02d ${CCDNUM_LIST})_r${RNUM}p${PNUM}_immask.fits.fz | grep -v "/$")"
 nimmask=`echo $immaskfiles | wc -w`
 if [ $nimmask -ge 1 ]; then
-#    psffiles="$(ifdh ls  /pnfs/des/${DESTCACHE}/${SCHEMA}/exp/${NITE}/${EXPNUM}/D$(printf %08d ${EXPNUM})_${BAND}_$(printf %02d ${CCDNUM_LIST})_r${RNUM}p${PNUM}_fullcat.fits | grep -v "/$")" 
     npsf=`echo $psffiles | wc -w`
     if [ $npsf -ge 1 ] || [ "$DOCALIB" == "false" ]; then
-#	csvfiles="`ifdh ls  /pnfs/des/${DESTCACHE}/${SCHEMA}/exp/${NITE}/${EXPNUM}/allZP_D$(printf %08d ${EXPNUM})_r${RNUM}p${PNUM}.csv | grep -v "/$"` `ifdh ls  /pnfs/des/${DESTCACHE}/${SCHEMA}/exp/${NITE}/${EXPNUM}/Zero_D$(printf %08d ${EXPNUM})_r${RNUM}p${PNUM}.csv | grep -v "/$"` `ifdh ls  /pnfs/des/${DESTCACHE}/${SCHEMA}/exp/${NITE}/${EXPNUM}/D$(printf %08d ${EXPNUM})_r${RNUM}p${PNUM}_ZP.csv | grep -v "/$"`" 
 	ncsv=`echo $csvfiles | wc -w`
 	if [ $ncsv -ge 2 ] || [ "$DOCALIB" == "false" ]; then
 	    if [ "$OVERWRITE" == "false" ]; then
@@ -242,7 +244,6 @@ if [ $nimmask -ge 1 ]; then
 	else
 	    # we don't have the combined csv files for this exposure and rpnum. Let's check for the CCD-specific files now. 
 	    # If they are present, 
-#	    ccdcsvfiles="`ifdh ls  /pnfs/des/${DESTCACHE}/${SCHEMA}/exp/${NITE}/${EXPNUM}/allZP_D$(printf %08d ${EXPNUM})_r${RNUM}p${PNUM}.csv | grep fnal` `ifdh ls  /pnfs/des/${DESTCACHE}/${SCHEMA}/exp/${NITE}/${EXPNUM}/Zero_D$(printf %08d ${EXPNUM})_$(printf %02d $CCDNUM_LIST)_r${RNUM}p${PNUM}.csv | grep fnal` `ifdh ls  /pnfs/des/${DESTCACHE}/${SCHEMA}/exp/${NITE}/${EXPNUM}/D$(printf %08d ${EXPNUM})_$(printf %02d $CCDNUM_LIST)_r${RNUM}p${PNUM}_ZP.csv | grep fnal`" 
 	    nccdcsv=`echo $ccdcsvfiles | wc -w`
 	    if [ $nccdcsv -ge 2 ]; then
 		if [ "$OVERWRITE" == "false" ]; then
@@ -270,7 +271,6 @@ if [ "$SKIPSE" == "false" ] ; then # if statement allows SE to be skipped if SE 
         echo "This SE job will include BLISS calib step."
     else
         echo "This SE job will use calib info from the DB."
-#        filestorm="`ifdh ls /pnfs/des/${DESTCACHE}/${SCHEMA}/exp/${NITE}/${EXPNUM}/D$(printf %08d $EXPNUM)_${BAND}_$(printf %02d ${CCDNUM_LIST})_r${RNUM}p${PNUM}_fullcat.fits | grep fits | grep fnal` `ifdh ls /pnfs/des/${DESTCACHE}/${SCHEMA}/exp/${NITE}/${EXPNUM}/D$(printf %08d $EXPNUM)_${BAND}_r'${RNUM}p${PNUM}'*csv*' | grep csv | grep fnal`"
 	filestorm="$psffiles $csvfiles"
 	if [ ! -z "${filestorm}" ]; then
             ifdh rm $filestorm
@@ -279,7 +279,9 @@ if [ "$SKIPSE" == "false" ] ; then # if statement allows SE to be skipped if SE 
     
     ifdh cp -D /pnfs/des/resilient/gw/code/MySoft4_v2.tar.gz  /pnfs/des/resilient/gw/code/test_mysql_libs.tar.gz ./ || { echo "Error copying input files. Exiting." ; exit 2 ; }
     tar xzf ./MySoft4_v2.tar.gz
-    
+    #NORA FIX 
+    ifdh cp /pnfs/des/scratch/nsherman/desdmLiby1e2.py ./
+    #END NORA FIX 
     tar xzfm ./test_mysql_libs.tar.gz
        
     chmod +x make_red_catlist.py BLISS-expCalib_Y3apass.py BLISS-expCalib_Y3apass-old.py getcorners.sh
@@ -318,7 +320,7 @@ if [ "$SKIPSE" == "false" ] ; then # if statement allows SE to be skipped if SE 
         skytempfile='Y2T4_20150715t0315_{filter:s}_c{ccd:>02s}_r2404p01_skypca-tmpl.fits'
         starflatfile='Y2A1_20150715t0315_{filter:s}_c{ccd:>02s}_r2360p01_starflat.fits'
         headfile='f'$CCDNUM_LIST'.head'
-        pcaprefix='binned-fp/Y2T4_20150715t0315_{filter:s}_r2404p01_skypca-binned-fp.fits'
+        pcaprefix='Y2T4_20150715t0315_{filter:s}_r2404p01_skypca-binned-fp.fits'
     else
         if [ $EXPNUM -lt 165290 ]; then
         YEAR=sv
@@ -329,8 +331,8 @@ if [ "$SKIPSE" == "false" ] ; then # if statement allows SE to be skipped if SE 
         skytempfile='Y2A1_20130101t0315_{filter:s}_c{ccd:>02s}_r1979p01_skypca-tmpl.fits'
         starflatfile='Y2A1_20130101t0315_{filter:s}_c{ccd:>02s}_r1976p01_starflat.fits'
         headfile='f'$CCDNUM_LIST'.head'
-        pcaprefix='binned-fp/Y2A1_20130101t0315_{filter:s}_r1979p01_skypca-binned-fp.fits'	
-        elif [ $EXPNUM -lt 226353 ]; then
+        pcaprefix='Y2A1_20130101t0315_{filter:s}_r1979p01_skypca-binned-fp.fits'
+     elif [ $EXPNUM -lt 226353 ]; then
         YEAR=sv
         EPOCH=e1
         biasfile='D_n20130115t0131_c{ccd:>02s}_r1788p01_biascor.fits'
@@ -339,18 +341,17 @@ if [ "$SKIPSE" == "false" ] ; then # if statement allows SE to be skipped if SE 
         skytempfile='Y2A1_20130101t0315_{filter:s}_c{ccd:>02s}_r1979p01_skypca-tmpl.fits'
         starflatfile='Y2A1_20130101t0315_{filter:s}_c{ccd:>02s}_r1976p01_starflat.fits'
         headfile='f'$CCDNUM_LIST'.head'
-        pcaprefix='binned-fp/Y2A1_20130101t0315_{filter:s}_r1979p01_skypca-binned-fp.fits'	
+        pcaprefix='Y2A1_20130101t0315_{filter:s}_r1979p01_skypca-binned-fp.fits'
         elif [ $EXPNUM -lt 258564 ]; then
         YEAR=y1
         EPOCH=e1
         biasfile='D_n20130916t0926_c{ccd:>02s}_r1999p06_biascor.fits'
         bpmfile='D_n20130916t0926_c{ccd:>02s}_r2083p01_bpm.fits'
         dflatfile='D_n20130916t0926_{filter:s}_c{ccd:>02s}_r1999p06_norm-dflatcor.fits'
-        #skytempfile='Y2A1_20131129t0315_{filter:s}_c{ccd:>02s}_r2106p01_skypca-tmpl.fits'
         skytempfile='Y2A1_20130801t1128_{filter:s}_c{ccd:>02s}_r2044p01_skypca-tmpl.fits'
         starflatfile='Y2A1_20130801t1128_{filter:s}_c{ccd:>02s}_r2046p01_starflat.fits'
         headfile='f'$CCDNUM_LIST'.head'
-        pcaprefix='binned-fp/Y2A1_20130801t1128_{filter:s}_r2044p01_skypca-binned-fp.fits'
+        pcaprefix='Y2A1_20130801t1128_{filter:s}_r2044p01_skypca-binned-fp.fits'
         elif [ $EXPNUM -lt 284391 ]; then
         YEAR=y1
         EPOCH=e2
@@ -370,7 +371,7 @@ if [ "$SKIPSE" == "false" ] ; then # if statement allows SE to be skipped if SE 
         skytempfile='Y2A1_20140801t1130_{filter:s}_c{ccd:>02s}_r1635p01_skypca-tmpl.fits'
         starflatfile='Y2A1_20140801t1130_{filter:s}_c{ccd:>02s}_r1637p01_starflat.fits'
         headfile='f'$CCDNUM_LIST'.head'                                                 
-        pcaprefix='binned-fp/Y2A1_20140801t1130_{filter:s}_r1635p01_skypca-binned-fp.fits'
+        pcaprefix='Y2A1_20140801t1130_{filter:s}_r1635p01_skypca-binned-fp.fits'
         elif [ $EXPNUM -le 438444 ]; then
         YEAR=y2
         EPOCH=e2
@@ -380,7 +381,7 @@ if [ "$SKIPSE" == "false" ] ; then # if statement allows SE to be skipped if SE 
         skytempfile='Y2A1_20141205t0315_{filter:s}_c{ccd:>02s}_r2133p01_skypca-tmpl.fits'
         starflatfile='Y2A1_20141205t0315_{filter:s}_c{ccd:>02s}_r2132p01_starflat.fits'
         headfile='f'$CCDNUM_LIST'.head'                                                 
-        pcaprefix='binned-fp/Y2A1_20141205t0315_{filter:s}_r2133p01_skypca-binned-fp.fits'
+        pcaprefix='Y2A1_20141205t0315_{filter:s}_r2133p01_skypca-binned-fp.fits'
         elif [ $EXPNUM -le 519543 ]; then
         YEAR=y3
         EPOCH=e1
@@ -390,7 +391,7 @@ if [ "$SKIPSE" == "false" ] ; then # if statement allows SE to be skipped if SE 
         skytempfile='Y2A1_20150715t0315_{filter:s}_c{ccd:>02s}_r2361p01_skypca-tmpl.fits'
         starflatfile='Y2A1_20150715t0315_{filter:s}_c{ccd:>02s}_r2360p01_starflat.fits'
         headfile='f'$CCDNUM_LIST'.head'                                                 
-        pcaprefix='binned-fp/Y2A1_20150715t0315_{filter:s}_r2361p01_skypca-binned-fp.fits'
+        pcaprefix='Y2A1_20150715t0315_{filter:s}_r2361p01_skypca-binned-fp.fits'
         elif [ $EXPNUM -le 666747 ]; then
         YEAR=y4
         EPOCH=e1
@@ -400,7 +401,7 @@ if [ "$SKIPSE" == "false" ] ; then # if statement allows SE to be skipped if SE 
         skytempfile='Y2T4_20150715t0315_{filter:s}_c{ccd:>02s}_r2404p01_skypca-tmpl.fits'
         starflatfile='Y2A1_20150715t0315_{filter:s}_c{ccd:>02s}_r2360p01_starflat.fits'
         headfile='f'$CCDNUM_LIST'.head'                                                 
-        pcaprefix='binned-fp/Y2T4_20150715t0315_{filter:s}_r2404p01_skypca-binned-fp.fits'
+        pcaprefix='Y2T4_20150715t0315_{filter:s}_r2404p01_skypca-binned-fp.fits'
 	else
 	    YEAR=y7
 	    EPOCH=''
@@ -449,7 +450,6 @@ if [ "$SKIPSE" == "false" ] ; then # if statement allows SE to be skipped if SE 
         conf_dir="/cvmfs/des.osgstorage.org/pnfs/fnal.gov/usr/des/persistent/stash/desdm/config/"
     else
         corr_dir="/pnfs/des/persistent/desdm/calib/"
-        #conf_dir="/pnfs/des/persistent/desdm/config/"
 	conf_dir="/pnfs/des/persistent/stash/desdm/config/"
     fi
     ## ag / kh hack feb 25, 2020                                                                                                                                                                                                                                               
@@ -525,7 +525,7 @@ EOF
     
     sed -i -e "/^nite\:/ s/nite\:.*/nite\: ${NITE}/" -e "/^expnum\:/ s/expnum\:.*/expnum\: ${EXPNUM}/" -e "/^filter\:/ s/filter:.*/filter\: ${BAND}/" -e "/^r\:/ s/r:.*/r\: ${RNUM}/" -e "/^p\:/ s/p:.*/p\: ${PNUM}/" confFile
     
-    setup finalcut Y6A1+2
+    setup -j finalcut Y6A1+2 -Z /cvmfs/des.opensciencegrid.org/2015_Q2/eeups/SL6/eups/packages
     setup diffimg gw8
     setup CoreUtils 1.0.1+0
     setup wcstools 3.9.6+0
@@ -586,12 +586,9 @@ EOF
 # doing this unsetup bit seems to break the BLISS old script. Commenting out for now	
 #	for prodlist in healpy astropy  fitsio  matplotlib six python ; do unsetup $prodlist ; done # some attempted version fixing
 	
-#	export CONDA_DIR=/cvmfs/des.opensciencegrid.org/fnal/anaconda2
-#	source $CONDA_DIR/etc/profile.d/conda.sh
-#	conda activate des18a
 	
-#    ./BLISS-expCalib_Y3apass.py --expnum $EXPNUM --reqnum $RNUM --attnum $PNUM --ccd $CCDNUM_LIST
-	./BLISS-expCalib_Y3apass-old.py --expnum $EXPNUM --reqnum $RNUM --attnum $PNUM --ccd $CCDNUM_LIST
+    #touch bliss_test.log
+	./BLISS-expCalib_Y3apass-old.py --expnum $EXPNUM --reqnum $RNUM --attnum $PNUM --ccd $CCDNUM_LIST &> /data/des80.a/data/desgw/maria_tests_2/gw_workflow/967887_57_test_2/bliss_test.log
 	
 	RESULT=$? 
 	echo "BLISS-expCalib_Y3pass-old.py exited with status $RESULT"
@@ -608,7 +605,6 @@ EOF
     
 # cleanup if we are in a grid job (defined as having the GRID_USER environment variable set) to avoid potential timeouts on exit
     if [ -n "$GRID_USER" ] ; then rm -f *.fits *.fits.fz *.ps *.psf *.xml full_1.cat *.head ; fi
-#rm *.csv *.png
     
     export HOME=$OLDHOME
 fi # end the if statement that skips SE processing    
@@ -660,7 +656,6 @@ done
 # in most cases, this list will only be 1 ccd long (and the 1-ccd runs will be run in parallel)
 for c in $ccdlist; do
     c2=$(printf "%02d" $c)
-#    export HOME=$OLDHOME
     
     ######## CODE FORMERLY IN RUN_DIFFIMG_PIPELINE.sh ##########
     
@@ -714,9 +709,9 @@ for c in $ccdlist; do
     setup -j easyaccess -Z /cvmfs/des.opensciencegrid.org/eeups/fnaleups
     setup cxOracle
     setup oracleclient
-    setup fitsio
-    setup astropy
-    setup scipy
+    setup -j fitsio -Z /cvmfs/des.opensciencegrid.org/eeups/fnaleups   
+    setup -j astropy -Z /cvmfs/des.opensciencegrid.org/2015_Q2/eeups/SL6/eups/packages
+    setup -j scipy -Z /cvmfs/des.opensciencegrid.org/2015_Q2/eeups/SL6/eups/packages
     setup -j sep -Z /cvmfs/des.opensciencegrid.org/eeups/fnaleups
     setup wcslib
     setup cfitsio
@@ -738,6 +733,7 @@ for c in $ccdlist; do
     setup -j autoscan v3.2.1+0 -Z /cvmfs/des.opensciencegrid.org/eeups/fnaleups
     setup -j joblib -Z /cvmfs/des.opensciencegrid.org/2015_Q2/eeups/SL6/eups/packages
     setup -j scikitlearn -Z /cvmfs/des.opensciencegrid.org/2015_Q2/eeups/SL6/eups/packages
+    setup -j esutil -Z /cvmfs/des.opensciencegrid.org/eeups/fnaleups
 
     # have to set the PFILES variable to be a local dir and not something in CVMFS
     mkdir syspfiles
@@ -781,11 +777,6 @@ for c in $ccdlist; do
     XY2SKY=${WCSTOOLS_DIR}/bin/xy2sky
     AWK=/bin/awk
 
-    # snana stuff for fakes KRH: do we need this? comment out for now on sep 8
-    # export SNANA_DIR=/data/des20.b/data/kessler/snana/snana
-    # export SNDATA_ROOT=/data/des20.b/data/SNDATA_ROOT
-    # export PATH=${PATH}:${SNANA_DIR}/bin 
-    # export PATH=${PATH}:${SNANA_DIR}/util 
 
     mkdir -p ${TOPDIR_SNFORCEPHOTO_IMAGES}
     mkdir -p WSTemplates/data
@@ -862,14 +853,6 @@ for c in $ccdlist; do
         outpairno=${CORNERDIR}/${sexp}-${texp}.no
       rm -f ${outpair}
 
-          # loop over search CCDs
-          #nccd=`wc -l ${CORNERDIR}/${sexp}.out | ${AWK} '{print $1}'`
-          #i=1
-          #while [[ $i -le $nccd ]]
-          #do
-          
-	    #find ccd corners 
-            #sccd=`${AWK} '(NR=='$i'){print $3}' ${CORNERDIR}/${sexp}_${CCDNUM_LIST}.out`
 	    sexpfile=""
 	    if [ -s ${sexp}_${CCDNUM_LIST}.out ]; then
 		sexpfile=${sexp}_${CCDNUM_LIST}.out
@@ -1036,11 +1019,6 @@ for c in $ccdlist; do
 		ifdh cp -D $ZPfile ./ || echo "Error copying $ZPfile"
 
                 # if the ZP file for this CCD exists we will symlink it to the generic name, and then copy in fits files
-           #     echo "Making symlink to this CCD ZP file..."
-           #     currentdir=$(pwd)
-           #     cd $ZPdir
-           #     ln -s $ZPfilename D`printf %08d $overlapexp`_${rpnum}_ZP.csv
-           #     cd $currentdir
 		
             fi
 	    if [ -z "$file2copy" ] ; then
@@ -1095,9 +1073,11 @@ for c in $ccdlist; do
 		done
                 # add the header if the file has content
 		if [ -s D${overlapexp8}_r${RNUM}p${PNUM}_ZP.csv ]; then
+		    echo "AG MA TEST 1"
 		    sed -i -e "1 i\ID,EXPNUM,CCDNUM,NUMBER,ALPHAWIN_J2000,DELTAWIN_J2000,FLUX_AUTO,FLUXERR_AUTO,FLUX_PSF,FLUXERR_PSF,MAG_AUTO,MAGERR_AUTO,MAG_PSF,MAGERR_PSF,SPREAD_MODEL,SPREADERR_MODEL,FWHM_WORLD,FWHMPSF_IMAGE,FWHMPSF_WORLD,CLASS_STAR,FLAGS,IMAFLAGS_ISO,ZeroPoint,ZeroPoint_rms,ZeroPoint_FLAGS" D${overlapexp8}_r${RNUM}p${PNUM}_ZP.csv
 		else
 		    # nothing was written into the file, so we delete this combined csv file to avoid problems later
+		    echo "AG MA TEST 2"
 		    rm  D${overlapexp8}_r${RNUM}p${PNUM}_ZP.csv
 		fi
 		
@@ -1224,18 +1204,22 @@ for c in $ccdlist; do
 		MAKESTARCAT_RESULT=-1
             else
 		echo "WARNING: STARCAT_NAME is set but SNVETO_NAME is not. The SN veto file will be created with the default name."
+		## AG MA TEST
 		python ${GW_UTILS_DIR}/code/makestarcat.py -e $EXPNUM -n $NITE -r $RNUM -p $PNUM -b $BAND --ccd $c -s `echo $procnum | sed -e s/dp//` -snveto $SNVETO_NAME
-        #python makestarcat.py -e $EXPNUM -n $NITE -r $RNUM -p $PNUM -b $BAND --ccd $c -s `echo $procnum | sed -e s/dp//` -snveto $SNVETO_NAME
+        echo "AG MA TESTD 1"
+		#python /data/des80.a/data/desgw/maria_tests_2/gw_workflow/starcat_fixes/makestarcat.py -e $EXPNUM -n $NITE -r $RNUM -p $PNUM -b $BAND --ccd $c -s `echo $procnum | sed -e s/dp//` -snveto $SNVETO_NAME &> makestarcat_test.log
 		MAKESTARCAT_RESULT=$?
             fi
 	elif [ "x$SNVETO_NAME" == "x" ]; then
             echo "WARNING: STARCAT_NAME is set but SNVETO_NAME is not. The SN veto file will be created with the default name."
+            echo "AG MA TESTD 2"
             python ${GW_UTILS_DIR}/code/makestarcat.py -e $EXPNUM -n $NITE -r $RNUM -p $PNUM -b $BAND --ccd $c -s `echo $procnum | sed -e s/dp//` -snstar $STARCAT_NAME
-        #python makestarcat.py -e $EXPNUM -n $NITE -r $RNUM -p $PNUM -b $BAND --ccd $c -s `echo $procnum | sed -e s/dp//` -snstar $STARCAT_NAME
+	    #python /data/des80.a/data/desgw/maria_tests_2/gw_workflow/starcat_fixes/makestarcat.py -e $EXPNUM -n $NITE -r $RNUM -p $PNUM -b $BAND --ccd $c -s `echo $procnum | sed -e s/dp//` -snstar $STARCAT_NAME &> makestarcat_test.log
             MAKESTARCAT_RESULT=$?
 	else
+        echo "AG MA TESTD 3"
             python ${GW_UTILS_DIR}/code/makestarcat.py -e $EXPNUM -n $NITE -r $RNUM -p $PNUM -b $BAND --ccd $c -s `echo $procnum | sed -e s/dp//` -snstar $STARCAT_NAME -snveto $SNVETO_NAME
-            #python makestarcat.py -e $EXPNUM -n $NITE -r $RNUM -p $PNUM -b $BAND --ccd $c -s `echo $procnum | sed -e s/dp//` -snstar $STARCAT_NAME -snveto $SNVETO_NAME
+	    #python /data/des80.a/data/desgw/maria_tests_2/gw_workflow/starcat_fixes/makestarcat.py -e $EXPNUM -n $NITE -r $RNUM -p $PNUM -b $BAND --ccd $c -s `echo $procnum | sed -e s/dp//` -snstar $STARCAT_NAME -snveto $SNVETO_NAME &> makestarcat_test.log
             MAKESTARCAT_RESULT=$?
 	fi
 	
