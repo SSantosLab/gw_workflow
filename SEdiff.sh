@@ -210,22 +210,22 @@ for lsfile in $lsfiles
 do
     if [[ $lsfile == *D$(printf %08d ${EXPNUM})_${BAND}_$(printf %02d ${CCDNUM_LIST})_r${RNUM}p${PNUM}_immask.fits.fz ]]; then
 	immaskfiles="$immaskfiles $lsfile"
-    echo "AG MA TEST ZP 1"
+    
     elif [[ $lsfile == *D$(printf %08d ${EXPNUM})_${BAND}_$(printf %02d ${CCDNUM_LIST})_r${RNUM}p${PNUM}_fullcat.fits ]]; then
 	psffiles="$psffiles $lsfile"
-    echo "AG MA TEST ZP 2"
+    
     elif [[ $lsfile == *allZP_D$(printf %08d ${EXPNUM})_r${RNUM}p${PNUM}.csv ]] || [[ $lsfile == *D$(printf %08d ${EXPNUM})_r${RNUM}p${PNUM}_ZP.csv ]] ; then
 	csvfiles="$csvfiles $lsfile"
-    echo "AG MA TEST ZP 3"
+    
     elif [[ $lsfile == /pnfs/des/${DESTCACHE}/${SCHEMA}/exp/${NITE}/${EXPNUM}/allZP_D$(printf %08d ${EXPNUM})_r${RNUM}p${PNUM}.csv ]] || [[ $lsfile ==  /pnfs/des/${DESTCACHE}/${SCHEMA}/exp/${NITE}/${EXPNUM}/Zero_D$(printf %08d ${EXPNUM})_$(printf %02d $CCDNUM_LIST)_r${RNUM}p${PNUM}.csv ]] || [[ $lsfile == /pnfs/des/${DESTCACHE}/${SCHEMA}/exp/${NITE}/${EXPNUM}/D$(printf %08d ${EXPNUM})_$(printf %02d $CCDNUM_LIST)_r${RNUM}p${PNUM}_ZP.csv ]] ; then
 	ccdcsvfiles="$ccdcsvfiles $lsfile"
-    echo "AG MA TEST ZP 4"
+    
     elif [[ $lsfile == */${EXPNUM}.out ]]; then
 	dotoutfile=$lsfile
-    echo "AG MA TEST ZP 5"
+    
     elif [[ $lsfile == */${EXPNUM}_$(printf %d ${ccdlist}).out ]]; then
     	ccddotoutfile=$lsfile
-        echo "AG MA TEST ZP 6"
+        
     fi
 done
 # get filenames
@@ -525,7 +525,7 @@ EOF
     
     sed -i -e "/^nite\:/ s/nite\:.*/nite\: ${NITE}/" -e "/^expnum\:/ s/expnum\:.*/expnum\: ${EXPNUM}/" -e "/^filter\:/ s/filter:.*/filter\: ${BAND}/" -e "/^r\:/ s/r:.*/r\: ${RNUM}/" -e "/^p\:/ s/p:.*/p\: ${PNUM}/" confFile
     
-    setup -j finalcut Y6A1+2 -Z /cvmfs/des.opensciencegrid.org/2015_Q2/eeups/SL6/eups/packages
+    setup finalcut Y6A1+2
     setup diffimg gw8
     setup CoreUtils 1.0.1+0
     setup wcstools 3.9.6+0
@@ -588,7 +588,7 @@ EOF
 	
 	
     #touch bliss_test.log
-	./BLISS-expCalib_Y3apass-old.py --expnum $EXPNUM --reqnum $RNUM --attnum $PNUM --ccd $CCDNUM_LIST &> /data/des80.a/data/desgw/maria_tests_2/gw_workflow/967887_57_test_2/bliss_test.log
+	./BLISS-expCalib_Y3apass-old.py --expnum $EXPNUM --reqnum $RNUM --attnum $PNUM --ccd $CCDNUM_LIST
 	
 	RESULT=$? 
 	echo "BLISS-expCalib_Y3pass-old.py exited with status $RESULT"
@@ -710,8 +710,8 @@ for c in $ccdlist; do
     setup cxOracle
     setup oracleclient
     setup -j fitsio -Z /cvmfs/des.opensciencegrid.org/eeups/fnaleups   
-    setup -j astropy -Z /cvmfs/des.opensciencegrid.org/2015_Q2/eeups/SL6/eups/packages
-    setup -j scipy -Z /cvmfs/des.opensciencegrid.org/2015_Q2/eeups/SL6/eups/packages
+    setup astropy
+    setup scipy
     setup -j sep -Z /cvmfs/des.opensciencegrid.org/eeups/fnaleups
     setup wcslib
     setup cfitsio
@@ -1073,17 +1073,17 @@ for c in $ccdlist; do
 		done
                 # add the header if the file has content
 		if [ -s D${overlapexp8}_r${RNUM}p${PNUM}_ZP.csv ]; then
-		    echo "AG MA TEST 1"
+		    
 		    sed -i -e "1 i\ID,EXPNUM,CCDNUM,NUMBER,ALPHAWIN_J2000,DELTAWIN_J2000,FLUX_AUTO,FLUXERR_AUTO,FLUX_PSF,FLUXERR_PSF,MAG_AUTO,MAGERR_AUTO,MAG_PSF,MAGERR_PSF,SPREAD_MODEL,SPREADERR_MODEL,FWHM_WORLD,FWHMPSF_IMAGE,FWHMPSF_WORLD,CLASS_STAR,FLAGS,IMAFLAGS_ISO,ZeroPoint,ZeroPoint_rms,ZeroPoint_FLAGS" D${overlapexp8}_r${RNUM}p${PNUM}_ZP.csv
 		else
 		    # nothing was written into the file, so we delete this combined csv file to avoid problems later
-		    echo "AG MA TEST 2"
+		    
 		    rm  D${overlapexp8}_r${RNUM}p${PNUM}_ZP.csv
 		fi
 		
 	    fi
 	    # final check for an empty csv file
-	    if [ $(wc -l D${overlapexp8}_r${RNUM}p${PNUM}_ZP.csv | awk '{print $1}') -lt 2 ]; then rm D${overlapexp8}_r${RNUM}p${PNUM}_ZP.csv ; echo "AG TEST11"; fi
+	    if [ $(wc -l D${overlapexp8}_r${RNUM}p${PNUM}_ZP.csv | awk '{print $1}') -lt 2 ]; then rm D${overlapexp8}_r${RNUM}p${PNUM}_ZP.csv ; fi
 	fi
     done
     # makestarcat
@@ -1206,18 +1206,18 @@ for c in $ccdlist; do
 		echo "WARNING: STARCAT_NAME is set but SNVETO_NAME is not. The SN veto file will be created with the default name."
 		## AG MA TEST
 		python ${GW_UTILS_DIR}/code/makestarcat.py -e $EXPNUM -n $NITE -r $RNUM -p $PNUM -b $BAND --ccd $c -s `echo $procnum | sed -e s/dp//` -snveto $SNVETO_NAME
-        echo "AG MA TESTD 1"
+        
 		#python /data/des80.a/data/desgw/maria_tests_2/gw_workflow/starcat_fixes/makestarcat.py -e $EXPNUM -n $NITE -r $RNUM -p $PNUM -b $BAND --ccd $c -s `echo $procnum | sed -e s/dp//` -snveto $SNVETO_NAME &> makestarcat_test.log
 		MAKESTARCAT_RESULT=$?
             fi
 	elif [ "x$SNVETO_NAME" == "x" ]; then
             echo "WARNING: STARCAT_NAME is set but SNVETO_NAME is not. The SN veto file will be created with the default name."
-            echo "AG MA TESTD 2"
+            
             python ${GW_UTILS_DIR}/code/makestarcat.py -e $EXPNUM -n $NITE -r $RNUM -p $PNUM -b $BAND --ccd $c -s `echo $procnum | sed -e s/dp//` -snstar $STARCAT_NAME
 	    #python /data/des80.a/data/desgw/maria_tests_2/gw_workflow/starcat_fixes/makestarcat.py -e $EXPNUM -n $NITE -r $RNUM -p $PNUM -b $BAND --ccd $c -s `echo $procnum | sed -e s/dp//` -snstar $STARCAT_NAME &> makestarcat_test.log
             MAKESTARCAT_RESULT=$?
 	else
-        echo "AG MA TESTD 3"
+        
             python ${GW_UTILS_DIR}/code/makestarcat.py -e $EXPNUM -n $NITE -r $RNUM -p $PNUM -b $BAND --ccd $c -s `echo $procnum | sed -e s/dp//` -snstar $STARCAT_NAME -snveto $SNVETO_NAME
 	    #python /data/des80.a/data/desgw/maria_tests_2/gw_workflow/starcat_fixes/makestarcat.py -e $EXPNUM -n $NITE -r $RNUM -p $PNUM -b $BAND --ccd $c -s `echo $procnum | sed -e s/dp//` -snstar $STARCAT_NAME -snveto $SNVETO_NAME &> makestarcat_test.log
             MAKESTARCAT_RESULT=$?
