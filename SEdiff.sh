@@ -225,7 +225,7 @@ do
     
     elif [[ $lsfile == */${EXPNUM}_$(printf %d ${ccdlist}).out ]]; then
     	ccddotoutfile=$lsfile
-        
+    
     fi
 done
 # get filenames
@@ -263,6 +263,7 @@ else
     echo "immask files not all present; continuing with the job."
 fi
 
+
 # do SE processing
 if [ "$SKIPSE" == "false" ] ; then # if statement allows SE to be skipped if SE is complete and the -O flag is not used
     echo "***** BEGIN SE PROCESSING *****"
@@ -281,6 +282,7 @@ if [ "$SKIPSE" == "false" ] ; then # if statement allows SE to be skipped if SE 
     tar xzf ./MySoft4_v2.tar.gz
     #NORA FIX 
     ifdh cp /pnfs/des/scratch/nsherman/desdmLiby1e2.py ./
+    #cp ../desdmLiby1e2.py ./
     #END NORA FIX 
     tar xzfm ./test_mysql_libs.tar.gz
        
@@ -525,6 +527,7 @@ EOF
     
     sed -i -e "/^nite\:/ s/nite\:.*/nite\: ${NITE}/" -e "/^expnum\:/ s/expnum\:.*/expnum\: ${EXPNUM}/" -e "/^filter\:/ s/filter:.*/filter\: ${BAND}/" -e "/^r\:/ s/r:.*/r\: ${RNUM}/" -e "/^p\:/ s/p:.*/p\: ${PNUM}/" confFile
     
+    #setup -j finalcut Y6A1+2 -Z /cvmfs/des.opensciencegrid.org/2015_Q2/eeups/SL6/eups/packages
     setup finalcut Y6A1+2
     setup diffimg gw8
     setup CoreUtils 1.0.1+0
@@ -534,8 +537,6 @@ EOF
     
     export LD_LIBRARY_PATH=${LD_LIBRARY_PATH}:${PWD}/usr/lib64/mysql
 
-
-    
 # in case single epoch processing was already done, skip that step
     if [ "$JUMPTOEXPCALIB" == "true" ] ; then
 	echo "jumping to the calibration step..."
@@ -588,6 +589,10 @@ EOF
 	
 	
     #touch bliss_test.log
+	ifdh cp /pnfs/des/scratch/nsherman/BLISS-expCalib_Y3apass-old-Nora.py ./BLISS-expCalib_Y3apass-old.py
+        
+	#cp ../BLISS-expCalib_Y3apass-old-Nora.py ./BLISS-expCalib_Y3apass-old.py
+	
 	./BLISS-expCalib_Y3apass-old.py --expnum $EXPNUM --reqnum $RNUM --attnum $PNUM --ccd $CCDNUM_LIST
 	
 	RESULT=$? 
@@ -639,7 +644,7 @@ if [ ! -s ${EXPNUM}.out ]; then
     fi
 fi
 
-    
+
 # if any of them failed remove them from WS_diff.list
 echo "FAILEDEXPS = $FAILEDEXPS"
 for failedexp in $FAILEDEXPS
@@ -710,6 +715,8 @@ for c in $ccdlist; do
     setup cxOracle
     setup oracleclient
     setup -j fitsio -Z /cvmfs/des.opensciencegrid.org/eeups/fnaleups   
+    #setup -j astropy -Z /cvmfs/des.opensciencegrid.org/2015_Q2/eeups/SL6/eups/packages
+    #setup -j scipy -Z /cvmfs/des.opensciencegrid.org/2015_Q2/eeups/SL6/eups/packages
     setup astropy
     setup scipy
     setup -j sep -Z /cvmfs/des.opensciencegrid.org/eeups/fnaleups
@@ -748,6 +755,8 @@ for c in $ccdlist; do
     export DIFFIMG_HOST=FNAL
     # use catalog dir in stashCache if StashCache works on this worker node. Otherwise fall back to regular CVMFS.
     # try to read testfile in stashcache ; to check if StashCache is correct version and readable
+
+    
     STASHTEST=$( cat /cvmfs/des.osgstorage.org/stash/test.stashdes.1M > /dev/null 2>&1)
     if [ $? -eq 0 ] && [ -d /cvmfs/des.osgstorage.org/stash/fnal/SNscampCatalog ]; then
         export SCAMP_CATALOG_DIR=/cvmfs/des.osgstorage.org/stash/fnal/SNscampCatalog  
@@ -788,6 +797,9 @@ for c in $ccdlist; do
     mkdir -p ${TOPDIR_WSDIFF}/pairs
 
     mkdir -p ${TOPDIR_SNFORCEPHOTO_IMAGES}/${NITE} $DES_ROOT $TOPDIR_SNFORCEPHOTO_OUTPUT $TOPDIR_DATAFILES_PUBLIC
+
+
+    
 
     # now copy in the template files
     # so now what we are going to do is copy in the .out files from the overlap_CCD part, and then use those to build the pairs, only 
@@ -832,6 +844,7 @@ for c in $ccdlist; do
 	    fi
 	fi
     done
+
     
     #show output of copy
     echo "contents of pairs directory:"
@@ -927,6 +940,7 @@ for c in $ccdlist; do
     }  # end create_pairs
 
 
+    
     # figure out how many out files we have and make the pairs (exclude the search exposure.out from this list)
     dotoutfiles=$(ls ${TOPDIR_WSDIFF}/pairs/*.out | grep -v "${EXPNUM}-" )
     echo $dotoutfiles
@@ -965,6 +979,7 @@ for c in $ccdlist; do
         create_pairs
     done
 
+   
     # now we have the searchexp-overlapexp.out files in the pairs directory so we parse them to see which template/CCD files we actually need in this job
 
     # link necessary as of diffimg gwdevel7
@@ -981,6 +996,9 @@ for c in $ccdlist; do
 	echo "If you were just trying to do SE processing, try using the -t option"
 	exit 1
     fi
+
+    
+    YOURHOME=$PWD
 
     for overlapfile in `ls ${TOPDIR_WSDIFF}/pairs/${EXPNUM}-*.out`
     do
@@ -1058,9 +1076,17 @@ for c in $ccdlist; do
 		    echo "Error in ifdh cp ${IFDHCP_OPT} /pnfs/des/${DESTCACHE}/${SCHEMA}/exp/${overlapnite}/${overlapexp}/D`printf %08d $overlapexp`_${BAND}_`printf %02d $overlapccd`_${rpnum}_immask.fits WSTemplates/data/DECam_${overlapexp}/ !!!"
 		fi
             fi
-            cd ../../../
+	    
+	    if [[ ../../../ -ef $YOURHOME ]]; then
+		cd ../../../
+	    else
+		echo "Something is not right. Moving into $YOURHOME"
+		cd $YOURHOME
+	    fi
             
         done
+
+	
 	overlapexp8=$(printf %08d $overlapexp)
 	if [ "${STARCAT_NAME}" != "" ] || [ "${SNVETO_NAME}" != "" ]; then
 	    # if there is not already an existing D${overlapexp8}_r${RNUM}p${PNUM}_ZP.csv AND we have some  D${overlapexp8}_[0-6][0-9]_r${RNUM}p${PNUM}_ZP.csv files with content
@@ -1087,7 +1113,6 @@ for c in $ccdlist; do
 	fi
     done
     # makestarcat
-
 
 
 
@@ -1206,13 +1231,13 @@ for c in $ccdlist; do
 		echo "WARNING: STARCAT_NAME is set but SNVETO_NAME is not. The SN veto file will be created with the default name."
 		## AG MA TEST
 		python ${GW_UTILS_DIR}/code/makestarcat.py -e $EXPNUM -n $NITE -r $RNUM -p $PNUM -b $BAND --ccd $c -s `echo $procnum | sed -e s/dp//` -snveto $SNVETO_NAME
-        
+   
 		#python /data/des80.a/data/desgw/maria_tests_2/gw_workflow/starcat_fixes/makestarcat.py -e $EXPNUM -n $NITE -r $RNUM -p $PNUM -b $BAND --ccd $c -s `echo $procnum | sed -e s/dp//` -snveto $SNVETO_NAME &> makestarcat_test.log
 		MAKESTARCAT_RESULT=$?
             fi
 	elif [ "x$SNVETO_NAME" == "x" ]; then
             echo "WARNING: STARCAT_NAME is set but SNVETO_NAME is not. The SN veto file will be created with the default name."
-            
+           
             python ${GW_UTILS_DIR}/code/makestarcat.py -e $EXPNUM -n $NITE -r $RNUM -p $PNUM -b $BAND --ccd $c -s `echo $procnum | sed -e s/dp//` -snstar $STARCAT_NAME
 	    #python /data/des80.a/data/desgw/maria_tests_2/gw_workflow/starcat_fixes/makestarcat.py -e $EXPNUM -n $NITE -r $RNUM -p $PNUM -b $BAND --ccd $c -s `echo $procnum | sed -e s/dp//` -snstar $STARCAT_NAME &> makestarcat_test.log
             MAKESTARCAT_RESULT=$?
