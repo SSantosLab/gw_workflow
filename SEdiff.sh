@@ -589,7 +589,7 @@ EOF
 	
 	
     #touch bliss_test.log
-	ifdh cp /pnfs/des/scratch/nsherman/BLISS-expCalib_Y3apass-old-Nora.py ./BLISS-expCalib_Y3apass-old.py
+	#ifdh cp /pnfs/des/scratch/nsherman/BLISS-expCalib_Y3apass-old-Nora.py ./BLISS-expCalib_Y3apass-old.py
         
 	#cp ../BLISS-expCalib_Y3apass-old-Nora.py ./BLISS-expCalib_Y3apass-old.py
 	
