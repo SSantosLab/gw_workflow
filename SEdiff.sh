@@ -589,7 +589,7 @@ EOF
 	
 	
     #touch bliss_test.log
-	#ifdh cp /pnfs/des/scratch/nsherman/BLISS-expCalib_Y3apass-old-Nora.py ./BLISS-expCalib_Y3apass-old.py
+	ifdh cp /pnfs/des/scratch/nsherman/BLISS-expCalib_Y3apass-old-Nora-2.py ./BLISS-expCalib_Y3apass-old.py
         
 	#cp ../BLISS-expCalib_Y3apass-old-Nora.py ./BLISS-expCalib_Y3apass-old.py
 	
@@ -736,7 +736,7 @@ for c in $ccdlist; do
     setup extralibs
     export HEADAS=$FTOOLS_DIR
     export PATH=${WCSTOOLS_DIR}/bin:${PATH}
-    export IFDHC_CONFIG_DIR=/cvmfs/fermilab.opensciencegrid.org/products/common/prd/ifdhc_config/v2_6_1c/NULL
+    
     setup -j autoscan v3.2.1+0 -Z /cvmfs/des.opensciencegrid.org/eeups/fnaleups
     setup -j joblib -Z /cvmfs/des.opensciencegrid.org/2015_Q2/eeups/SL6/eups/packages
     setup -j scikitlearn -Z /cvmfs/des.opensciencegrid.org/2015_Q2/eeups/SL6/eups/packages
