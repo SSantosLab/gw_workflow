@@ -976,6 +976,9 @@ echo "now doing coy of input_files directory"
 echo "copydcmd = $COPYDCMD"
 echo "ls first:"
 ls /pnfs/des/${DESTCACHE}/${SCHEMA}/exp/${NITE}/${EXPNUM}/${procnum}/ 
+#if [ ${USER} != 'desgw' ]; then
+$MKDIRCMD /pnfs/des/${DESTCACHE}/${SCHEMA}/exp/${NITE}/${EXPNUM}/${procnum}/input_files
+#fi  
 $COPYDCMD -r mytemp_${EXPNUM}/${procnum}/input_files /pnfs/des/${DESTCACHE}/${SCHEMA}/exp/${NITE}/${EXPNUM}/${procnum}/  ||  echo "Error copying data dir!!!!"
 
 rmlist=""
