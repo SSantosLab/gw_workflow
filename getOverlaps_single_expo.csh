@@ -46,20 +46,18 @@ set drad = `echo $ddeg | awk '{printf "%12.9f\n",cos($1*'$dtor')}'`
 set nexp = `wc -l KH.list | awk '{print $1}'`
 echo $nexp
 
+# filter out exposures on the blacklist
+grep -v -xF -f ../SE_blacklist.txt KH.list > KH.list.new
+mv KH.list.new KH.list
+
 rm -f KH_diff.tmp1 KH_diff.tmp2
 
-set i = 1
-while ($i <= $nexp)
-#  while ($i <= 10)
-
-  set expinfo = (`awk '(NR=='$i')' KH.list`)
+  set expinfo = (`awk '($1=='$myexp')' KH.list`)
+  set i = `awk '($1=='$myexp') {print NR}' KH.list`
   set rar  = `echo $expinfo[4] | awk '{printf "%9.6f",$1*'${dtor}'}'`
   set decr = `echo $expinfo[5] | awk '{printf "%9.6f",$1*'${dtor}'}'`
   set band = $expinfo[6]
   set mjd = $expinfo[3]
-  if ("`grep $expinfo[1] ../SE_blacklist.txt`" == "") then
-
-  if ("$expinfo[1]" == "$myexp") then
 
     echo $expinfo > KH_diff.tmp0
 # check for any other args
@@ -117,11 +115,6 @@ while ($i <= $nexp)
   awk '(NR==1){print $0,'${ntempl}'}' KH_diff.tmp0 >> KH_diff.tmp2
   awk '(NR>1){printf "%8d %8d %10.5f %12.9f\n",$1,$2,$3-'$expinfo[3]',atan2(sqrt(1-$7*$7),$7)/'${dtor}'}' KH_diff.tmp0 >> KH_diff.tmp2
   echo hi | awk '{printf "\n"}' >> KH_diff.tmp2
-  break  
-endif
-endif
-  @ i++
-end
 
 awk '{print NF-1,$0}' KH_diff.tmp1 > KH_diff.list1
 rm -f KH_diff.tmp0 KH_diff.tmp1
