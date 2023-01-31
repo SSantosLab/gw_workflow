@@ -281,7 +281,7 @@ if [ "$SKIPSE" == "false" ] ; then # if statement allows SE to be skipped if SE 
     ifdh cp -D /pnfs/des/resilient/gw/code/MySoft4_v2.tar.gz  /pnfs/des/resilient/gw/code/test_mysql_libs.tar.gz ./ || { echo "Error copying input files. Exiting." ; exit 2 ; }
     tar xzf ./MySoft4_v2.tar.gz
     #NORA FIX 
-    ifdh cp /pnfs/des/scratch/nsherman/desdmLiby1e2.py ./
+    ifdh cp /pnfs/des/persistent/desgw/desdmLiby1e2.py ./
     #cp ../desdmLiby1e2.py ./
     #END NORA FIX 
     tar xzfm ./test_mysql_libs.tar.gz
@@ -589,7 +589,7 @@ EOF
 	
 	
     #touch bliss_test.log
-	ifdh cp /pnfs/des/scratch/nsherman/BLISS-expCalib_Y3apass-old-Nora-2.py ./BLISS-expCalib_Y3apass-old.py
+	ifdh cp /pnfs/des/persistent/desgw/BLISS-expCalib_Y3apass-old-Nora.py ./BLISS-expCalib_Y3apass-old.py
         
 	#cp ../BLISS-expCalib_Y3apass-old-Nora.py ./BLISS-expCalib_Y3apass-old.py
 	
