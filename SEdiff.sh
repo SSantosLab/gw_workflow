@@ -1057,6 +1057,19 @@ for c in $ccdlist; do
 			fi
 		    else
 			echo "Error in ifdh cp ${IFDHCP_OPT} /pnfs/des/${DESTCACHE}/${SCHEMA}/exp/${overlapnite}/${overlapexp}/D`printf %08d $overlapexp`_${BAND}_`printf %02d $overlapccd`_${rpnum}_immask.fits WSTemplates/data/DECam_${overlapexp}/ !!!"
+			#AG KH NS MA fix to stop exiting pipeline when one ccd failed SE processing
+                        echo "Removing CCD from {TOPDIR_WSDIFF}/pairs/${EXPNUM}-${overlapexp}.out"
+                        sed -i -e "s/\(.*\) ${overlapccd} /\1/" "${overlapfile}" #agtest
+                        overlapcounter=( `awk '{print $4}' ${overlapfile}` )
+                        echo $overlapcounter
+                        newcounter=`echo $overlapcounter | awk '{print $1-1}'`
+                        echo $newcounter
+                        sed -i -e "s/\(.*\) ${overlapcounter} /\1 $newcounter/" "${overlapfile}"
+			if [ "${newcounter}" -lt 1 ]; then
+			    # Change the SEARCHEXP_TEMPEXP.out to .no (but how?)
+			    mv ${TOPDIR_WSDIFF}/pairs/${EXPNUM}-${overlapexp}.out ${TOPDIR_WSDIFF}/pairs/${EXPNUM}-${overlapexp}.no
+			    #mv SEARCHEXP_TEMPEXP.out SEARCHEXP_TEMPEXP.no
+			fi
 		    fi  
                 fi
                 # copy the ccd files over
@@ -1177,7 +1190,8 @@ for c in $ccdlist; do
     fi
     # if we are outside the footprint (then SNSTAR_FILENAME and SNVETO_FILENAME are set), we make our own starcat (with gaia), using the BLISS.py outputs
     if [ ! -z "$SNSTAR_FILENAME" ]; then
-        cp ${DIFFIMG_DIR}/bin/makeWSTemplates.sh ./ 
+        #cp ${DIFFIMG_DIR}/bin/makeWSTemplates.sh ./
+	cp /pnfs/des/persistent/desgw/makeWSTemplates_Nora.sh ./makeWSTemplates.sh #Cuz actually the above script doesn't accomodate the fact that we have over 1mil exposures
         export PATH=${PWD}:${PATH}
         if [ -s ${SNSTAR_FILENAME} ]; then
             echo "using local copy of SNSTAR"
