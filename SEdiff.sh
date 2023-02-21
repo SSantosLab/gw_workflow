@@ -1191,7 +1191,7 @@ for c in $ccdlist; do
     # if we are outside the footprint (then SNSTAR_FILENAME and SNVETO_FILENAME are set), we make our own starcat (with gaia), using the BLISS.py outputs
     if [ ! -z "$SNSTAR_FILENAME" ]; then
         #cp ${DIFFIMG_DIR}/bin/makeWSTemplates.sh ./
-	cp /pnfs/des/persistent/desgw/makeWSTemplates_Nora.sh ./makeWSTemplates.sh #Cuz actually the above script doesn't accomodate the fact that we have over 1mil exposures
+	ifdh cp /pnfs/des/persistent/desgw/makeWSTemplates_Nora.sh ./makeWSTemplates.sh #Cuz actually the above script doesn't accomodate the fact that we have over 1mil exposures
         export PATH=${PWD}:${PATH}
         if [ -s ${SNSTAR_FILENAME} ]; then
             echo "using local copy of SNSTAR"
