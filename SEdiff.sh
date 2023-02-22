@@ -281,7 +281,7 @@ if [ "$SKIPSE" == "false" ] ; then # if statement allows SE to be skipped if SE 
     ifdh cp -D /pnfs/des/resilient/gw/code/MySoft4_v2.tar.gz  /pnfs/des/resilient/gw/code/test_mysql_libs.tar.gz ./ || { echo "Error copying input files. Exiting." ; exit 2 ; }
     tar xzf ./MySoft4_v2.tar.gz
     #NORA FIX 
-    ifdh cp /pnfs/des/persistent/desgw/desdmLiby1e2.py ./
+    ifdh cp /pnfs/des/scratch/macevedo/desdmLiby1e2.py ./
     #cp ../desdmLiby1e2.py ./
     #END NORA FIX 
     tar xzfm ./test_mysql_libs.tar.gz
@@ -1058,7 +1058,7 @@ for c in $ccdlist; do
 		    else
 			echo "Error in ifdh cp ${IFDHCP_OPT} /pnfs/des/${DESTCACHE}/${SCHEMA}/exp/${overlapnite}/${overlapexp}/D`printf %08d $overlapexp`_${BAND}_`printf %02d $overlapccd`_${rpnum}_immask.fits WSTemplates/data/DECam_${overlapexp}/ !!!"
 			#AG KH NS MA fix to stop exiting pipeline when one ccd failed SE processing
-                        echo "Removing CCD from {TOPDIR_WSDIFF}/pairs/${EXPNUM}-${overlapexp}.out"
+                        echo "Removing CCD from ${TOPDIR_WSDIFF}/pairs/${EXPNUM}-${overlapexp}.out"
                         sed -i -e "s/\(.*\) ${overlapccd} /\1/" "${overlapfile}" #agtest
                         overlapcounter=( `awk '{print $4}' ${overlapfile}` )
                         echo $overlapcounter
@@ -1087,6 +1087,18 @@ for c in $ccdlist; do
 		    fi
 		else
 		    echo "Error in ifdh cp ${IFDHCP_OPT} /pnfs/des/${DESTCACHE}/${SCHEMA}/exp/${overlapnite}/${overlapexp}/D`printf %08d $overlapexp`_${BAND}_`printf %02d $overlapccd`_${rpnum}_immask.fits WSTemplates/data/DECam_${overlapexp}/ !!!"
+
+		    echo "Removing CCD from ${TOPDIR_WSDIFF}/pairs/${EXPNUM}-${overlapexp}.out"
+                    sed -i -e "s/\(.*\) ${overlapccd} /\1/" "${overlapfile}" #agtest
+                    overlapcounter=( `awk '{print $4}' ${overlapfile}` )
+                    echo $overlapcounter
+                    newcounter=`echo $overlapcounter | awk '{print $1-1}'`
+                    echo $newcounter
+                    sed -i -e "s/\(.*\) ${overlapcounter} /\1 $newcounter/" "${overlapfile}"
+                    if [ "${newcounter}" -lt 1 ]; then
+                        # Change the SEARCHEXP_TEMPEXP.out to .no (but how?)
+                        mv ${TOPDIR_WSDIFF}/pairs/${EXPNUM}-${overlapexp}.out ${TOPDIR_WSDIFF}/pairs/${EX\PNUM}-${overlapexp}.no
+		    fi
 		fi
             fi
 	    
