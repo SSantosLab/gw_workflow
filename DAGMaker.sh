@@ -1005,8 +1005,8 @@ if [ $NOTEMPS -eq 1 ]; then
 fi
 
 echo "To submit this DAG do"
-echo "jobsub_submit_dag -G des --role=DESGW file://${outfile}"
+echo "jobsub_submit_dag -G des --role=desgw file://${outfile}"
 
 touch mytemp_${EXPNUM}/DAGMaker.DONE
-echo "jobsub_submit_dag -G des --role=DESGW file://${outfile}" >> mytemp_${EXPNUM}/DAGMaker.DONE
+echo "jobsub_submit_dag -G des --role=desgw file://${outfile}" >> mytemp_${EXPNUM}/DAGMaker.DONE
 rm -r syspfiles_$$
