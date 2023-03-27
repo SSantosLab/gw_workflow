@@ -73,6 +73,12 @@ export EXPERIMENT=des
 
 export IFDH_NO_PROXY=1
 
+#export IFDH_TOKEN_ENABLE=1
+
+#if [ "${GRID_USER}" = "desgw" ]; then 
+#    export HTGETTOKENOPTS="--credkey=desgw/managedtokens/fifeutilgpvm01.fnal.gov" ; 
+#fi
+
 export IFDH_GRIDFTP_EXTRA="-st 1800"
 export XRD_REQUESTTIMEOUT=1200
 
@@ -281,7 +287,7 @@ if [ "$SKIPSE" == "false" ] ; then # if statement allows SE to be skipped if SE 
     ifdh cp -D /pnfs/des/resilient/gw/code/MySoft4_v2.tar.gz  /pnfs/des/resilient/gw/code/test_mysql_libs.tar.gz ./ || { echo "Error copying input files. Exiting." ; exit 2 ; }
     tar xzf ./MySoft4_v2.tar.gz
     #NORA FIX 
-    ifdh cp /pnfs/des/scratch/macevedo/desdmLiby1e2.py ./
+    ifdh cp /pnfs/des/persistent/desgw/desdmLiby1e2.py ./
     #cp ../desdmLiby1e2.py ./
     #END NORA FIX 
     tar xzfm ./test_mysql_libs.tar.gz
@@ -1305,7 +1311,7 @@ fi
     if [ "${FULLCOPY}" == "true" ]; then
         FPACKFILES=$(ls WS*.fits)
     fi
-    if [ -z $FPACKFILES ]; then echo "No expected output files to add!" ; fi
+    if [ -z "${FPACKFILES}" ]; then echo "No expected output files to add!" ; fi
 
     PACKEDFILES=""
     for file in $FPACKFILES
