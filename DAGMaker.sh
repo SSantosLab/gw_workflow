@@ -245,8 +245,7 @@ if [ ! -f $optionalfile ] ; then echo "Warning: $optionalfile not found." ; fi
 RNUM="2"
 PNUM="01"
 SEASON="11"
-JOBSUB_OPTS="--memory=3000MB --expected-lifetime=medium --cpu=4 --mail_on_error --email-to=kherner@fnal.gov"
-RESOURCES="DEDICATED,OPPORTUNISTIC,OFFSITE"
+JOBSUB_OPTS="--memory=3000MB --expected-lifetime=medium --cpu=1 --mail_on_error --email-to=kherner@fnal.gov"
 DIFFIMG_EUPS_VERSION="gw8"
 WRITEDB="off"
 RM_MYTEMP="false"
@@ -297,7 +296,6 @@ echo "WRITEDB = $WRITEDB (default is WRITEDB=off; set WRITEDB=on if you want out
 echo "RM_MYTEMP = $RM_MYTEMP"  
 echo "IGNORECALIB = $IGNORECALIB (default is false)"
 echo "JOBSUB_OPTS = $JOBSUB_OPTS"
-echo "RESOURCES = $RESOURCES"
 echo "DIFFIMG_EUPS_VERSION = $DIFFIMG_EUPS_VERSION"
 echo "DESTCACHE = $DESTCACHE"
 echo "SCHEMA = $SCHEMA"
@@ -454,7 +452,7 @@ touch $templatecopyfile
 echo "<parallel>" >> $outfile
 
 # stick a dummy job in here so that there is something just in case there ends up being nothing to do for parallel processing
-echo "jobsub -n --group=des --resource-provides=usage_model=${RESOURCES} --memory=500MB --disk=100MB --expected-lifetime=600s file://dummyjob.sh" >> $outfile
+echo "jobsub -n --group=des --memory=500MB --disk=100MB --expected-lifetime=600s file://dummyjob.sh" >> $outfile
 
 
 # initialize empty list of files for the copy pairs output
@@ -723,13 +721,13 @@ do
                 do
                     if [ $ichip -ne 2 ] && [ $ichip -ne 31 ] && [ $ichip -ne 61 ] ; then
 			# CHANGE 11-20-18 TO RUN SEDiff ON ALL EXPOSURES EXPLIST --> overlapnum
-                        echo "jobsub -n --group=des --lines='+SingularityImage=\\\"/cvmfs/singularity.opensciencegrid.org/fermilab/fnal-wn-sl7:latest\\\"' --resource-provides=usage_model=${RESOURCES} $JOBSUB_OPTS --append_condor_requirements='(TARGET.GLIDEIN_Site==\\\"FermiGrid\\\"||(TARGET.HAS_SINGULARITY==true&&TARGET.HAS_CVMFS_des_opensciencegrid_org==true&&TARGET.HAS_CVMFS_des_osgstorage_org==true)${STASHVER})' file://SEdiff.sh -r $RNUM -p $PNUM -E $EXPLIST -v $DIFFIMG_EUPS_VERSION -b $BAND -n $overlapnite $JUMPTOEXPCALIBOPTION -d $DESTCACHE -m $SCHEMA $SEARCH_OPTS -c $ichip -S $procnum $(echo $SNSTAR_OPTS | sed -e "s/\${CCDNUM_LIST}/${ichip}/") $(echo $SNVETO_OPTS | sed -e "s/\${CCDNUM_LIST}/${ichip}/")" >> $searchfile
+                        echo "jobsub -n --group=des --singularity-image /cvmfs/singularity.opensciencegrid.org/fermilab/fnal-wn-sl7:latest $JOBSUB_OPTS --append_condor_requirements='(TARGET.GLIDEIN_Site==\\\"FermiGrid\\\"||(TARGET.HAS_SINGULARITY==true&&TARGET.HAS_CVMFS_des_opensciencegrid_org==true&&TARGET.HAS_CVMFS_des_osgstorage_org==true)${STASHVER})' file://SEdiff.sh -r $RNUM -p $PNUM -E $EXPLIST -v $DIFFIMG_EUPS_VERSION -b $BAND -n $overlapnite $JUMPTOEXPCALIBOPTION -d $DESTCACHE -m $SCHEMA $SEARCH_OPTS -c $ichip -S $procnum $(echo $SNSTAR_OPTS | sed -e "s/\${CCDNUM_LIST}/${ichip}/") $(echo $SNVETO_OPTS | sed -e "s/\${CCDNUM_LIST}/${ichip}/")" >> $searchfile
     #                       echo wrote chip $ichip to $searchfile
                     fi    
                 done
 #                cat $searchfile
             else		
-		echo "jobsub -n --group=des --lines='+SingularityImage=\\\"/cvmfs/singularity.opensciencegrid.org/fermilab/fnal-wn-sl7:latest\\\"' --resource-provides=usage_model=${RESOURCES} $JOBSUB_OPTS -N 60 --append_condor_requirements='(TARGET.GLIDEIN_Site==\\\"FermiGrid\\\"||(TARGET.HAS_SINGULARITY==true&&TARGET.HAS_CVMFS_des_opensciencegrid_org==true&&TARGET.HAS_CVMFS_des_osgstorage_org==true))' file://SEdiff.sh -r $RNUM -p $PNUM -E $overlapnum -v $DIFFIMG_EUPS_VERSION -b $BAND -n $overlapnite $JUMPTOEXPCALIBOPTION -d $DESTCACHE -m $SCHEMA -c 0 -t $TEMP_OPTS -S $procnum" >> $outfile
+		echo "jobsub -n --group=des --singularity-image /cvmfs/singularity.opensciencegrid.org/fermilab/fnal-wn-sl7:latest $JOBSUB_OPTS -N 60 --append_condor_requirements='(TARGET.GLIDEIN_Site==\\\"FermiGrid\\\"||(TARGET.HAS_SINGULARITY==true&&TARGET.HAS_CVMFS_des_opensciencegrid_org==true&&TARGET.HAS_CVMFS_des_osgstorage_org==true))' file://SEdiff.sh -r $RNUM -p $PNUM -E $overlapnum -v $DIFFIMG_EUPS_VERSION -b $BAND -n $overlapnite $JUMPTOEXPCALIBOPTION -d $DESTCACHE -m $SCHEMA -c 0 -t $TEMP_OPTS -S $procnum" >> $outfile
             fi
             # add the .out file for this overlap image to the list to be copied
             DOTOUTFILES="${DOTOUTFILES} /pnfs/des/${DESTCACHE}/${SCHEMA}/exp/$overlapnite/$overlapnum/${overlapnum}.out"
@@ -796,7 +794,7 @@ fi
 if [ $(awk '{print $1}' mytemp_${EXPNUM}/KH_diff.list1 ) -gt 1 ]; then
 # Add the runmon step at the end of the dag. wait until now because we need to determine the field first. Only do it if there are templates though, since there will be no diffimg jobs otherwise.
 echo "<serial>" >> $outfile
-echo "jobsub -n --group=des --lines='+SingularityImage=\\\"/cvmfs/singularity.opensciencegrid.org/fermilab/fnal-wn-sl7:latest\\\"' --resource-provides=usage_model=$RESOURCES $JOBSUB_OPTS --expected-lifetime=7200s  --append_condor_requirements='(TARGET.GLIDEIN_Site==\\\"FermiGrid\\\"||TARGET.HAS_CVMFS_des_opensciencegrid_org==true)' file://RUNMON.sh -r $rpnum -p $procnum -E $EXPNUM -n $NITE -f $FIELD -d $DESTCACHE -m $SCHEMA" >> $outfile
+echo "jobsub -n --group=des --singularity-image /cvmfs/singularity.opensciencegrid.org/fermilab/fnal-wn-sl7:latest $JOBSUB_OPTS --expected-lifetime=7200s  --append_condor_requirements='(TARGET.GLIDEIN_Site==\\\"FermiGrid\\\"||TARGET.HAS_CVMFS_des_opensciencegrid_org==true)' file://RUNMON.sh -r $rpnum -p $procnum -E $EXPNUM -n $NITE -f $FIELD -d $DESTCACHE -m $SCHEMA" >> $outfile
 echo "</serial>" >> $outfile
 fi
 # edit the template files to match this exposure
