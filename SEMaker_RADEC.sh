@@ -329,18 +329,38 @@ chmod a+x dummyjob.sh
 
 echo "set up environment, and handy commands"
 
-# pull the setps from setup-diffImg
-. /cvmfs/des.opensciencegrid.org/eeups/startupcachejob21i.sh 
+source /cvmfs/des.opensciencegrid.org/ncsa/centos7/finalcut/Y6A1+2/eups/desdm_eups_setup.sh
+# source /cvmfs/des.opensciencegrid.org/eeups/startupcachejob31i.sh                                                                                                                                                                                                             
+export EUPS_PATH=/cvmfs/des.opensciencegrid.org/ncsa/centos7/finalcut/Y6A1+2/eups/packages:/cvmfs/des.opensciencegrid.org/eeups/fnaleups:/cvmfs/des.opensciencegrid.org/2015_Q2/eeups/SL6/eups/packages
+setup oracleclient
+setup wcslib
+setup cfitsio
+setup cfitsio_shared
+setup gsl
+setup diffimg gw8
+setup CoreUtils 1.0.1+0
+setup wcstools 3.9.6+0
+export WCS_INC=-I${WCSLIB_DIR}/include/wcslib
+export SNANA_DIR=/cvmfs/des.opensciencegrid.org/eeups/fnaleups/Linux64/SNANA/v11_03e
+export EUPS_PATH=${EUPS_PATH}:/cvmfs/des.opensciencegrid.org/eeups/fnaleups
 
-export CIGETCERTLIBS_DIR=/cvmfs/fermilab.opensciencegrid.org/products/common/prd/cigetcertlibs/v1_1/Linux64bit-2-6-2-12
-
-export EUPS_PATH=/cvmfs/des.opensciencegrid.org/eeups/fnaleups:$EUPS_PATH
+setup -j ftools v6.17
+export HEADAS=$FTOOLS_DIR
+export PATH=$DIFFIMG_DIR/bin:$PATH
+export PATH=${WCSTOOLS_DIR}/bin:${PATH}
+export DIFFIMG_HOST=FNAL
+#for IFDH                                                                                                                                                                                                                                                                       
+export EXPERIMENT=des
+export PATH=${PATH}:/cvmfs/fermilab.opensciencegrid.org/products/common/db/../prd/cpn/v1_7/NULL/bin:/cvmfs/fermilab.opensciencegrid.org/products/common/prd/ifdhc/v2_6_1/Linux64bit-3-10-2-17/bin
+export PYTHONPATH=${PYTHONPATH}:/cvmfs/fermilab.opensciencegrid.org/products/common/prd/ifdhc/v2_6_1/Linux64bit-3-10-2-17/lib/python
+export IFDHC_CONFIG_DIR=/cvmfs/fermilab.opensciencegrid.org/products/common/prd/ifdhc_config/v2_6_1a/NULL
+export IFDH_NO_PROXY=1
+export IFDH_CP_UNLINK_ON_ERROR=1
+export IFDH_CP_MAXRETRIES=2
 
 # setup a specific version of perl so that we know what we're getting
 setup perl 5.18.1+6 || exit 134
 
-# setup other useful packages and env variables
-setup Y2Nstack
 setup diffimg $DIFFIMG_EUPS_VERSION
 setup ftools v6.17
 export HEADAS=$FTOOLS_DIR
