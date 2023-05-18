@@ -352,9 +352,9 @@ export PATH=${WCSTOOLS_DIR}/bin:${PATH}
 export DIFFIMG_HOST=FNAL
 #for IFDH
 export EXPERIMENT=des
-export PATH=${PATH}:/cvmfs/fermilab.opensciencegrid.org/products/common/db/../prd/cpn/v1_7/NULL/bin:/cvmfs/fermilab.opensciencegrid.org/products/common/prd/ifdhc/v2_6_1/Linux64bit-3-10-2-17/bin
-export PYTHONPATH=${PYTHONPATH}:/cvmfs/fermilab.opensciencegrid.org/products/common/prd/ifdhc/v2_6_1/Linux64bit-3-10-2-17/lib/python
-export IFDHC_CONFIG_DIR=/cvmfs/fermilab.opensciencegrid.org/products/common/prd/ifdhc_config/v2_6_1a/NULL
+export PATH=${PATH}:/cvmfs/fermilab.opensciencegrid.org/products/common/db/../prd/cpn/v1_7/NULL/bin:/cvmfs/fermilab.opensciencegrid.org/products/common/prd/ifdhc/v2_6_18/Linux64bit-3-10-2-17/bin
+export PYTHONPATH=${PYTHONPATH}:/cvmfs/fermilab.opensciencegrid.org/products/common/prd/ifdhc/v2_6_18/Linux64bit-3-10-2-17/lib/python
+export IFDHC_CONFIG_DIR=/cvmfs/fermilab.opensciencegrid.org/products/common/prd/ifdhc_config/v2_6_18/NULL
 export IFDH_NO_PROXY=1
 export IFDH_CP_UNLINK_ON_ERROR=1
 export IFDH_CP_MAXRETRIES=2
