@@ -386,13 +386,6 @@ fi
 
 echo "figure out overlaps"
 
-#### now run the single exposure script to get the overlaps
-###if [ ! -d mytemp_${EXPNUM} ] ; then
-###    mkdir mytemp_${EXPNUM}
-###fi
-###cd mytemp_${EXPNUM}
-###ln -s ../exposures_${BAND}.list .
-
 egrep -i "\"RA\"\s*\:" $ARGS | sed -r "s/.*\"RA\"\s*\:(.*)\,/\1/g" > ra.list
 egrep -i "\"dec\"\s*\:" $ARGS | sed -r "s/.*\"dec\"\s*\:(.*)\,/\1/g" > dec.list
 egrep -i "\"filter\"\s*\:" $ARGS | sed -r "s/.*\"filter\"\s*\:\s*\"([a-zY])\"\,/\1/g" > band.list
@@ -406,25 +399,11 @@ outfile=SE_jobs_${rpnum}_${SEASON}.dag
 if [ -f $outfile ]; then
     rm $outfile   # maybe we don't want to overwrite? think about that a bit
 fi
-###touch $outfile
-###
-#### create the output copy_pairs file (empty)
-###templatecopyfile="copy_pairs_for_${EXPNUM}.sh"
-###if [ -f $templatecopyfile ]; then
-###    rm $templatecopyfile   # maybe we don't want to overwrite? think about that a bit
-###fi
-###touch $templatecopyfile
-###
-#### begin composing the dag 
 echo "<parallel>" >> $outfile
+
 # stick a dummy job in here so that there is something just in case there ends up being nothing to do for parallel processing
 echo "jobsub -n --group=des  --resource-provides=usage_model=${RESOURCES} --memory=500MB --disk=100MB --expected-lifetime=600s $JOBSUB_OPTS file://dummyjob.sh" >> $outfile
-###
-#### initialize empty list of files for the copy pairs output
-###DOTOUTFILES=""
-###
-###echo "loop over the diff list of exposures"
-###
+
 # now loop over the diff list, get info about the overlaping exposures, and set the SE portion of the dag
 for((i=1; i<=`wc -l KH_diff_RADEC.list2 | awk '{print $1}'`; i++)) 
 do
@@ -473,18 +452,10 @@ do
     echo "This image has a t_eff of $teff, below the cut value of $TEFF_CUT. We will not use this image."
     fi
 
-###    # the first image in the list is the search image itself
-###    if [ $i == 1 ]; then 
-### if [ "$SKIP" == "true" ] ; then echo "Cannot proceed without the search image!" ; exit 1 ; fi
-### NITE=$overlapnite  # capitalized NITE is the search image nite
-###    fi
-    
     # image failed quality tests ; try the next exposure in the list
     if [ "$SKIP" == "true" ] ; then echo "Overlap exposure $overlapnum failed quality criteria. Skipping." ; continue ; fi
 
     #### at this point, the image passed basic quality cuts. let's now check if it was not already SE processed:
-
-#    echo -e "\noverlapnum = ${overlapnum} , overlapnite = ${overlapnite} , explength = $explength, teff = $teff"
 
     # ls in the dcache scratch area to see if images are already there
     nfiles=0    
@@ -558,37 +529,6 @@ if [ $(ls /data/des50.b/data/BLISS/${overlapnum:0:4}00/${overlapnum}/D`printf %0
     chmod 775   /pnfs/des/${DESTCACHE}/${SCHEMA}/exp/${overlapnite}/${overlapnum}
     fi
 
-### This section copies BLISS outputs over, but it is commented out now because we are assuming this is done elsewhere.
-
-##    echo $overlapnum $RNUM $PNUM  /pnfs/des/${DESTCACHE}/${SCHEMA}/exp/${overlapnite} >> $BLISSFILE
-    
-##    for fullcatfile in  $(ls /data/des50.b/data/BLISS/${overlapnum:0:4}00/${overlapnum}/D`printf %08d $overlapnum`_*r1p1_fullcat.fits)
-##    do
-##  baseout=`basename $fullcatfile | sed -e "s/r1p1/r${RNUM}p${PNUM}/" -e "s/\.fz//"`
-##  cp $fullcatfile /pnfs/des/${DESTCACHE}/${SCHEMA}/exp/$overlapnite/$overlapnum/$baseout
-##    done
-##    
-##    for csvfile in  $(ls /data/des50.b/data/BLISS/${overlapnum:0:4}00/${overlapnum}/*r1p01*.csv)
-##    do
-##  baseout=`basename $csvfile | sed -e "s/r1p01/r${RNUM}p${PNUM}/" -e "s/\.fz//"`
-##  cp $csvfile /pnfs/des/${DESTCACHE}/${SCHEMA}/exp/$overlapnite/$overlapnum/$baseout  
-##    done
-##    
-##    for blissfile in $(ls /data/des50.b/data/BLISS/${overlapnum:0:4}00/${overlapnum}/D`printf %08d $overlapnum`_*r1p1_immask.fits.fz)
-##    do
-##  baseout=`basename $blissfile | sed -e "s/r1p1/r${RNUM}p${PNUM}/" -e "s/\.fz//"`
-##  funpack -O $baseout $blissfile
-##  if [ $? -eq 0 ] ; then
-##      cp $baseout /pnfs/des/${DESTCACHE}/${SCHEMA}/exp/$overlapnite/$overlapnum/$baseout  || ALLGOOD=false
-##      rm $baseout
-##  else
-##      ALLGOOD=false
-##  fi
-##    done
-##    if [ -e /pnfs/des/${DESTCACHE}/${SCHEMA}/exp/$overlapnite/$overlapnum/${overlapnum}.out ] ; then
-##  echo "${overlapnum}.out file already in dCache."
-##    else
-##  cp /data/des50.b/data/BLISS/${overlapnum:0:4}00/${overlapnum}/${overlapnum}.out /pnfs/des/${DESTCACHE}/${SCHEMA}/exp/$overlapnite/$overlapnum/
     DOTOUTFILES="${DOTOUTFILES} /pnfs/des/${DESTCACHE}/${SCHEMA}/exp/$overlapnite/$overlapnum/${overlapnum}.out" 
 ##    fi
     if [ "$ALLGOOD" == "true" ] ; then continue ; fi
@@ -623,12 +563,6 @@ fi
 		    $COPYDCMD DECam_`printf %08d ${overlapnum}`.fits.fz /pnfs/des/scratch/${SCHEMA}/dts/${overlapnite}/ && rm DECam_`printf %08d ${overlapnum}`.fits.fz
 		else
 		    echo "wget failed! We will just skip this template."			
-
-	#		    echo "wget failed! Will try to get image $overlapnum $overlapnite from NOAO."			
-#		    fetch_noao
-#		    if [ $? -ne 0 ]; then
-#			echo "Failure in fetching from NOAO!"
-#			if [ $i == 1 ] ; then echo "Cannot proceed without the search image!" ; exit 2 ; fi
 			SKIP=true
 #			echo "Unable to find raw image for overlapping exposure: $overlapnum ; will try to proceed without it."
 			continue
@@ -640,7 +574,7 @@ fi
     if [ $DO_HEADER_CHECK -eq 1 ]; then 
     	check_header
     fi
-    echo "jobsub -n --group=des --lines='+SingularityImage=\\\"/cvmfs/singularity.opensciencegrid.org/fermilab/fnal-wn-sl6:latest\\\"' -N 60 --resource-provides=usage_model=${RESOURCES} $JOBSUB_OPTS $JOBSUB_OPTS_SE file://SEdiff.sh -r $RNUM -p $PNUM -E $overlapnum -b $BAND -n $overlapnite -c 0 -S dp$SEASON $JUMPTOEXPCALIBOPTION -d $DESTCACHE -m $SCHEMA $SE_OPTS $TEMP_OPTS" >> $outfile
+    echo "jobsub -n --group=des --singularity-image /cvmfs/singularity.opensciencegrid.org/fermilab/fnal-wn-sl7:latest -N 60 $JOBSUB_OPTS $JOBSUB_OPTS_SE file://SEdiff.sh -r $RNUM -p $PNUM -E $overlapnum -b $BAND -n $overlapnite -c 0 -S dp$SEASON $JUMPTOEXPCALIBOPTION -d $DESTCACHE -m $SCHEMA $SE_OPTS $TEMP_OPTS" >> $outfile
 ### KH hack 2017-02-18
     echo "submitting job for $overlapnum"
 #jobsub_submit --role=DESGW --group=des --OS=SL6 --resource-provides=usage_model=${RESOURCES} $JOBSUB_OPTS $JOBSUB_OPTS_SE file://SE_job.sh -r $RNUM -p $PNUM -E $overlapnum -b $BAND -n $overlapnite $JUMPTOEXPCALIBOPTION -d $DESTCACHE -m $SCHEMA $SE_OPTS
