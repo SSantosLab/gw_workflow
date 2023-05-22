@@ -319,7 +319,7 @@ if [ "$SKIPSE" == "false" ] ; then # if statement allows SE to be skipped if SE 
     ifdh cp -D /pnfs/des/resilient/gw/code/MySoft4_v2.tar.gz  /pnfs/des/resilient/gw/code/test_mysql_libs.tar.gz ./ || { echo "Error copying input files. Exiting." ; exit 2 ; }
     tar xzf ./MySoft4_v2.tar.gz
     #NORA FIX 
-    ifdh cp /pnfs/des/persistent/desgw/desdmLiby1e2.py ./
+    ifdh cp /pnfs/des/persistent/macevedo/desdmLiby1e2.py ./
     #cp ../desdmLiby1e2.py ./
     #END NORA FIX 
     tar xzfm ./test_mysql_libs.tar.gz
@@ -691,7 +691,6 @@ if [ ! -s ${EXPNUM}.out ]; then
     fi
 fi
 
-
 # if any of them failed remove them from WS_diff.list
 echo "FAILEDEXPS = $FAILEDEXPS"
 for failedexp in $FAILEDEXPS
@@ -868,6 +867,9 @@ for c in $ccdlist; do
 
     fi
     if [ -s ${EXPNUM}.out ] && [ -f ${EXPNUM}.out ]  && [ ! "$(ls -A $TOPDIR_WSTEMPLATES/pairs/)" ]; then
+	echo "Hi, Dillon :("
+	echo "${EXPNUM}.out"
+	echo "$(ls -A $TOPDIR_WSTEMPLATES/pairs/)"
         cp ${EXPNUM}.out $TOPDIR_WSTEMPLATES/pairs/
     fi
 
@@ -877,6 +879,7 @@ for c in $ccdlist; do
 	echo "Checking exposure $tempexp"
 	if [ ! -s  $TOPDIR_WSTEMPLATES/pairs/${tempexp}.out ] ; then
 	    dirfiles=$(ifdh ls $templatedir)
+	    ifdh ls $templatedir # debug NS DB 03/03/23
 	    tempdotouts=""
 	    for dirfile in $dirfiles
 	    do
@@ -885,12 +888,73 @@ for c in $ccdlist; do
 		fi
 	    done
 	    ifdh cp -D $tempdotouts . || echo "Error copying .out files for $tempexp."
+	    ifdh cp -D ${tempexp}.out $TOPDIR_WSTEMPLATES/pairs/ || echo "Error copying .out files for $tempexp." # NS DB debug
+	    echo "Copied template.out file to WSTemplates/pairs/"
+	    echo $tempdotouts
 	    ccddots=$(ls ${tempexp}_[0-9]*.out 2>/dev/null)
 	    if [ ! -z "${ccddots}" ] ; then
 		cat $ccddots > $TOPDIR_WSTEMPLATES/pairs/${tempexp}.out
 	    fi
 	fi
     done
+
+    # ADD WS_diff.case 
+    #list Removal Here????
+    # FROM CHATGPT BECAUSE NSMA are sad grads
+    # Define the directory to check for numbers
+    dir_to_check="$TOPDIR_WSTEMPLATES/pairs/"
+
+    # Define the file to process
+    file_to_process="WS_diff.list"
+
+    # Get a list of all files in the directory
+    files_in_dir="$(ls "$dir_to_check"*.out)"
+    echo $file_in_dir
+
+    # Use awk to extract all sets of numbers from the file
+    numbers=$(awk '{gsub(/[^0-9]+/," "); print}' "$file_to_process")
+    echo  "NUMBERS: " $numbers
+    # Loop through each set of numbers
+    temp_count=-1
+    for number_set in $numbers; do
+	echo "Number Set: " $number_set
+	# Check if any of the numbers in the set are present in any of the file names in the directory
+	found=0
+	for number in $number_set; do
+	    echo "Number: " $number
+            if echo "$files_in_dir" | grep -q "$number"; then
+		temp_count=$(( $temp_count + 1 ))
+		echo "Temp Count: " $temp_count
+		found=1
+		break
+            fi
+	done
+	# If none of the numbers in the set are present, remove the set from the file
+	if [ $found -eq 0 ]; then
+	    echo "Temp Count: " $temp_count
+            sed -i "s/$number_set//g" "$file_to_process"
+	fi
+    done
+    
+    # Use sed to replace the original first number with the new first number in the file
+    sed -i "1s/^[0-9]\+\s/$temp_count /" "$file_to_process"
+    
+    cat $file_to_process
+
+    # Loop through each line in the file
+    #while read -r line; do
+	# Check if the line contains a number
+	#if [[ $line =~ [0-9] ]]; then
+        #    # Extract the number from the line
+        #    number=$(echo "$line" | grep -o "[0-9]\+")
+	#    echo "NUMBER: " $number
+        #    # Check if the number is present in any of the file names in the directory
+        #    if ! echo "$files_in_dir" | grep -q "$number"; then
+#		# If the number is not present, remove the line from the file
+#		sed -i "/$line/d" "$file_to_process"
+#            fi#
+#	fi
+#    done < "$file_to_process"
 
     
     #show output of copy
@@ -1118,12 +1182,24 @@ for c in $ccdlist; do
                         echo $newcounter
                         sed -i -e "s/\(.*\) ${overlapcounter} /\1 $newcounter/" "${overlapfile}"
 			if [ "${newcounter}" -lt 1 ]; then
+<<<<<<< HEAD
 			    echo "NORA!! LOOK!!"
 			    # Change the SEARCHEXP_TEMPEXP.out to .no (but how?)
 			    mv ${TOPDIR_WSDIFF}/pairs/${EXPNUM}-${overlapexp}.out ${TOPDIR_WSDIFF}/pairs/${EXPNUM}-${overlapexp}.no
 			    ln -sf ${TOPDIR_WSDIFF}/pairs/${EXPNUM}-${overlapexp}.no ${TOPDIR_WSDIFF}/pairs/${EXPNUM}/${EXPNUM}-${overlapexp}.out
 			    mv ${TOPDIR_WSDIFF}/pairs/${EXPNUM}/${EXPNUM}-${overlapexp}.out ${TOPDIR_WSDIFF}/pairs/${EXPNUM}/${EXPNUM}-${overlapexp}.no
+=======
+			    echo "CCD are 0, attempting to make .no"			
+    # Change the SEARCHEXP_TEMPEXP.out to .no (but how?)
+			    mv ${TOPDIR_WSDIFF}/pairs/${EXPNUM}-${overlapexp}.out ${TOPDIR_WSDIFF}/pairs/${EXPNUM}-${overlapexp}.no
+			    rm ${TOPDIR_WSDIFF}/pairs/${EXPNUM}/${EXPNUM}-${overlapexp}.out
+			    ln -s ${TOPDIR_WSDIFF}/pairs/${EXPNUM}-${overlapexp}.no ${TOPDIR_WSDIFF}/pairs/${EXPNUM}/${EXPNUM}-${overlapexp}.no
+			    echo ".out supposedly moved to .no"
+>>>>>>> d878d23 (Fix to no break when a few bad templates)
 			    #mv SEARCHEXP_TEMPEXP.out SEARCHEXP_TEMPEXP.no
+			else
+			    echo "The value of newcount is not zero, but rather ..."
+			    echo $newcounter
 			fi
 		    fi  
                 fi
@@ -1151,11 +1227,24 @@ for c in $ccdlist; do
                     echo $newcounter
                     sed -i -e "s/\(.*\) ${overlapcounter} /\1 $newcounter/" "${overlapfile}"
                     if [ "${newcounter}" -lt 1 ]; then
+<<<<<<< HEAD
 			echo "NORA!! PAY ATTENTION!!"
                         # Change the SEARCHEXP_TEMPEXP.out to .no (but how?)
                         mv ${TOPDIR_WSDIFF}/pairs/${EXPNUM}-${overlapexp}.out ${TOPDIR_WSDIFF}/pairs/${EXPNUM}-${overlapexp}.no
 			ln -sf ${TOPDIR_WSDIFF}/pairs/${EXPNUM}-${overlapexp}.no ${TOPDIR_WSDIFF}/pairs/${EXPNUM}/${EXPNUM}-${overlapexp}.out
 			mv ${TOPDIR_WSDIFF}/pairs/${EXPNUM}/${EXPNUM}-${overlapexp}.out ${TOPDIR_WSDIFF}/pairs/${EXPNUM}/${EXPNUM}-${overlapexp}.no
+=======
+			echo "CCD are 0, attempting to make .no"
+                        # Change the SEARCHEXP_TEMPEXP.out to .no (but how?)
+                        mv ${TOPDIR_WSDIFF}/pairs/${EXPNUM}-${overlapexp}.out ${TOPDIR_WSDIFF}/pairs/${EXPNUM}-${overlapexp}.no
+			rm ${TOPDIR_WSDIFF}/pairs/${EXPNUM}/${EXPNUM}-${overlapexp}.out
+                        ln -s ${TOPDIR_WSDIFF}/pairs/${EXPNUM}-${overlapexp}.no ${TOPDIR_WSDIFF}/pairs/${EXPNUM}/${EXPNUM}-${overlapexp}.no
+			echo ".out supposedly moved to .no"
+                        #mv SEARCHEXP_TEMPEXP.out SEARCHEXP_TEMPEXP.no
+                    else
+                        echo "The value of newcount is not zero, but rather ..."
+                        echo $newcounter
+>>>>>>> d878d23 (Fix to no break when a few bad templates)
 		    fi
 		fi
             fi
@@ -1436,7 +1525,9 @@ fi
 
 
     sed -i -e "s/0x47FB/0x47DB/" RUN05_expose_makeWeight
-
+    echo $PWD
+    echo "/pnfs/des/persistent/macevedo/edit_run1819.sh $PWD" >> RUN17_combined+expose_sexDistorTEMPLATES
+    
     echo "start pipeline"
     #### THIS IS THE PIPELINE!!! #####
     export CCDNUM_LIST
