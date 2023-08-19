@@ -67,7 +67,6 @@ export EUPS_PATH=/cvmfs/des.opensciencegrid.org/ncsa/centos7/finalcut/Y6A1+2/eup
 export IFDH_CP_MAXRETRIES=2
 export IFDH_XROOTD_EXTRA="-f -N"
 export XRD_REDIRECTLIMIT=255
-export IFDH_CP_UNLINK_ON_ERROR=1
 #for IFDH
 export EXPERIMENT=des
 
@@ -1220,7 +1219,7 @@ for c in $ccdlist; do
             ln -s /cvmfs/des.osgstorage.org/pnfs/fnal.gov/usr/des/persistent/stash/${SCHEMA}/CATALOG_FILES/${NITE}/${SNSTAR_FILENAME} .
             else
             # try to ifdh cp 
-            ifdh cp -D ${IFDHCP_OPT} /pnfs/des/persistent/stash/${SCHEMA}/CATALOG_FILES/${NITE}/${SNSTAR_FILENAME} ./ || echo "ERROR: ${SNSTAR_FILENAME} is not in CVMFS and there was an error copying it to the worker node. RUN02 will probably fail..."
+            IFDH_CP_UNLINK_ON_ERROR=1 ifdh cp -D ${IFDHCP_OPT} /pnfs/des/persistent/stash/${SCHEMA}/CATALOG_FILES/${NITE}/${SNSTAR_FILENAME} ./ || echo "ERROR: ${SNSTAR_FILENAME} is not in CVMFS and there was an error copying it to the worker node. RUN02 will probably fail..."
             fi
         fi
         # image masking for bright galaxy subtraction ; hopefully we don't need this anymore
@@ -1289,7 +1288,7 @@ for c in $ccdlist; do
     # make sure that the files actually exist before we try to copy then. If makestarcat.py did not run, then we won't need to check.
     if [ -f $STARCAT_NAME ] && [ ! -L $STARCAT_NAME ] && [ -f $SNVETO_NAME ] && [ ! -L $SNVETO_NAME ]; then
         ifdh mkdir /pnfs/des/persistent/stash/${SCHEMA}/CATALOG_FILES/${NITE}
-        ifdh cp --force=xrootd -D $STARCAT_NAME $SNVETO_NAME /pnfs/des/persistent/stash/${SCHEMA}/CATALOG_FILES/${NITE}/ || echo "ERROR: copy of $STARCAT_NAME and $SNVETO_NAME failed with status $?. You may see problems running diffimg jobs later."  
+        IFDH_CP_UNLINK_ON_ERROR=1 ifdh cp --force=xrootd -D $STARCAT_NAME $SNVETO_NAME /pnfs/des/persistent/stash/${SCHEMA}/CATALOG_FILES/${NITE}/ || echo "ERROR: copy of $STARCAT_NAME and $SNVETO_NAME failed with status $?. You may see problems running diffimg jobs later."  
     fi
     else
         if [ $MAKESTARCAT_RESULT -eq -1 ]; then
@@ -1356,12 +1355,12 @@ fi
 
     echo "outfiles = $OUTFILES"
 
-    if [ ! -z "$OUTFILES" ]; then ifdh cp ${IFDHCP_OPT} -D $OUTFILES /pnfs/des/${DESTCACHE}/${SCHEMA}/exp/$NITE/$EXPNUM/$LOCDIR/ || echo "FAILURE: Error $? when trying to copy outfiles back" ; fi
+    if [ ! -z "$OUTFILES" ]; then IFDH_CP_UNLINK_ON_ERROR=1 ifdh cp ${IFDHCP_OPT} -D $OUTFILES /pnfs/des/${DESTCACHE}/${SCHEMA}/exp/$NITE/$EXPNUM/$LOCDIR/ || echo "FAILURE: Error $? when trying to copy outfiles back" ; fi
 
     if [ `ls ${TOPDIR_SNFORCEPHOTO_IMAGES}/${NITE} | wc -l` -gt 0 ]; then 
         copies=`ls ${TOPDIR_SNFORCEPHOTO_IMAGES}/${NITE}/ ` 
         ifdh mkdir_p /pnfs/des/${DESTCACHE}/${SCHEMA}/forcephoto/images/${procnum}/${NITE}/${EXPNUM} 
-        ifdh cp ${IFDHCP_OPT} -D $copies /pnfs/des/${DESTCACHE}/${SCHEMA}/forcephoto/images/${procnum}/${NITE}/${EXPNUM} || echo "FAILURE: Error $? when copying  ${TOPDIR_SNFORCEPHOTO_IMAGES}"
+        IFDH_CP_UNLINK_ON_ERROR=1 ifdh cp ${IFDHCP_OPT} -D $copies /pnfs/des/${DESTCACHE}/${SCHEMA}/forcephoto/images/${procnum}/${NITE}/${EXPNUM} || echo "FAILURE: Error $? when copying  ${TOPDIR_SNFORCEPHOTO_IMAGES}"
     fi
 
     ### also copy back the stamps
@@ -1372,7 +1371,7 @@ fi
         copies=`ls $STAMPSDIR`
         cd  $STAMPSDIR
         tar czfm `basename ${STAMPSDIR}`.tar.gz *.fits *.gif
-        ifdh cp ${IFDHCP_OPT} -D `basename ${STAMPSDIR}`.tar.gz /pnfs/des/${DESTCACHE}/${SCHEMA}/exp/$NITE/$EXPNUM/$STAMPSDIR || echo "FAILURE: Error $? when copying  ${STAMPSDIR}" 
+        IFDH_CP_UNLINK_ON_ERROR=1 ifdh cp ${IFDHCP_OPT} -D `basename ${STAMPSDIR}`.tar.gz /pnfs/des/${DESTCACHE}/${SCHEMA}/exp/$NITE/$EXPNUM/$STAMPSDIR || echo "FAILURE: Error $? when copying  ${STAMPSDIR}" 
         cd -
     fi
 
