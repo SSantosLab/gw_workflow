@@ -1102,7 +1102,7 @@ for c in $ccdlist; do
                     sed -i -e "s/\(.*\) ${overlapcounter} /\1 $newcounter/" "${overlapfile}"
                     if [ "${newcounter}" -lt 1 ]; then
                         # Change the SEARCHEXP_TEMPEXP.out to .no (but how?)
-                        mv ${TOPDIR_WSDIFF}/pairs/${EXPNUM}-${overlapexp}.out ${TOPDIR_WSDIFF}/pairs/${EX\PNUM}-${overlapexp}.no
+                        mv ${TOPDIR_WSDIFF}/pairs/${EXPNUM}-${overlapexp}.out ${TOPDIR_WSDIFF}/pairs/${EXPNUM}-${overlapexp}.no
 		    fi
 		fi
             fi
