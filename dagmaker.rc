@@ -16,7 +16,7 @@ PNUM=7
 # Season 5000 is reserved for DES nightly difference imaging on the wide survey in Y5 (2017-2018)
 # Season 6000 is reserved for DES nightly difference imaging on the wide survey in Y6 (2018-2019)
 ##############
-SEASON=33
+SEASON=2206
 
 DIFFIMG_EUPS_VERSION=gw8
 
@@ -41,13 +41,24 @@ TEMP_OPTS="-C -t"
 ### SCHEMA is the naming schema for the output files, not the DB schema. Valid values are gw and wsdiff.
 SCHEMA="gw"
 #t_eff cuts for each filter
-TEFF_CUT_g=0.2
-TEFF_CUT_i=0.3
-TEFF_CUT_r=0.3
-TEFF_CUT_Y=0.2
-TEFF_CUT_z=0.3
-TEFF_CUT_u=0.2
-TWINDOW=15
+TEFF_CUT_g=0.1
+TEFF_CUT_i=0.1
+TEFF_CUT_r=0.1
+TEFF_CUT_Y=0.1
+TEFF_CUT_z=0.1
+TEFF_CUT_u=0.1
+#TWINDOW=15
+
+TWINDOW_DISTINCT=1 # 1: Allow distinct before and after nite
+TWINDOW_BEFORE=30
+TWINDOW_AFTER=100
+
+
+#### Template Winnow
+TEXP_DEPTH_ON=1
+TEXP_DEPTH=1000
+
+
 
 #### ONLY use this option if you have nothing but late-time templates. It should be commented out for standard nightly diffim running.
 #MIN_NITE=20170831
@@ -62,7 +73,7 @@ TWINDOW=15
 SKIP_INCOMPLETE_SE=false
 
 ### turn off header check for FIELD, OBJECT, TILING to save time. Can do that if you have already fixed the headers elsewhere (for example when copying from DESDM).
-DO_HEADER_CHECK=0
+DO_HEADER_CHECK=1
 
 # for 20810221
 #Minimum stashcache revision version required for jobs to start. This is only useful for nightly difference imaging.
