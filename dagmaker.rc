@@ -26,8 +26,8 @@ WRITEDB=on
 # When true, DAGMaker will delete a pre-existing mytemp dir for the exposure and rerun
 RM_MYTEMP=true
 
-JOBSUB_OPTS="--memory=2500MB --disk=70GB --cpu=1 --expected-lifetime=5h --email-to=alyssag94@brandeis.edu --disk=70GB --need-storage-modify"
-JOBSUB_OPTS_SE="--memory=3600MB --disk=100GB --cpu=1 --expected-lifetime=5h --need-storage-modify"
+JOBSUB_OPTS="--memory=2500MB --disk=70GB --cpu=1 --expected-lifetime=5h --email-to=alyssag94@brandeis.edu --disk=70GB --need-storage-modify /pnfs/des/persistent/gw/exp --need-storage-modify /pnfs/des/persistent/gw/forcephoto --need-storage-modify /pnfs/des/persistent/stash/gw"
+JOBSUB_OPTS_SE="--memory=3600MB --disk=100GB --cpu=1 --expected-lifetime=5h --need-storage-modify /pnfs/des/persistent/gw/exp --need-storage-modify /pnfs/des/persistent/gw/forcephoto --need-storage-modify /pnfs/des/persistent/stash/gw"
 
 RESOURCES="DEDICATED,OPPORTUNISTIC,OFFSITE"
 IGNORECALIB=true
