@@ -245,7 +245,7 @@ if [ ! -f $optionalfile ] ; then echo "Warning: $optionalfile not found." ; fi
 RNUM="2"
 PNUM="01"
 SEASON="11"
-JOBSUB_OPTS="--memory=3000MB --expected-lifetime=medium --cpu=1 --mail_on_error --email-to=kherner@fnal.gov --need-storage-modify /pnfs/des/persistent/gw/exp --need-storage-modify /pnfs/des/persistent/gw/forcephoto --need-storage-modify /pnfs/des/persistent/stash/gw"
+JOBSUB_OPTS="--memory=3000MB --expected-lifetime=medium --cpu=1 --mail_on_error --email-to=kherner@fnal.gov --need-storage-modify /des/persistent/gw/exp --need-storage-modify /des/persistent/gw/forcephoto"
 DIFFIMG_EUPS_VERSION="gw8"
 WRITEDB="off"
 RM_MYTEMP="false"
