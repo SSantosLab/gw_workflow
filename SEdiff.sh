@@ -18,7 +18,7 @@ IFDHCP_OPT=""
 DOCALIB="false"
 FAILEDEXPS=""
 FULLCOPY=false
-
+STATBASE="https://fndcadoor.fnal.gov:2880/pnfs/fnal.gov/usr/des"
 umask 002 
 
 #######################################
@@ -554,9 +554,17 @@ EOF
 	    for c in $ccdlist; do
         # copies all ccds
 		c=$(printf "%02d" $c)
-		filestocopy1="$(ifdh ls /pnfs/des/${DESTCACHE}/${SCHEMA}/exp/${NITE}/${EXPNUM}/D$(printf %08d ${EXPNUM})_${BAND}_${c}_r${RNUM}p${PNUM}_fullcat.fits | grep fits)"
+		filestocopy1=""
+		filestocopy2=""
+		gfal-stat ${STATBASE}/${DESTCACHE}/${SCHEMA}/exp/${NITE}/${EXPNUM}/D$(printf %08d ${EXPNUM})_${BAND}_${c}_r${RNUM}p${PNUM}_fullcat.fits > /dev/null 2>&1
+		if [ $? -eq 0 ]; then
+		    filestocopy1="/pnfs/des/${DESTCACHE}/${SCHEMA}/exp/${NITE}/${EXPNUM}/D$(printf %08d ${EXPNUM})_${BAND}_${c}_r${RNUM}p${PNUM}_fullcat.fits"
+		fi
 		echo "filestocopy1: $filestocopy1"
-		filestocopy2="$(ifdh ls /pnfs/des/${DESTCACHE}/${SCHEMA}/exp/${NITE}/${EXPNUM}/D$(printf %08d ${EXPNUM})_${BAND}_${c}_r${RNUM}p${PNUM}_immask.fits.fz | grep fits)"
+		gfal-stat ${STATBASE}/${DESTCACHE}/${SCHEMA}/exp/${NITE}/${EXPNUM}/D$(printf %08d ${EXPNUM})_${BAND}_${c}_r${RNUM}p${PNUM}_immask.fits.fz > /dev/null 2>&1
+		if [ $? -eq 0 ]; then
+		    filestocopy2="/pnfs/des/${DESTCACHE}/${SCHEMA}/exp/${NITE}/${EXPNUM}/D$(printf %08d ${EXPNUM})_${BAND}_${c}_r${RNUM}p${PNUM}_immask.fits.fz"
+		fi
 		echo "filestocopy2: $filestocopy2"
 		ifdh cp --force=xrootd -D $filestocopy1 $filestocopy2 .
 	    done
@@ -1011,15 +1019,16 @@ for c in $ccdlist; do
         overlapnite=$(egrep -o /pnfs/des/${DESTCACHE}/${SCHEMA}/exp/[0-9]{8}/${overlapexp}/${overlapexp}.out ${procnum}/input_files/copy_pairs_for_${EXPNUM}.sh | sed -r -e "s/.*\/([0-9]{8})\/.*/\1/")
         overlapccds=`awk '($2=='${CCDNUM_LIST}') { for( f=5; f<=NF; f++) print $f}' $overlapfile`
 	echo "overlap ccds = $overlapccds"
-	tempfiles=$(ifdh ls /pnfs/des/${DESTCACHE}/${SCHEMA}/exp/${overlapnite}/${overlapexp})
 	immaskfiles=""
 	immaskfitsfiles=""
 	psffiles=""
 	csvfiles=""
 	ZPdir="/pnfs/des/${DESTCACHE}/${SCHEMA}/exp/${overlapnite}/${overlapexp}/"
-	ZPfilename=$(echo $tempfiles | grep -o D$(printf %08d $overlapexp)_${rpnum}_ZP.csv 2>/dev/null)
+	ZPfilename=D$(printf %08d $overlapexp)_${rpnum}_ZP.csv
 	echo "ZPfilename for combined file = $ZPfilename"
-        if [ ! -z "$ZPfilename" ]; then
+	# check it exists and try to copy if gfal-stat is successful
+	gfal-stat $(echo ${ZPdir}$ZPfilename | sed -e "#/pnfs/des#${STATBASE}#") > /dev/null
+        if [ $? -eq 0 ]; then
 	    ifdh cp -D ${ZPdir}${ZPfilename} ./ || echo "Error copying $ZPfile"  
 	fi
 
@@ -1033,10 +1042,12 @@ for c in $ccdlist; do
             fi
             file2copy="/pnfs/des/${DESTCACHE}/${SCHEMA}/exp/${overlapnite}/${overlapexp}/D`printf %08d $overlapexp`_${BAND}_`printf %02d $overlapccd`_${rpnum}_immask.fits.fz"
             echo "file2copy = $file2copy"
-	    ZPfilename=$(echo $tempfiles | grep -o D$(printf %08d $overlapexp)_$(printf %02d $overlapccd)_${rpnum}_ZP.csv 2>/dev/null)
+	    ZPfilename=D$(printf %08d $overlapexp)_$(printf %02d $overlapccd)_${rpnum}_ZP.csv 2>/dev/null)
 	    ZPfile=${ZPdir}${ZPfilename}
 	    echo "ZPfile = $ZPfile"
-            if [ -z "$ZPfilename" ] ; then
+	    # check it exists and try to copy if gfal-stat is successful
+	    gfal-stat $(echo $ZPfile | sed -e "#/pnfs/des#${STATBASE}#") > /dev/null
+            if [ $? -ne 0 ] ; then
                 echo "ZP file for this template and CCD is not available. Hopefully a combined files exists for this exposure."
             else
 		ifdh cp -D $ZPfile ./ || echo "Error copying $ZPfile"
