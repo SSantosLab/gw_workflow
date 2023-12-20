@@ -1043,7 +1043,7 @@ for c in $ccdlist; do
             fi
             file2copy="/pnfs/des/${DESTCACHE}/${SCHEMA}/exp/${overlapnite}/${overlapexp}/D`printf %08d $overlapexp`_${BAND}_`printf %02d $overlapccd`_${rpnum}_immask.fits.fz"
             echo "file2copy = $file2copy"
-	    ZPfilename=D$(printf %08d $overlapexp)_$(printf %02d $overlapccd)_${rpnum}_ZP.csv 2>/dev/null)
+	    ZPfilename=D$(printf %08d $overlapexp)_$(printf %02d $overlapccd)_${rpnum}_ZP.csv
 	    ZPfile=${ZPdir}${ZPfilename}
 	    echo "ZPfile = $ZPfile"
 	    # check it exists and try to copy if gfal-stat is successful
