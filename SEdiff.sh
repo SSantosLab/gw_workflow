@@ -203,36 +203,37 @@ rpnum="r${RNUM}p${PNUM}"
 # tokenize ccd argument (in case of multiple comma-separated ccds)
 ccdlist=(${CCDNUM_LIST//,/ })
 
-#do a single ifdh ls to get the contents of the main expnum directory.
-lsfiles="$(ifdh ls /pnfs/des/${DESTCACHE}/${SCHEMA}/exp/${NITE}/${EXPNUM})"
+PNFSPATH="/pnfs/des/${DESTCACHE}/${SCHEMA}/exp/${NITE}/${EXPNUM}"
+STATPATH=${STATBASE}/${DESTCACHE}/${SCHEMA}/exp/${NITE}/${EXPNUM}
 immaskfiles=""
 psffiles=""
 csvfiles=""
 ccdsvfiles=""
 dotoutfile=""
 ccddotoutfile=""
-for lsfile in $lsfiles
+
+# Check whether SE outputs and .out files exist with gfal-stat; computationally cheaper than ifdh ls.
+
+statfile=D$(printf %08d ${EXPNUM})_${BAND}_$(printf %02d ${CCDNUM_LIST})_r${RNUM}p${PNUM}_immask.fits.fz
+gfal-stat ${STATPATH}/${statfile} > /dev/null && immaskfiles="$immaskfiles ${PNFSPATH}/${statfile}"
+
+statfile=D$(printf %08d ${EXPNUM})_${BAND}_$(printf %02d ${CCDNUM_LIST})_r${RNUM}p${PNUM}_fullcat.fits   
+gfal-stat ${STATPATH}/${statfile} > /dev/null && psffiles="$psffiles ${PNFSPATH}/${statfile}"
+
+statfile=allZP_D$(printf %08d ${EXPNUM})_r${RNUM}p${PNUM}.csv
+gfal-stat ${STATPATH}/${statfile} > /dev/null && csvfiles="$csvfiles ${PNFSPATH}/${statfile}"
+statfile=D$(printf %08d ${EXPNUM})_r${RNUM}p${PNUM}_ZP.csv
+gfal-stat ${STATPATH}/${statfile} > /dev/null && csvfiles="$csvfiles ${PNFSPATH}/${statfile}"
+    
+for csvfile in allZP_D$(printf %08d ${EXPNUM})_r${RNUM}p${PNUM}.csv Zero_D$(printf %08d ${EXPNUM})_$(printf %02d $CCDNUM_LIST)_r${RNUM}p${PNUM}.csv D$(printf %08d ${EXPNUM})_$(printf %02d $CCDNUM_LIST)_r${RNUM}p${PNUM}_ZP.csv
 do
-    if [[ $lsfile == *D$(printf %08d ${EXPNUM})_${BAND}_$(printf %02d ${CCDNUM_LIST})_r${RNUM}p${PNUM}_immask.fits.fz ]]; then
-	immaskfiles="$immaskfiles $lsfile"
-    
-    elif [[ $lsfile == *D$(printf %08d ${EXPNUM})_${BAND}_$(printf %02d ${CCDNUM_LIST})_r${RNUM}p${PNUM}_fullcat.fits ]]; then
-	psffiles="$psffiles $lsfile"
-    
-    elif [[ $lsfile == *allZP_D$(printf %08d ${EXPNUM})_r${RNUM}p${PNUM}.csv ]] || [[ $lsfile == *D$(printf %08d ${EXPNUM})_r${RNUM}p${PNUM}_ZP.csv ]] ; then
-	csvfiles="$csvfiles $lsfile"
-    
-    elif [[ $lsfile == /pnfs/des/${DESTCACHE}/${SCHEMA}/exp/${NITE}/${EXPNUM}/allZP_D$(printf %08d ${EXPNUM})_r${RNUM}p${PNUM}.csv ]] || [[ $lsfile ==  /pnfs/des/${DESTCACHE}/${SCHEMA}/exp/${NITE}/${EXPNUM}/Zero_D$(printf %08d ${EXPNUM})_$(printf %02d $CCDNUM_LIST)_r${RNUM}p${PNUM}.csv ]] || [[ $lsfile == /pnfs/des/${DESTCACHE}/${SCHEMA}/exp/${NITE}/${EXPNUM}/D$(printf %08d ${EXPNUM})_$(printf %02d $CCDNUM_LIST)_r${RNUM}p${PNUM}_ZP.csv ]] ; then
-	ccdcsvfiles="$ccdcsvfiles $lsfile"
-    
-    elif [[ $lsfile == */${EXPNUM}.out ]]; then
-	dotoutfile=$lsfile
-    
-    elif [[ $lsfile == */${EXPNUM}_$(printf %d ${ccdlist}).out ]]; then
-    	ccddotoutfile=$lsfile
-    
-    fi
+    gfal-stat ${STATPATH}/${csvfile} && ccdcsvfiles="$ccdcsvfiles ${PNFSPATH}/${csvfile}"
 done
+
+gfal-stat ${STATPATH}/${EXPNUM}.out > /dev/null && dotoutfile=${PNFSPATH}/${EXPNUM}.out
+    
+gfal-stat ${STATPATH}/${EXPNUM}_$(printf %d ${ccdlist}).out > /dev/null && ccddotoutfile=${PNFSPATH}/${EXPNUM}_$(printf %d ${ccdlist}).out
+
 # get filenames
 nimmask=`echo $immaskfiles | wc -w`
 if [ $nimmask -ge 1 ]; then
@@ -534,7 +535,7 @@ EOF
     
     #setup -j finalcut Y6A1+2 -Z /cvmfs/des.opensciencegrid.org/2015_Q2/eeups/SL6/eups/packages
     setup finalcut Y6A1+2
-    setup diffimg gw8
+    setup diffimg $DIFFIMG_VERSION
     setup CoreUtils 1.0.1+0
     setup wcstools 3.9.6+0
     export PATH=${WCSTOOLS_DIR}/bin:${PATH}
@@ -714,14 +715,14 @@ for c in $ccdlist; do
     ln -s ${procnum}/input_files/* .
     
     # make some local directories expected by the diffimg pipeline
-    mkdir ${LOCDIR}/headers ${LOCDIR}/ingest ${LOCDIR}/$(basename $(ifdh ls  /pnfs/des/${DESTCACHE}/${SCHEMA}/exp/${NITE}/${EXPNUM}/${LOCDIR}/stamps* 0 | head -1))
+    mkdir ${LOCDIR}/headers ${LOCDIR}/ingest ${LOCDIR}/$(basename $(ifdh ls /pnfs/${DESTCACHE}/${SCHEMA}/exp/${NITE}/${EXPNUM}/${LOCDIR}/stamps* 0 | head -1))
     ln -s ${LOCDIR}/ingest ${LOCDIR}/stamps* ${LOCDIR}/headers .
     
     /cvmfs/grid.cern.ch/util/cvmfs-uptodate /cvmfs/des.opensciencegrid.org # make sure we have new version of cvmfs
     
 
     # Setup
-    setup diffimg gw8
+    setup diffimg $DIFFIMG_VERSiON
     setup CoreUtils 1.0.1+0
     setup wcstools 3.9.6+0
     setup -j easyaccess -Z /cvmfs/des.opensciencegrid.org/eeups/fnaleups
