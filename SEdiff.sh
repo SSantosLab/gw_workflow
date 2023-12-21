@@ -18,7 +18,7 @@ IFDHCP_OPT=""
 DOCALIB="false"
 FAILEDEXPS=""
 FULLCOPY=false
-
+STATBASE="https://fndcadoor.fnal.gov:2880/pnfs/fnal.gov/usr/des"
 umask 002 
 
 #######################################
@@ -203,36 +203,37 @@ rpnum="r${RNUM}p${PNUM}"
 # tokenize ccd argument (in case of multiple comma-separated ccds)
 ccdlist=(${CCDNUM_LIST//,/ })
 
-#do a single ifdh ls to get the contents of the main expnum directory.
-lsfiles="$(ifdh ls /pnfs/des/${DESTCACHE}/${SCHEMA}/exp/${NITE}/${EXPNUM})"
+PNFSPATH="/pnfs/des/${DESTCACHE}/${SCHEMA}/exp/${NITE}/${EXPNUM}"
+STATPATH=${STATBASE}/${DESTCACHE}/${SCHEMA}/exp/${NITE}/${EXPNUM}
 immaskfiles=""
 psffiles=""
 csvfiles=""
 ccdsvfiles=""
 dotoutfile=""
 ccddotoutfile=""
-for lsfile in $lsfiles
+
+# Check whether SE outputs and .out files exist with gfal-stat; computationally cheaper than ifdh ls.
+
+statfile=D$(printf %08d ${EXPNUM})_${BAND}_$(printf %02d ${CCDNUM_LIST})_r${RNUM}p${PNUM}_immask.fits.fz
+gfal-stat ${STATPATH}/${statfile} > /dev/null && immaskfiles="$immaskfiles ${PNFSPATH}/${statfile}"
+
+statfile=D$(printf %08d ${EXPNUM})_${BAND}_$(printf %02d ${CCDNUM_LIST})_r${RNUM}p${PNUM}_fullcat.fits   
+gfal-stat ${STATPATH}/${statfile} > /dev/null && psffiles="$psffiles ${PNFSPATH}/${statfile}"
+
+statfile=allZP_D$(printf %08d ${EXPNUM})_r${RNUM}p${PNUM}.csv
+gfal-stat ${STATPATH}/${statfile} > /dev/null && csvfiles="$csvfiles ${PNFSPATH}/${statfile}"
+statfile=D$(printf %08d ${EXPNUM})_r${RNUM}p${PNUM}_ZP.csv
+gfal-stat ${STATPATH}/${statfile} > /dev/null && csvfiles="$csvfiles ${PNFSPATH}/${statfile}"
+    
+for csvfile in allZP_D$(printf %08d ${EXPNUM})_r${RNUM}p${PNUM}.csv Zero_D$(printf %08d ${EXPNUM})_$(printf %02d $CCDNUM_LIST)_r${RNUM}p${PNUM}.csv D$(printf %08d ${EXPNUM})_$(printf %02d $CCDNUM_LIST)_r${RNUM}p${PNUM}_ZP.csv
 do
-    if [[ $lsfile == *D$(printf %08d ${EXPNUM})_${BAND}_$(printf %02d ${CCDNUM_LIST})_r${RNUM}p${PNUM}_immask.fits.fz ]]; then
-	immaskfiles="$immaskfiles $lsfile"
-    
-    elif [[ $lsfile == *D$(printf %08d ${EXPNUM})_${BAND}_$(printf %02d ${CCDNUM_LIST})_r${RNUM}p${PNUM}_fullcat.fits ]]; then
-	psffiles="$psffiles $lsfile"
-    
-    elif [[ $lsfile == *allZP_D$(printf %08d ${EXPNUM})_r${RNUM}p${PNUM}.csv ]] || [[ $lsfile == *D$(printf %08d ${EXPNUM})_r${RNUM}p${PNUM}_ZP.csv ]] ; then
-	csvfiles="$csvfiles $lsfile"
-    
-    elif [[ $lsfile == /pnfs/des/${DESTCACHE}/${SCHEMA}/exp/${NITE}/${EXPNUM}/allZP_D$(printf %08d ${EXPNUM})_r${RNUM}p${PNUM}.csv ]] || [[ $lsfile ==  /pnfs/des/${DESTCACHE}/${SCHEMA}/exp/${NITE}/${EXPNUM}/Zero_D$(printf %08d ${EXPNUM})_$(printf %02d $CCDNUM_LIST)_r${RNUM}p${PNUM}.csv ]] || [[ $lsfile == /pnfs/des/${DESTCACHE}/${SCHEMA}/exp/${NITE}/${EXPNUM}/D$(printf %08d ${EXPNUM})_$(printf %02d $CCDNUM_LIST)_r${RNUM}p${PNUM}_ZP.csv ]] ; then
-	ccdcsvfiles="$ccdcsvfiles $lsfile"
-    
-    elif [[ $lsfile == */${EXPNUM}.out ]]; then
-	dotoutfile=$lsfile
-    
-    elif [[ $lsfile == */${EXPNUM}_$(printf %d ${ccdlist}).out ]]; then
-    	ccddotoutfile=$lsfile
-    
-    fi
+    gfal-stat ${STATPATH}/${csvfile} && ccdcsvfiles="$ccdcsvfiles ${PNFSPATH}/${csvfile}"
 done
+
+gfal-stat ${STATPATH}/${EXPNUM}.out > /dev/null && dotoutfile=${PNFSPATH}/${EXPNUM}.out
+    
+gfal-stat ${STATPATH}/${EXPNUM}_$(printf %d ${ccdlist}).out > /dev/null && ccddotoutfile=${PNFSPATH}/${EXPNUM}_$(printf %d ${ccdlist}).out
+
 # get filenames
 nimmask=`echo $immaskfiles | wc -w`
 if [ $nimmask -ge 1 ]; then
@@ -534,7 +535,7 @@ EOF
     
     #setup -j finalcut Y6A1+2 -Z /cvmfs/des.opensciencegrid.org/2015_Q2/eeups/SL6/eups/packages
     setup finalcut Y6A1+2
-    setup diffimg gw8
+    setup diffimg $DIFFIMG_VERSION
     setup CoreUtils 1.0.1+0
     setup wcstools 3.9.6+0
     export PATH=${WCSTOOLS_DIR}/bin:${PATH}
@@ -554,9 +555,17 @@ EOF
 	    for c in $ccdlist; do
         # copies all ccds
 		c=$(printf "%02d" $c)
-		filestocopy1="$(ifdh ls /pnfs/des/${DESTCACHE}/${SCHEMA}/exp/${NITE}/${EXPNUM}/D$(printf %08d ${EXPNUM})_${BAND}_${c}_r${RNUM}p${PNUM}_fullcat.fits | grep fits)"
+		filestocopy1=""
+		filestocopy2=""
+		gfal-stat ${STATBASE}/${DESTCACHE}/${SCHEMA}/exp/${NITE}/${EXPNUM}/D$(printf %08d ${EXPNUM})_${BAND}_${c}_r${RNUM}p${PNUM}_fullcat.fits > /dev/null 2>&1
+		if [ $? -eq 0 ]; then
+		    filestocopy1="/pnfs/des/${DESTCACHE}/${SCHEMA}/exp/${NITE}/${EXPNUM}/D$(printf %08d ${EXPNUM})_${BAND}_${c}_r${RNUM}p${PNUM}_fullcat.fits"
+		fi
 		echo "filestocopy1: $filestocopy1"
-		filestocopy2="$(ifdh ls /pnfs/des/${DESTCACHE}/${SCHEMA}/exp/${NITE}/${EXPNUM}/D$(printf %08d ${EXPNUM})_${BAND}_${c}_r${RNUM}p${PNUM}_immask.fits.fz | grep fits)"
+		gfal-stat ${STATBASE}/${DESTCACHE}/${SCHEMA}/exp/${NITE}/${EXPNUM}/D$(printf %08d ${EXPNUM})_${BAND}_${c}_r${RNUM}p${PNUM}_immask.fits.fz > /dev/null 2>&1
+		if [ $? -eq 0 ]; then
+		    filestocopy2="/pnfs/des/${DESTCACHE}/${SCHEMA}/exp/${NITE}/${EXPNUM}/D$(printf %08d ${EXPNUM})_${BAND}_${c}_r${RNUM}p${PNUM}_immask.fits.fz"
+		fi
 		echo "filestocopy2: $filestocopy2"
 		ifdh cp --force=xrootd -D $filestocopy1 $filestocopy2 .
 	    done
@@ -706,14 +715,14 @@ for c in $ccdlist; do
     ln -s ${procnum}/input_files/* .
     
     # make some local directories expected by the diffimg pipeline
-    mkdir ${LOCDIR}/headers ${LOCDIR}/ingest ${LOCDIR}/$(basename $(ifdh ls  /pnfs/des/${DESTCACHE}/${SCHEMA}/exp/${NITE}/${EXPNUM}/${LOCDIR}/stamps* 0 | head -1))
+    mkdir ${LOCDIR}/headers ${LOCDIR}/ingest ${LOCDIR}/$(basename $(ifdh ls /pnfs/${DESTCACHE}/${SCHEMA}/exp/${NITE}/${EXPNUM}/${LOCDIR}/stamps* 0 | head -1))
     ln -s ${LOCDIR}/ingest ${LOCDIR}/stamps* ${LOCDIR}/headers .
     
     /cvmfs/grid.cern.ch/util/cvmfs-uptodate /cvmfs/des.opensciencegrid.org # make sure we have new version of cvmfs
     
 
     # Setup
-    setup diffimg gw8
+    setup diffimg $DIFFIMG_VERSiON
     setup CoreUtils 1.0.1+0
     setup wcstools 3.9.6+0
     setup -j easyaccess -Z /cvmfs/des.opensciencegrid.org/eeups/fnaleups
@@ -1011,15 +1020,16 @@ for c in $ccdlist; do
         overlapnite=$(egrep -o /pnfs/des/${DESTCACHE}/${SCHEMA}/exp/[0-9]{8}/${overlapexp}/${overlapexp}.out ${procnum}/input_files/copy_pairs_for_${EXPNUM}.sh | sed -r -e "s/.*\/([0-9]{8})\/.*/\1/")
         overlapccds=`awk '($2=='${CCDNUM_LIST}') { for( f=5; f<=NF; f++) print $f}' $overlapfile`
 	echo "overlap ccds = $overlapccds"
-	tempfiles=$(ifdh ls /pnfs/des/${DESTCACHE}/${SCHEMA}/exp/${overlapnite}/${overlapexp})
 	immaskfiles=""
 	immaskfitsfiles=""
 	psffiles=""
 	csvfiles=""
 	ZPdir="/pnfs/des/${DESTCACHE}/${SCHEMA}/exp/${overlapnite}/${overlapexp}/"
-	ZPfilename=$(echo $tempfiles | grep -o D$(printf %08d $overlapexp)_${rpnum}_ZP.csv 2>/dev/null)
+	ZPfilename=D$(printf %08d $overlapexp)_${rpnum}_ZP.csv
 	echo "ZPfilename for combined file = $ZPfilename"
-        if [ ! -z "$ZPfilename" ]; then
+	# check it exists and try to copy if gfal-stat is successful
+	gfal-stat $(echo ${ZPdir}$ZPfilename | sed -e "#/pnfs/des#${STATBASE}#") > /dev/null
+        if [ $? -eq 0 ]; then
 	    ifdh cp -D ${ZPdir}${ZPfilename} ./ || echo "Error copying $ZPfile"  
 	fi
 
@@ -1033,10 +1043,12 @@ for c in $ccdlist; do
             fi
             file2copy="/pnfs/des/${DESTCACHE}/${SCHEMA}/exp/${overlapnite}/${overlapexp}/D`printf %08d $overlapexp`_${BAND}_`printf %02d $overlapccd`_${rpnum}_immask.fits.fz"
             echo "file2copy = $file2copy"
-	    ZPfilename=$(echo $tempfiles | grep -o D$(printf %08d $overlapexp)_$(printf %02d $overlapccd)_${rpnum}_ZP.csv 2>/dev/null)
+	    ZPfilename=D$(printf %08d $overlapexp)_$(printf %02d $overlapccd)_${rpnum}_ZP.csv
 	    ZPfile=${ZPdir}${ZPfilename}
 	    echo "ZPfile = $ZPfile"
-            if [ -z "$ZPfilename" ] ; then
+	    # check it exists and try to copy if gfal-stat is successful
+	    gfal-stat $(echo $ZPfile | sed -e "#/pnfs/des#${STATBASE}#") > /dev/null
+            if [ $? -ne 0 ] ; then
                 echo "ZP file for this template and CCD is not available. Hopefully a combined files exists for this exposure."
             else
 		ifdh cp -D $ZPfile ./ || echo "Error copying $ZPfile"
