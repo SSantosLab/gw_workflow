@@ -215,24 +215,56 @@ ccddotoutfile=""
 # Check whether SE outputs and .out files exist with gfal-stat; computationally cheaper than ifdh ls.
 
 statfile=D$(printf %08d ${EXPNUM})_${BAND}_$(printf %02d ${CCDNUM_LIST})_r${RNUM}p${PNUM}_immask.fits.fz
-gfal-stat ${STATPATH}/${statfile} > /dev/null && immaskfiles="$immaskfiles ${PNFSPATH}/${statfile}"
+gfal-stat ${STATPATH}/${statfile} > /dev/null
+if [ $? -eq 0 ]; then
+    immaskfiles="$immaskfiles ${PNFSPATH}/${statfile}"
+else
+    echo "$statfile not already present on disk."
+fi
 
 statfile=D$(printf %08d ${EXPNUM})_${BAND}_$(printf %02d ${CCDNUM_LIST})_r${RNUM}p${PNUM}_fullcat.fits   
-gfal-stat ${STATPATH}/${statfile} > /dev/null && psffiles="$psffiles ${PNFSPATH}/${statfile}"
+gfal-stat ${STATPATH}/${statfile} > /dev/null
+if [ $? -eq 0 ]; then
+    psffiles="$psffiles ${PNFSPATH}/${statfile}"
+else
+    echo "$statfile not already present on disk."
+fi
 
 statfile=allZP_D$(printf %08d ${EXPNUM})_r${RNUM}p${PNUM}.csv
-gfal-stat ${STATPATH}/${statfile} > /dev/null && csvfiles="$csvfiles ${PNFSPATH}/${statfile}"
+gfal-stat ${STATPATH}/${statfile} > /dev/null
+if [ $? -eq 0 ]; then
+    csvfiles="$csvfiles ${PNFSPATH}/${statfile}"
+else
+    echo "$statfile not already present on disk."
+fi
 statfile=D$(printf %08d ${EXPNUM})_r${RNUM}p${PNUM}_ZP.csv
-gfal-stat ${STATPATH}/${statfile} > /dev/null && csvfiles="$csvfiles ${PNFSPATH}/${statfile}"
-    
+gfal-stat ${STATPATH}/${statfile} > /dev/null
+if [ $? -eq 0 ]; then
+    csvfiles="$csvfiles ${PNFSPATH}/${statfile}"
+else
+    echo "$statfile not already present on disk."
+fi
+
 for csvfile in allZP_D$(printf %08d ${EXPNUM})_r${RNUM}p${PNUM}.csv Zero_D$(printf %08d ${EXPNUM})_$(printf %02d $CCDNUM_LIST)_r${RNUM}p${PNUM}.csv D$(printf %08d ${EXPNUM})_$(printf %02d $CCDNUM_LIST)_r${RNUM}p${PNUM}_ZP.csv
 do
-    gfal-stat ${STATPATH}/${csvfile} && ccdcsvfiles="$ccdcsvfiles ${PNFSPATH}/${csvfile}"
+    gfal-stat ${STATPATH}/${csvfile} > /dev/null && ccdcsvfiles="$ccdcsvfiles ${PNFSPATH}/${csvfile}"
 done
 
-gfal-stat ${STATPATH}/${EXPNUM}.out > /dev/null && dotoutfile=${PNFSPATH}/${EXPNUM}.out
-    
-gfal-stat ${STATPATH}/${EXPNUM}_$(printf %d ${ccdlist}).out > /dev/null && ccddotoutfile=${PNFSPATH}/${EXPNUM}_$(printf %d ${ccdlist}).out
+statfile=${EXPNUM}.out
+gfal-stat ${STATPATH}/${statfile} > /dev/null
+if [ $? -eq 0 ]; then
+    dotoutfile=${PNFSPATH}/${statfile}
+else
+    echo "$statfile not already present on disk."
+fi
+
+statfile=${EXPNUM}_$(printf %d ${ccdlist}).out
+gfal-stat ${STATPATH}/${statfile} > /dev/null
+if [ $? -eq 0 ]; then
+    ccddotoutfile=${PNFSPATH}/${statfile}
+else
+    echo "$statfile not already present on disk."
+fi
 
 # get filenames
 nimmask=`echo $immaskfiles | wc -w`
@@ -560,11 +592,15 @@ EOF
 		gfal-stat ${STATBASE}/${DESTCACHE}/${SCHEMA}/exp/${NITE}/${EXPNUM}/D$(printf %08d ${EXPNUM})_${BAND}_${c}_r${RNUM}p${PNUM}_fullcat.fits > /dev/null 2>&1
 		if [ $? -eq 0 ]; then
 		    filestocopy1="/pnfs/des/${DESTCACHE}/${SCHEMA}/exp/${NITE}/${EXPNUM}/D$(printf %08d ${EXPNUM})_${BAND}_${c}_r${RNUM}p${PNUM}_fullcat.fits"
+		else
+		    echo "Error finding ${PNFSPATH}/D$(printf %08d ${EXPNUM})_${BAND}_${c}_r${RNUM}p${PNUM}_fullcat.fits"
 		fi
 		echo "filestocopy1: $filestocopy1"
 		gfal-stat ${STATBASE}/${DESTCACHE}/${SCHEMA}/exp/${NITE}/${EXPNUM}/D$(printf %08d ${EXPNUM})_${BAND}_${c}_r${RNUM}p${PNUM}_immask.fits.fz > /dev/null 2>&1
 		if [ $? -eq 0 ]; then
 		    filestocopy2="/pnfs/des/${DESTCACHE}/${SCHEMA}/exp/${NITE}/${EXPNUM}/D$(printf %08d ${EXPNUM})_${BAND}_${c}_r${RNUM}p${PNUM}_immask.fits.fz"
+		else
+		    echo "Error finding ${PNFSPATH}/D$(printf %08d ${EXPNUM})_${BAND}_${c}_r${RNUM}p${PNUM}_immask.fits.fz"
 		fi
 		echo "filestocopy2: $filestocopy2"
 		ifdh cp --force=xrootd -D $filestocopy1 $filestocopy2 .
@@ -1028,9 +1064,11 @@ for c in $ccdlist; do
 	ZPfilename=D$(printf %08d $overlapexp)_${rpnum}_ZP.csv
 	echo "ZPfilename for combined file = $ZPfilename"
 	# check it exists and try to copy if gfal-stat is successful
-	gfal-stat $(echo ${ZPdir}$ZPfilename | sed -e "#/pnfs/des#${STATBASE}#") > /dev/null
+	gfal-stat $(echo ${ZPdir}$ZPfilename | sed -e "#/pnfs/des#${STATBASE}#") > /dev/null 2>&1
         if [ $? -eq 0 ]; then
-	    ifdh cp -D ${ZPdir}${ZPfilename} ./ || echo "Error copying $ZPfile"  
+	    ifdh cp -D ${ZPdir}${ZPfilename} ./ || echo "Error copying $ZPfile"
+	else
+	    echo "Unable to find ${ZPdir}$ZPfilename in cache."
 	fi
 
         for overlapccd in $overlapccds
