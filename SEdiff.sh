@@ -639,7 +639,7 @@ EOF
 	
 	
     #touch bliss_test.log
-	ifdh cp /pnfs/des/persistent/desgw/BLISS-expCalib_Y3apass-old-Nora.py ./BLISS-expCalib_Y3apass-old.py
+	ifdh cp /pnfs/des/persistent/desgw/BLISS-expCalib_Y3apass-old-Nora-BBHG.py ./BLISS-expCalib_Y3apass-old.py
         
 	#cp ../BLISS-expCalib_Y3apass-old-Nora.py ./BLISS-expCalib_Y3apass-old.py
 	
@@ -1064,7 +1064,7 @@ for c in $ccdlist; do
 	ZPfilename=D$(printf %08d $overlapexp)_${rpnum}_ZP.csv
 	echo "ZPfilename for combined file = $ZPfilename"
 	# check it exists and try to copy if gfal-stat is successful
-	gfal-stat $(echo ${ZPdir}$ZPfilename | sed -e "#/pnfs/des#${STATBASE}#") > /dev/null 2>&1
+	gfal-stat $(echo ${ZPdir}$ZPfilename | sed -e "s#/pnfs/des#${STATBASE}#") > /dev/null 2>&1
         if [ $? -eq 0 ]; then
 	    ifdh cp -D ${ZPdir}${ZPfilename} ./ || echo "Error copying $ZPfile"
 	else
@@ -1085,7 +1085,7 @@ for c in $ccdlist; do
 	    ZPfile=${ZPdir}${ZPfilename}
 	    echo "ZPfile = $ZPfile"
 	    # check it exists and try to copy if gfal-stat is successful
-	    gfal-stat $(echo $ZPfile | sed -e "#/pnfs/des#${STATBASE}#") > /dev/null
+	    gfal-stat $(echo $ZPfile | sed -e "s#/pnfs/des#${STATBASE}#") > /dev/null
             if [ $? -ne 0 ] ; then
                 echo "ZP file for this template and CCD is not available. Hopefully a combined files exists for this exposure."
             else
@@ -1121,8 +1121,11 @@ for c in $ccdlist; do
                         echo $newcounter
                         sed -i -e "s/\(.*\) ${overlapcounter} /\1 $newcounter/" "${overlapfile}"
 			if [ "${newcounter}" -lt 1 ]; then
+			    echo "NORA!! LOOK!!"
 			    # Change the SEARCHEXP_TEMPEXP.out to .no (but how?)
 			    mv ${TOPDIR_WSDIFF}/pairs/${EXPNUM}-${overlapexp}.out ${TOPDIR_WSDIFF}/pairs/${EXPNUM}-${overlapexp}.no
+			    ln -sf ${TOPDIR_WSDIFF}/pairs/${EXPNUM}-${overlapexp}.no ${TOPDIR_WSDIFF}/pairs/${EXPNUM}/${EXPNUM}-${overlapexp}.out
+			    mv ${TOPDIR_WSDIFF}/pairs/${EXPNUM}/${EXPNUM}-${overlapexp}.out ${TOPDIR_WSDIFF}/pairs/${EXPNUM}/${EXPNUM}-${overlapexp}.no
 			    #mv SEARCHEXP_TEMPEXP.out SEARCHEXP_TEMPEXP.no
 			fi
 		    fi  
@@ -1151,8 +1154,11 @@ for c in $ccdlist; do
                     echo $newcounter
                     sed -i -e "s/\(.*\) ${overlapcounter} /\1 $newcounter/" "${overlapfile}"
                     if [ "${newcounter}" -lt 1 ]; then
+			echo "NORA!! PAY ATTENTION!!"
                         # Change the SEARCHEXP_TEMPEXP.out to .no (but how?)
                         mv ${TOPDIR_WSDIFF}/pairs/${EXPNUM}-${overlapexp}.out ${TOPDIR_WSDIFF}/pairs/${EXPNUM}-${overlapexp}.no
+			ln -sf ${TOPDIR_WSDIFF}/pairs/${EXPNUM}-${overlapexp}.no ${TOPDIR_WSDIFF}/pairs/${EXPNUM}/${EXPNUM}-${overlapexp}.out
+			mv ${TOPDIR_WSDIFF}/pairs/${EXPNUM}/${EXPNUM}-${overlapexp}.out ${TOPDIR_WSDIFF}/pairs/${EXPNUM}/${EXPNUM}-${overlapexp}.no
 		    fi
 		fi
             fi
