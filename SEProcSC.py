@@ -15,7 +15,7 @@ import logging
 import numpy as np
 import pyfits
 import os
-import ConfigParser
+import configparser
 
 import argparse
 from despyfits.DESImage import DESImage
@@ -53,7 +53,7 @@ class SEProcSC():
 
 ###########  Configuration ############
 
-        self.Config = ConfigParser.ConfigParser()
+        self.Config = configparser.ConfigParser()
         self.configFile = self.args.confFile 
         self.Config.read(self.configFile)
         self.template_file = self.ConfigSectionMap("General")['template']
@@ -238,7 +238,7 @@ class SEProcSC():
         ' --flat ' + self.flat.format(**args) + \
         ' --resaturate --fixcols --addweight'    
 
-        print '\n',cmd,'\n'    
+        print('\n',cmd,'\n') 
     
         retval = subprocess.call(cmd.split(),stderr=subprocess.STDOUT)
         if retval != 0:
@@ -260,7 +260,7 @@ class SEProcSC():
         '  -m -b 5 -f 1.0 -l 7 -n 7 -r 5 -t 20 -v 3 -w 2.0 -y 1.0 -s 100 -v 3 -E 6 -L 30' + \
         '  -x ' +self.template_file.format(**args)+'_trailbox.fits -o ' +self.template_file.format(**args)+'_satstars.fits'   
 
-        print '\n',cmd,'\n'    
+        print('\n',cmd,'\n')
 
         retval = subprocess.call(cmd.split(),stderr=subprocess.STDOUT)
         if retval != 0:
@@ -279,7 +279,7 @@ class SEProcSC():
         ' --skyfilename ' + self.template_file.format(**args)+'_'+outname+'.fits' + \
         ' --blocksize 128'
 
-        print '\n',cmd,'\n'    
+        print('\n',cmd,'\n')
 
         retval = subprocess.call(cmd.split(),stderr=subprocess.STDOUT)
         if retval != 0:
@@ -301,7 +301,7 @@ class SEProcSC():
         ' --bkgfile '+self.template_file.format(**args)+'_'+bkgname+'.fits'+\
         ' --draw  --write_streaks  --streaksfile ' + self.template_file.format(**args)+'_streaksfile.fits' 
 
-        print '\n',cmd,'\n'    
+        print('\n',cmd,'\n')
 
         retval = subprocess.call(cmd.split(),stderr=subprocess.STDOUT)
         if retval != 0:
@@ -326,7 +326,7 @@ class SEProcSC():
         self.copy_from_Dcache(self.correc_dir+'/skypca/'+str(self.year)+str(self.epoch)+'/'+self.PCFILENAME.format(**args))
     #-----------------------
         cmd = 'ls  *'+inputFile+'.fits > listpcain'
-        print'\n', cmd,'\n' 
+        print('\n', cmd,'\n')
         retval = subprocess.call(cmd, shell=True)
 
         if retval != 0:
@@ -336,7 +336,7 @@ class SEProcSC():
 
     #------------------------
         cmd = 'sky_combine --miniskylist listpcain -o ' + self.exp_template_file.format(**args)+'_'+skycombineFile+'.fits --ccdnums 1,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36,37,38,39,40,41,42,43,44,45,46,47,48,49,50,51,52,53,54,55,56,57,58,59,60,62 --invalid S30,N30' 
-        print cmd
+        print(cmd)
         retval = subprocess.call(cmd.split(),stderr=subprocess.STDOUT)
 
         if retval != 0:
@@ -348,7 +348,7 @@ class SEProcSC():
         cmd = 'sky_fit --infilename ' +  self.exp_template_file.format(**args)+'_'+ skycombineFile+'.fits' 
         cmd += ' --outfilename '+ self.exp_template_file.format(**args)+'_'+skyfitinfoFile+'.fits --pcfilename  '
         cmd += (self.PCFILENAME[self.PCFILENAME.rfind("/")+1:]).format(**args)
-        print cmd
+        print(cmd)
         retval = subprocess.call(cmd.split(),stderr=subprocess.STDOUT)
 
         if retval != 0:
@@ -370,7 +370,7 @@ class SEProcSC():
         ' --starflat '+ self.starflat.format(**args) +\
         ' --out '+self.template_file.format(**args)+'_'+outname+'.fits'
 
-        print '\n',cmd,'\n'
+        print('\n',cmd,'\n')
 
         retval = subprocess.call(cmd.split(),stderr=subprocess.STDOUT)
 
@@ -399,7 +399,7 @@ class SEProcSC():
         ' --domefilename ' +self.flat.format(**args) +\
         ' --weight  ' +self.weight
 
-        print '\n',cmd,'\n'
+        print('\n',cmd,'\n')
            
         retval = subprocess.call(cmd.split(),stderr=subprocess.STDOUT)
         if retval != 0:
@@ -424,7 +424,7 @@ class SEProcSC():
         ' -ASTREF_CATALOG ' +self.catalog_ref +' -c ' +self.default_scamp +\
         ' -WRITE_XML Y -XML_NAME scamp.xml -MOSAIC_TYPE SAME_CRVAL -ASTREF_BAND DEFAULT -POSITION_MAXERR 10.0 -NTHREADS 1 '
 
-        print '\n',cmd,'\n'
+        print('\n',cmd,'\n')
 
         retval = subprocess.call(cmd.split(),stderr=subprocess.STDOUT)
         if retval != 0:
@@ -471,7 +471,7 @@ class SEProcSC():
         ' -DETECT_THRESH 10.0 -SATUR_KEY SATURATE  -CATALOG_TYPE FITS_LDAC -WEIGHT_IMAGE  ' + self.template_file.format(**args)+'_'+inname+'.fits[2]'+\
         '  -WEIGHT_TYPE  MAP_WEIGHT  '
 
-        print '\n',cmd,'\n'
+        print('\n',cmd,'\n')
 
         retval = subprocess.call(cmd.split(),stderr=subprocess.STDOUT)
         if retval != 0:
@@ -492,7 +492,7 @@ class SEProcSC():
         '  -SATUR_KEY SATURATE  -CATALOG_TYPE FITS_LDAC -WEIGHT_IMAGE  ' + self.template_file.format(**args)+'_'+inname+'.fits[2]'+\
         '  -WEIGHT_TYPE  MAP_WEIGHT  '
 
-        print '\n',cmd,'\n'
+        print('\n',cmd,'\n')
 
         retval = subprocess.call(cmd.split(),stderr=subprocess.STDOUT)
         if retval != 0:
@@ -531,7 +531,7 @@ class SEProcSC():
         ' -PARAMETERS_NAME ' + self.sexbkgparamFile +\
         ' -CATALOG_TYPE NONE -INTERP_TYPE ALL -INTERP_MAXXLAG 16 -INTERP_MAXYLAG 16 '
 
-        print '\n',cmd,'\n'
+        print('\n',cmd,'\n')
         retval = subprocess.call(cmd.split(),stderr=subprocess.STDOUT)
         if retval != 0:
             sys.exit(1)
@@ -546,7 +546,7 @@ class SEProcSC():
 
         cmd = 'psfex ' + self.template_file.format(**args)+'_'+name+'.fits -c  ' +self.config_filePSF +\
         '  -OUTCAT_NAME  '+ self.template_file.format(**args)+'_psflist.fits  -OUTCAT_TYPE FITS_LDAC'
-        print '\n',cmd,'\n'
+        print('\n',cmd,'\n')
 
         retval = subprocess.call(cmd.split(),stderr=subprocess.STDOUT)
         if retval != 0:
@@ -574,7 +574,7 @@ class SEProcSC():
         ' -DETECT_THRESH 1.5 -SATUR_KEY SATURATE  -CATALOG_TYPE FITS_LDAC '+\
         ' -WEIGHT_IMAGE '+self.template_file.format(**args)+'_'+name1+'.fits[2],'+self.template_file.format(**args)+'_'+name1+'.fits[2]'+ \
         '  -WEIGHT_TYPE MAP_WEIGHT  -CHECKIMAGE_NAME ' + self.template_file.format(**args)+'_segmap.fits -CHECKIMAGE_TYPE SEGMENTATION '
-        print ' sextractorPSF \n',cmd,'\n'
+        print(' sextractorPSF \n',cmd,'\n')
 #        ' -INTERP_TYPE NONE  -SEEING_FWHM ' + str(fwhm) +\
 
         retval = subprocess.call(cmd.split(),stderr=subprocess.STDOUT)
@@ -596,23 +596,23 @@ class SEProcSC():
         CLASSLIM = 0.75      # class threshold to define star
         MAGERRLIMIT = 0.1  # mag error threshold for stars
 
-        if debug: print "!!!! WUTL_STS: (fwhm): Opening scamp_cat to calculate median FWHM & ELLIPTICITY.\n"
+        if debug: print("!!!! WUTL_STS: (fwhm): Opening scamp_cat to calculate median FWHM & ELLIPTICITY.\n")
         hdu = pyfits.open(incat,"readonly")
 
-        if debug: print "!!!! WUTL_STS: (fwhm): Checking to see that hdu2 in scamp_cat is a binary table.\n"
+        if debug: print("!!!! WUTL_STS: (fwhm): Checking to see that hdu2 in scamp_cat is a binary table.\n")
         if 'XTENSION' in hdu[2].header:
             if hdu[2].header['XTENSION'] != 'BINTABLE':
-                print "!!!! WUTL_ERR: (fwhm): this HDU is not a binary table"
+                print("!!!! WUTL_ERR: (fwhm): this HDU is not a binary table")
                 exit(1)
         else:
-            print "!!!! WUTL_ERR: (fwhm): XTENSION keyword not found"
+            print("!!!! WUTL_ERR: (fwhm): XTENSION keyword not found")
             exit(1)
 
         if 'NAXIS2' in hdu[2].header:
             nrows = hdu[2].header['NAXIS2']
-            print "!!!! WUTL_INF: (fwhm): Found %s rows in table" % nrows
+            print("!!!! WUTL_INF: (fwhm): Found %s rows in table" % nrows)
         else:
-            print "!!!! WUTL_ERR: (fwhm): NAXIS2 keyword not found"
+            print("!!!! WUTL_ERR: (fwhm): NAXIS2 keyword not found")
             exit(1)
 
         tbldct = {}
@@ -620,7 +620,7 @@ class SEProcSC():
             if colname in hdu[2].columns.names:
                 tbldct[colname] = hdu[2].data.field(colname)
             else:
-                print "!!!! WUTL_ERR: (fwhm): No %s column in binary table" % colname
+                print("!!!! WUTL_ERR: (fwhm): No %s column in binary table" % colname)
                 exit(1)
 
         hdu.close()
@@ -650,17 +650,17 @@ class SEProcSC():
         else:
             if count%2:
             # Odd number of elements
-                fwhm_med = fwhm_sel[count/2]
-                ellp_med = ellp_sel[count/2]
+                fwhm_med = fwhm_sel[count//2]
+                ellp_med = ellp_sel[count//2]
             else:
         # Even number of elements
-                fwhm_med = 0.5 * (fwhm_sel[count/2]+fwhm_sel[count/2-1])
-                ellp_med = 0.5 * (ellp_sel[count/2]+ellp_sel[count/2-1])
+                fwhm_med = 0.5 * (fwhm_sel[count//2]+fwhm_sel[count//2-1])
+                ellp_med = 0.5 * (ellp_sel[count//2]+ellp_sel[count//2-1])
 
         if debug:
             print "FWHM=%.4f" % fwhm_med
             print "ELLIPTIC=%.4f" % ellp_med
-            print "NFWHMCNT=%s" % count
+            print "NFWHMCNT=%i" % count
 
         return (fwhm_med,ellp_med,count)    
 
@@ -683,7 +683,7 @@ class SEProcSC():
         for ii in o:
             for oo in info_array:
                 if oo in ii.split('=')[0] :
-                    #print ii.split('=')[0], ii.split('=')[1].split('/')[0]
+                    #print(ii.split('=')[0], ii.split('=')[1].split('/')[0])
                     matrix.append(ii.split('=')[1].split('/')[0])
 
         matrix = np.array(matrix)
@@ -852,13 +852,13 @@ class SEProcSC():
         
 if __name__ == '__main__':
     nbpar = len(sys.argv)
-    print sys.argv
+    print(sys.argv)
     conF = "confFile"
     conF = sys.argv[1]
     multiprocessing.freeze_support()
-    print " Start SEProc.py with conf File %s\n" % conF
+    print(" Start SEProc.py with conf File %s\n" % conF)
     se = SEProcSC(conF)
-    print "instance created \n"
+    print("instance created \n")
     EXPNUM =  se.ConfigSectionMap("General")['expnum']
     FILTER = se.ConfigSectionMap("General")['filter']
     NITE = se.ConfigSectionMap("General")['nite']
@@ -870,10 +870,10 @@ if __name__ == '__main__':
     YEAR = se.ConfigSectionMap("General")['year']
     EPOCH = se.ConfigSectionMap("General")['epoch']
     ncpu = int(se.ConfigSectionMap("General")['ncpu'])
-    print "ncpu=%d \n" % ncpu
+    print("ncpu=%d \n" % ncpu)
 #EXPFILE =  'DECam_00'+str(EXPNUM)+'.fits.fz'
     EXPFILE = data_file
-    print "Start working with file %s \n" % EXPFILE
+    print("Start working with file %s \n" % EXPFILE)
     args = {'expnum': EXPNUM, 'filter': FILTER, 'ccd':'0', 'r':rRun, 'p':pRun, 'year': YEAR, 'epoch': EPOCH}
     se.setArgs(**args)
 #running crosstalk
@@ -881,12 +881,12 @@ if __name__ == '__main__':
 # I have to replace NITE with empty string to avoid modification of the file path
 # as it add to the path NITE and we have different data model
 #
-    print " Start crosstalk \n"
+    print(" Start crosstalk \n")
     se.crosstalk(EXPFILE,'',**args)
     nccd = len(CCD)
     xfiles_list = glob.glob('*_xtalk.fits')
     if len(xfiles_list) <  nccd:
-        print " Possibly corrupted file expect %d extensions but got only %d \n" % (nccd,len(xfiles_list))
+        print(" Possibly corrupted file expect %d extensions but got only %d \n" % (nccd,len(xfiles_list)))
         sys.exit(-1)
 #running pixelcorrect and bleedmask
     se.copy_from_Dcache(se.data_conf+'default.psf')
@@ -917,7 +917,7 @@ if __name__ == '__main__':
     se.scamp('Scamp_allCCD_r'+rRun+'p'+pRun+'.fits')
     se.change_head('Scamp_allCCD_r'+rRun+'p'+pRun+'.head', 'sextractor', 'detrend', 'wcs', CCD, **args)
 #
-    print "SECOND LOOP \n"
+    print("SECOND LOOP \n")
 
     for ccd in CCD:
         ccdstring= "%02d"%int(ccd)
@@ -926,7 +926,7 @@ if __name__ == '__main__':
     se.skyCombineFit('bleedmask-mini','bleedmask-mini-fp','skyfit-binned-fp',**args)
 # 
 
-    print "THIRD LOOP \n"
+    print("THIRD LOOP \n")
 
     for ccd in CCD:
         ccdstring= "%02d"%int(ccd)
@@ -935,4 +935,4 @@ if __name__ == '__main__':
 
     
 
-    print " End run on exposure  \n" 
+    print(" End run on exposure  \n")
