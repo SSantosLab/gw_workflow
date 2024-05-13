@@ -1,4 +1,4 @@
-#!/bin/bash
+!/bin/bash
 
 if [ $# -lt 1 ]; then
     echo "usage: SEdiff.sh -E EXPNUM -r RNUM -p PNUM -n NITE -b BAND (i|r|g|Y|z|u) -S season (dpXX) [-c ccdlist] [-d destcache (scratch|persistent)] [-m SCHEMA (gw|wsdiff)] [-v diffimg_version] [-t] [-C] [-j] [-s] [-O] [-V SNVETO_NAME] [-T STARCAT_NAME] [-Y] [-F]" 
@@ -318,10 +318,9 @@ if [ "$SKIPSE" == "false" ] ; then # if statement allows SE to be skipped if SE 
     
     ifdh cp -D /pnfs/des/resilient/gw/code/MySoft4_v2.tar.gz  /pnfs/des/resilient/gw/code/test_mysql_libs.tar.gz ./ || { echo "Error copying input files. Exiting." ; exit 2 ; }
     tar xzf ./MySoft4_v2.tar.gz
-    #MARIA FIX 
+    #MARIA FIX
     ifdh cp /pnfs/des/persistent/macevedo/desdmLiby1e2.py ./
-    #cp ../desdmLiby1e2.py ./
-    #END MARIA FIX 
+    #END MARIA FIX
     tar xzfm ./test_mysql_libs.tar.gz
        
     chmod +x make_red_catlist.py expCalib-isaac-BBH.py expCalib-isaac-BNS.py getcorners.sh
@@ -424,7 +423,8 @@ if [ "$SKIPSE" == "false" ] ; then # if statement allows SE to be skipped if SE 
         pcaprefix='Y2A1_20141205t0315_{filter:s}_r2133p01_skypca-binned-fp.fits'
         elif [ $EXPNUM -le 519543 ]; then
         YEAR=y3
-        EPOCH=e1
+        #EPOCH=e1
+	EPOCH=''
         biasfile='D_n20151113t1123_c{ccd:>02s}_r2350p02_biascor.fits'
         bpmfile='D_n20151113t1123_c{ccd:>02s}_r2359p01_bpm.fits'
         dflatfile='D_n20151113t1123_{filter:s}_c{ccd:>02s}_r2350p02_norm-dflatcor.fits'
@@ -636,20 +636,30 @@ EOF
 	
 	
     #touch bliss_test.log
+<<<<<<< HEAD
 	ifdh cp /pnfs/des/persistent/desgw/expCalib-isaac-BBH.py ./expCalib-isaac-BBH.py
         
 	#cp ../BLISS-expCalib_Y3apass-old-Nora.py ./BLISS-expCalib_Y3apass-old.py
 	
 	./expCalib-isaac-BBH.py --expnum $EXPNUM --reqnum $RNUM --attnum $PNUM --ccd $CCDNUM_LIST
+=======
+    ifdh cp /pnfs/des/persistent/desgw/expCalib-isaac-BNS.py ./expCalib-isaac-BNS.py
+    ./expCalib-isaac-BNS.py --expnum $EXPNUM --reqnum $RNUM --attnum $PNUM --ccd $CCDNUM_LIST
+
+	#ifdh cp /pnfs/des/persistent/desgw/BLISS-expCalib_Y3apass-old-Nora.py ./BLISS-expCalib_Y3apass-old.py
+	#ifdh cp /pnfs/des/persistent/desgw/expCalib-isaac.py ./BLISS-expCalib_Y3apass-old.py
+	#./BLISS-expCalib_Y3apass-old.py --expnum $EXPNUM --reqnum $RNUM --attnum $PNUM --ccd $CCDNUM_LIST
+>>>>>>> 809db39 (implement new calibration and skipping incomplete)
 	
 	RESULT=$? 
-	echo "BLISS-expCalib_Y3pass-old.py exited with status $RESULT"
-	
+	#echo "BLISS-expCalib_Y3pass-old.py exited with status $RESULT"
+    echo "expCalib-isaac-BNS.py exited with status $RESULT"	
+
 	files2cp=`ls allZP*r${RNUM}*p${PNUM}*.csv Zero*r${RNUM}*p${PNUM}*.csv D*${EXPNUM}*_ZP.csv D*${EXPNUM}*CCDsvsZPs.png D*${EXPNUM}*NumClipstar.png D*${EXPNUM}*ZP.png`
 	if [ "x${files2cp}" = "x" ]; then
             echo "Error, no calibration files to copy!"
 	else
-            IFDH_CP_UNLINK_ON_ERROR=1 ifdh cp --force=xrootd -D $files2cp /pnfs/des/${DESTCACHE}/${SCHEMA}/exp/${NITE}/${EXPNUM} || echo "ifdh cp of calibration csv and png files failed. There could be problems with Diffimg down the road when using this exposure."
+            ifdh cp --force=xrootd -D $files2cp /pnfs/des/${DESTCACHE}/${SCHEMA}/exp/${NITE}/${EXPNUM} || echo "ifdh cp of calibration csv and png files failed. There could be problems with Diffimg down the road when using this exposure."
 	fi
     fi
     
@@ -681,7 +691,6 @@ export NITE=$NITE
 ifdh cp ${IFDHCP_OPT} -D /pnfs/des/${DESTCACHE}/${SCHEMA}/exp/${NITE}/${EXPNUM}/${procnum}/input_files/copy_pairs_for_${EXPNUM}.sh  /pnfs/des/${DESTCACHE}/${SCHEMA}/exp/${NITE}/${EXPNUM}/WS_diff.list ./ || { echo "failed to copy WS_diff.list and copy_paris_for_${EXPNUM}.sh files" ; exit 2 ; }  # do we want to exit here?
 
 TEMPLATEPATHS=`cat copy_pairs_for_${EXPNUM}.sh | sed -r -e "s/ifdh\ cp\ (\-\-force=xrootd\ )?\-D\ //" -e "s/[0-9]{6,7}\.out//g" | sed -e 's/\$TOPDIR_WSTEMPLATES\/pairs\///'` ##AGTEST 6-->7
-echo "TEMPLATEPATHS: $TEMPLATEPATHS"
 
 baseccddotout=$(basename $ccddotoutfile)
 ifdh cp -D $dotoutfile $ccddotoutfile ./ || { echo "Failed to copy both combined .out file $dotoutfiles and CCD file ${ccddotoutfiles}. At least one is required. Exiting." ; exit 2 ; }
@@ -1119,12 +1128,21 @@ for c in $ccdlist; do
                         echo $newcounter
                         sed -i -e "s/\(.*\) ${overlapcounter} /\1 $newcounter/" "${overlapfile}"
 			if [ "${newcounter}" -lt 1 ]; then
+<<<<<<< HEAD
 			    echo "NORA!! LOOK!!"
 			    # Change the SEARCHEXP_TEMPEXP.out to .no (but how?)
 			    mv ${TOPDIR_WSDIFF}/pairs/${EXPNUM}-${overlapexp}.out ${TOPDIR_WSDIFF}/pairs/${EXPNUM}-${overlapexp}.no
 			    ln -sf ${TOPDIR_WSDIFF}/pairs/${EXPNUM}-${overlapexp}.no ${TOPDIR_WSDIFF}/pairs/${EXPNUM}/${EXPNUM}-${overlapexp}.out
 			    mv ${TOPDIR_WSDIFF}/pairs/${EXPNUM}/${EXPNUM}-${overlapexp}.out ${TOPDIR_WSDIFF}/pairs/${EXPNUM}/${EXPNUM}-${overlapexp}.no
 			    #mv SEARCHEXP_TEMPEXP.out SEARCHEXP_TEMPEXP.no
+=======
+
+                #NS fix for simlink
+                mv ${TOPDIR_WSDIFF}/pairs/${EXPNUM}-${overlapexp}.out ${TOPDIR_WSDIFF}/pairs/${EXPNUM}-${overlapexp}.no
+                ln -sf ${TOPDIR_WSDIFF}/pairs/${EXPNUM}-${overlapexp}.no ${TOPDIR_WSDIFF}/pairs/${EXPNUM}/${EXPNUM}-${overlapexp}.out
+                mv ${TOPDIR_WSDIFF}/pairs/${EXPNUM}/${EXPNUM}-${overlapexp}.out ${TOPDIR_WSDIFF}/pairs/${EXPNUM}/${EXPNUM}-${overlapexp}.no
+                            #mv SEARCHEXP_TEMPEXP.out SEARCHEXP_TEMPEXP.no
+>>>>>>> 809db39 (implement new calibration and skipping incomplete)
 			fi
 		    fi  
                 fi
@@ -1152,11 +1170,18 @@ for c in $ccdlist; do
                     echo $newcounter
                     sed -i -e "s/\(.*\) ${overlapcounter} /\1 $newcounter/" "${overlapfile}"
                     if [ "${newcounter}" -lt 1 ]; then
+<<<<<<< HEAD
 			echo "NORA!! PAY ATTENTION!!"
                         # Change the SEARCHEXP_TEMPEXP.out to .no (but how?)
                         mv ${TOPDIR_WSDIFF}/pairs/${EXPNUM}-${overlapexp}.out ${TOPDIR_WSDIFF}/pairs/${EXPNUM}-${overlapexp}.no
 			ln -sf ${TOPDIR_WSDIFF}/pairs/${EXPNUM}-${overlapexp}.no ${TOPDIR_WSDIFF}/pairs/${EXPNUM}/${EXPNUM}-${overlapexp}.out
 			mv ${TOPDIR_WSDIFF}/pairs/${EXPNUM}/${EXPNUM}-${overlapexp}.out ${TOPDIR_WSDIFF}/pairs/${EXPNUM}/${EXPNUM}-${overlapexp}.no
+=======
+                        #NS fix for simlink
+                        mv ${TOPDIR_WSDIFF}/pairs/${EXPNUM}-${overlapexp}.out ${TOPDIR_WSDIFF}/pairs/${EXPNUM}-${overlapexp}.no
+                        ln -sf ${TOPDIR_WSDIFF}/pairs/${EXPNUM}-${overlapexp}.no ${TOPDIR_WSDIFF}/pairs/${EXPNUM}/${EXPNUM}-${overlapexp}.out
+                        mv ${TOPDIR_WSDIFF}/pairs/${EXPNUM}/${EXPNUM}-${overlapexp}.out ${TOPDIR_WSDIFF}/pairs/${EXPNUM}/${EXPNUM}-${overlapexp}.no
+>>>>>>> 809db39 (implement new calibration and skipping incomplete)
 		    fi
 		fi
             fi
@@ -1437,7 +1462,15 @@ fi
 
 
     sed -i -e "s/0x47FB/0x47DB/" RUN05_expose_makeWeight
+    
+    echo "$PWD/edit_run1819.sh $PWD" >> RUN17_combined+expose_sexDistorTEMPLATES
 
+    echo "start pipeline"
+    echo "HOLD UP!"
+    echo "Got to add my new and improved makeWSTemplates.sh to see if it works"
+    cp /pnfs/des/persistent/desgw/makeWSTemplates_Nora.sh makeWSTemplates.sh
+    ls -ltr makeWSTemplates.sh
+    echo "Okay, now you can"
     echo "start pipeline"
     #### THIS IS THE PIPELINE!!! #####
     export CCDNUM_LIST

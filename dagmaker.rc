@@ -6,7 +6,7 @@
 # Please change this to reflect your desired configuration.
 #
 RNUM=4
-PNUM=7
+PNUM=12
 #
 #### PLEASE READ: A word on season numbers #######
 # Never use season numbers below 11; they are reserved for the SNe group
@@ -16,7 +16,7 @@ PNUM=7
 # Season 5000 is reserved for DES nightly difference imaging on the wide survey in Y5 (2017-2018)
 # Season 6000 is reserved for DES nightly difference imaging on the wide survey in Y6 (2018-2019)
 ##############
-SEASON=2206
+SEASON=4009
 
 DIFFIMG_EUPS_VERSION=gw8
 
@@ -51,14 +51,11 @@ TEFF_CUT_u=0.1
 
 TWINDOW_DISTINCT=1 # 1: Allow distinct before and after nite
 TWINDOW_BEFORE=30
-TWINDOW_AFTER=100
-
+TWINDOW_AFTER=200
 
 #### Template Winnow
-TEXP_DEPTH_ON=1
-TEXP_DEPTH=1000
-
-
+#TEXP_DEPTH_ON=1
+#TEXP_DEPTH=500
 
 #### ONLY use this option if you have nothing but late-time templates. It should be commented out for standard nightly diffim running.
 #MIN_NITE=20170831

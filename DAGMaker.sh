@@ -246,7 +246,10 @@ RNUM="2"
 PNUM="01"
 SEASON="11"
 JOBSUB_OPTS="--memory=3000MB --expected-lifetime=medium --cpu=1 --mail_on_error --email-to=kherner@fnal.gov --need-storage-modify /des/persistent/gw/exp --need-storage-modify /des/persistent/gw/forcephoto"
+<<<<<<< HEAD
 JOBSUB_TEMP_OPTS="$JOBSUB_OPTS --lines='+FERMIHTC_AutoRelease=True' --lines='+FERMIHTC_GraceLifetime=43200' --lines='+FERMIHTC_GraceMemory=5000'"
+=======
+>>>>>>> 809db39 (implement new calibration and skipping incomplete)
 DIFFIMG_EUPS_VERSION="gw8"
 WRITEDB="off"
 RM_MYTEMP="false"
@@ -333,7 +336,7 @@ chmod a+x dummyjob.sh
 echo "set up environment, and handy commands"
 
 source /cvmfs/des.opensciencegrid.org/ncsa/centos7/finalcut/Y6A1+2/eups/desdm_eups_setup.sh
-#source /cvmfs/des.opensciencegrid.org/eeups/startupcachejob31i.sh
+# source /cvmfs/des.opensciencegrid.org/eeups/startupcachejob31i.sh 
 export EUPS_PATH=/cvmfs/des.opensciencegrid.org/ncsa/centos7/finalcut/Y6A1+2/eups/packages:/cvmfs/des.opensciencegrid.org/eeups/fnaleups:/cvmfs/des.opensciencegrid.org/2015_Q2/eeups/SL6/eups/packages
 setup oracleclient
 setup wcslib
@@ -359,10 +362,6 @@ export IFDHC_CONFIG_DIR=/cvmfs/fermilab.opensciencegrid.org/products/common/prd/
 export IFDH_NO_PROXY=1
 export IFDH_CP_UNLINK_ON_ERROR=1
 export IFDH_CP_MAXRETRIES=2
-
-setup numpy 1.9.1+11 --exact
-setup pandas 0.15.2+5 --exact
-
 
 if [ ! -d syspfiles_$$ ]; then
     mkdir syspfiles_$$
@@ -474,39 +473,15 @@ fi
 touch $searchfile
 echo "<parallel>" >> $searchfile
 
-### TEMPLATE WINNOW NFS (06.06.23)
-if [ "$TEXP_DEPTH_ON" -eq 1 ]; then
-    SE_PROC_TEXP_DEPTH=0
-    NO_PROC_TEXP_DEPTH=() #empty array
-    TEXP_ARR=()
-fi
-# TEMPLATE WINNOW MOD NFS (12.06.23)
-#printenv &> env_dagmaker_230705.txt
-$COPYCMD /pnfs/des/persistent/desgw/orderoverlaps_byteff_difflist2.py ./
-python orderoverlaps_byteff_difflist2.py mytemp_${EXPNUM}/KH_diff.list1 ${BAND} mytemp_${EXPNUM}/KH_diff.list2
-
-echo "Rergarding NOVERLAPS ..."
-echo "First we had ..."
-cat mytemp_${EXPNUM}/KH_diff.list1
-echo "Now we have ..."
-cat mytemp_${EXPNUM}/NS_diff.list
-echo "But also, regarding the list2 ..."
-cat mytemp_${EXPNUM}/NS_diff.list2
-
-NOVERLAPS=$(awk '{print NF-2}' mytemp_${EXPNUM}/NS_diff.list) # TEMPLATE WINNOW MOD NFS (12.06.23)
+NOVERLAPS=$(awk '{print NF-2}' mytemp_${EXPNUM}/KH_diff.list1)
 # now loop over the diff list, get info about the overlaping exposures, and set the SE portion of the dag
-
 echo "NOVERLAPS $NOVERLAPS"
 for((i=1; i<=${NOVERLAPS}; i++)) 
 do
     # get expnum, nite info
     echo get expnum, nite info
-    #overlapnum=$(awk "NR == $i {print \$1}" mytemp_${EXPNUM}/KH_diff.list2)
-    overlapnum=$(awk "NR == $i {print \$1}" mytemp_${EXPNUM}/NS_diff.list2)
-    #echo $overlapnum
-    #overlapnite=$(awk "NR == $i {print \$2}" mytemp_${EXPNUM}/KH_diff.list2)
-    overlapnite=$(awk "NR == $i {print \$2}" mytemp_${EXPNUM}/NS_diff.list2)
-    #echo $overlapnite
+    overlapnum=$(awk "NR == $i {print \$1}" mytemp_${EXPNUM}/KH_diff.list2)
+    overlapnite=$(awk "NR == $i {print \$2}" mytemp_${EXPNUM}/KH_diff.list2)
 
     # try to use this exposure 
     echo try to use this exposure
@@ -519,7 +494,7 @@ do
     
     # check that exposure's t_eff is greater than the cut for this band
     if [ $i == 1 ]; then
-        SKIP=false
+    SKIP=false
 	echo "this is the search image; dont apply teff cuts"
     else  
 	teff=$(awk '($1=='${overlapnum}') {print $10}' exposures.list)
@@ -548,7 +523,6 @@ do
         OLDCOUNT=`awk '{print $1}'  mytemp_${EXPNUM}/KH_diff.list1`
         NEWCOUNT=$((${OLDCOUNT}-1))
         sed -i -e s/${OLDCOUNT}/${NEWCOUNT}/  mytemp_${EXPNUM}/KH_diff.list1
-	sed -i -e s/${OLDCOUNT}/${NEWCOUNT}/  mytemp_${EXPNUM}/NS_diff.list # TEMPLATE WINNOW MOD NFS (12.06.23)
         continue
     fi
     
@@ -570,7 +544,6 @@ do
 		OLDCOUNT=`awk '{print $1}'  mytemp_${EXPNUM}/KH_diff.list1`
 		NEWCOUNT=$((${OLDCOUNT}-1))
 		sed -i -e s/${OLDCOUNT}/${NEWCOUNT}/  mytemp_${EXPNUM}/KH_diff.list1
-		sed -i -e s/${OLDCOUNT}/${NEWCOUNT}/  mytemp_${EXPNUM}/NS_diff.list # TEMPLATE WINNOW MOD NFS (12.06.23)
 		continue
 	    fi
 	else
@@ -584,7 +557,6 @@ do
 		OLDCOUNT=`awk '{print $1}'  mytemp_${EXPNUM}/KH_diff.list1`
                 NEWCOUNT=$((${OLDCOUNT}-1))
                 sed -i -e s/${OLDCOUNT}/${NEWCOUNT}/  mytemp_${EXPNUM}/KH_diff.list1
-		sed -i -e s/${OLDCOUNT}/${NEWCOUNT}/  mytemp_${EXPNUM}/NS_diff.list # TEMPLATE WINNOW MOD NFS (12.06.23)
 		continue
 	    fi
         fi
@@ -661,27 +633,6 @@ do
         if [ $i -gt 1 ]; then 
             DOTOUTFILES="${DOTOUTFILES} /pnfs/des/${DESTCACHE}/${SCHEMA}/exp/$overlapnite/$overlapnum/${overlapnum}.out"
         fi
-	
-
-	### TEMPLATE WINNOW NFS (23.06.06)
-    if [ -n "$teff" ]; then
-	    echo "So here's SE_PROC_TEXP_DEPTH so far ..."
-	    echo $SE_PROC_TEXP_DEPTH
-        echo $teff
-        echo $explength
-	    SE_PROC_TEXP_DEPTH=$(echo "$SE_PROC_TEXP_DEPTH + $teff * $explength" | bc)
-	    echo "But now it becomes ..."
-	    echo $SE_PROC_TEXP_DEPTH
-        TEXP_ARR+=($overlapnum)
-	    if [ "$(echo "$SE_PROC_TEXP_DEPTH >= $TEXP_DEPTH" | bc)" -eq 1 ]; then
-	        echo "We've reached our limit!!!! We are trying to breaaaaaak"
-	        break ####BREAK (hopefully out of the whole thing)
-	    fi
-    else
-        echo "teff is empty"
-    fi
-
-
     fi
     if [ $nfiles -lt 59 ] || [ $i == 1 ]; then
 	if [ $i == 1 ]; then echo "This is the search image so we need to make sure that the raw image is stil present." ; fi
@@ -718,6 +669,11 @@ do
                         wget --no-check-certificate -nv https://desar2.cosmology.illinois.edu/DESFiles/desarchive/DTS/raw/${overlapnite}/DECam_`printf %08d ${overlapnum}`.fits.fz 
                         if [ $? -eq 0 ] ; then
                             $COPYDCMD DECam_`printf %08d ${overlapnum}`.fits.fz /pnfs/des/scratch/${SCHEMA}/dts/${overlapnite}/ && rm DECam_`printf %08d ${overlapnum}`.fits.fz
+                        #MARIA ADD TO FIND IMAGES
+                        elif [ -e /data/des80.a/data/desgw/DEBASS/missing_exposures/exposures/DECam_$(printf %08d ${overlapnum}).fits.fz ] ; then
+                            echo " Raw image for exposure $overlapnum not in dcache and not in /data/des30.b or /data/des51.b or NCSA. Try to transfer from local downloads..."
+                            $COPYDCMD /data/des80.a/data/desgw/DEBASS/missing_exposures/exposures/DECam_`printf %08d ${overlapnum}`.fits.fz /pnfs/des/scratch/${SCHEMA}/dts/${overlapnite}/DECam_`printf %08d ${overlapnum}`.fits.fz || { echo "cp failed!" ; exit 2 ; }
+                        #END MARIA ADD
                         else
                             echo "wget failed! Will try to get image $overlapnum $overlapnite from NOAO."			
                                     #fetch_noao
@@ -781,7 +737,11 @@ do
                 done
 #                cat $searchfile
             else		
+<<<<<<< HEAD
 		echo "jobsub -n --group=des --singularity-image /cvmfs/singularity.opensciencegrid.org/fermilab/fnal-wn-sl7:latest $JOBSUB_TEMP_OPTS -N 60 --append_condor_requirements='(TARGET.GLIDEIN_Site==\\\"FermiGrid\\\"||(TARGET.HAS_SINGULARITY==true&&TARGET.HAS_CVMFS_des_opensciencegrid_org==true&&TARGET.HAS_CVMFS_des_osgstorage_org==true))' file://SEdiff.sh -r $RNUM -p $PNUM -E $overlapnum -v $DIFFIMG_EUPS_VERSION -b $BAND -n $overlapnite $JUMPTOEXPCALIBOPTION -d $DESTCACHE -m $SCHEMA -c 0 -t $TEMP_OPTS -S $procnum" >> $outfile
+=======
+		echo "jobsub -n --group=des --singularity-image /cvmfs/singularity.opensciencegrid.org/fermilab/fnal-wn-sl7:latest $JOBSUB_OPTS -N 60 --append_condor_requirements='(TARGET.GLIDEIN_Site==\\\"FermiGrid\\\"||(TARGET.HAS_SINGULARITY==true&&TARGET.HAS_CVMFS_des_opensciencegrid_org==true&&TARGET.HAS_CVMFS_des_osgstorage_org==true))' file://SEdiff.sh -r $RNUM -p $PNUM -E $overlapnum -v $DIFFIMG_EUPS_VERSION -b $BAND -n $overlapnite $JUMPTOEXPCALIBOPTION -d $DESTCACHE -m $SCHEMA -c 0 -t $TEMP_OPTS -S $procnum" >> $outfile
+>>>>>>> 809db39 (implement new calibration and skipping incomplete)
             fi
             # add the .out file for this overlap image to the list to be copied
             DOTOUTFILES="${DOTOUTFILES} /pnfs/des/${DESTCACHE}/${SCHEMA}/exp/$overlapnite/$overlapnum/${overlapnum}.out"
@@ -795,33 +755,6 @@ echo "</parallel>" >> $outfile
 # close the search portion of the dag
 echo "</parallel>" >> $searchfile
 cat $searchfile >> $outfile
-
-
-### TEMPLATE WINNOW NFS (23.06.06)
-#if [ $SE_PROC_TEXP_DEPTH -le $TEXP_DEPTH ]; then
-echo $SE_PROC_TEXP_DEPTH
-echo $TEXP_DEPTH
-if [ "$(echo "$SE_PROC_TEXP_DEPTH <= $TEXP_DEPTH" | bc)" -eq 1 ]; then
-    echo "TEMP DEPTH not reached, running winnow"
-    #REMAININ_DEPTH=$(($TEXP_DEPTH-$SE_PROC_TEXP_DEPTH))
-    REMAINING_DEPTH=$(echo "$TEXP_DEPTH - $SE_PROC_TEXP_DEPTH" | bc)
-    echo $REMAINING_DEPTH
-    echo "python getncheck_exps.py "${NO_PROC_TEXP_DEPTH[@]}" $BAND $REMAINING_DEPTH $outfile"
-    $COPYCMD /pnfs/des/persistent/desgw/getncheck_exps.py ./
-    python getncheck_exps.py "${NO_PROC_TEXP_DEPTH[@]}" "$BAND" "$REMAINING_DEPTH" "$outfile"
-else
-    echo "All necessary templates to reach the desired template depth have already been SE processed."
-    echo "Removing superflous templates from the dag file."
-    echo "python getncheck_exps.py "${NO_PROC_TEXP_DEPTH[@]}" $BAND $REMAINING_DEPTH $outfile"
-    $COPYCMD /pnfs/des/persistent/desgw/getncheck_exps.py ./
-    python getncheck_exps.py "${NO_PROC_TEXP_DEPTH[@]}" "$BAND" 0 "$outfile"
-    TEXP_ARR=("${TEXP_ARR[@]}" "${NO_PROC_TEXP_DEPTH[@]}")
-fi
-
-echo "Removing superflous templates from diff.list"
-$COPYCMD /pnfs/des/persistent/desgw/editdifflist.py ./
-python editdifflist.py "${TEXP_ARR[@]}" "mytemp_${EXPNUM}/NS_diff.list"
-
 
 # write the full copy command for the .out files and other auxfiles
 echo "ifdh cp -D $DOTOUTFILES \$TOPDIR_WSTEMPLATES/pairs/" > $templatecopyfile
@@ -1077,8 +1010,7 @@ else
     COPYCMD="ifdh cp"
 fi
 rm -f /pnfs/des/${DESTCACHE}/${SCHEMA}/exp/${NITE}/${EXPNUM}/WS_diff.list
-#$COPYCMD mytemp_${EXPNUM}/KH_diff.list1  /pnfs/des/${DESTCACHE}/${SCHEMA}/exp/${NITE}/${EXPNUM}/WS_diff.list
-$COPYCMD mytemp_${EXPNUM}/MA_diff.list  /pnfs/des/${DESTCACHE}/${SCHEMA}/exp/${NITE}/${EXPNUM}/WS_diff.list
+$COPYCMD mytemp_${EXPNUM}/KH_diff.list1  /pnfs/des/${DESTCACHE}/${SCHEMA}/exp/${NITE}/${EXPNUM}/WS_diff.list
 
 if [ $NOTEMPS -eq 1 ]; then
     echo "NO TEMPLATE IMAGES, DIFFIMG WILL FAIL"
