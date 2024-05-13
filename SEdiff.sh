@@ -1,4 +1,4 @@
-#!/bin/bash
+!/bin/bash
 
 if [ $# -lt 1 ]; then
     echo "usage: SEdiff.sh -E EXPNUM -r RNUM -p PNUM -n NITE -b BAND (i|r|g|Y|z|u) -S season (dpXX) [-c ccdlist] [-d destcache (scratch|persistent)] [-m SCHEMA (gw|wsdiff)] [-v diffimg_version] [-t] [-C] [-j] [-s] [-O] [-V SNVETO_NAME] [-T STARCAT_NAME] [-Y] [-F]" 
@@ -18,7 +18,7 @@ IFDHCP_OPT=""
 DOCALIB="false"
 FAILEDEXPS=""
 FULLCOPY=false
-
+STATBASE="https://fndcadoor.fnal.gov:2880/pnfs/fnal.gov/usr/des"
 umask 002 
 
 #######################################
@@ -67,7 +67,6 @@ export EUPS_PATH=/cvmfs/des.opensciencegrid.org/ncsa/centos7/finalcut/Y6A1+2/eup
 export IFDH_CP_MAXRETRIES=2
 export IFDH_XROOTD_EXTRA="-f -N"
 export XRD_REDIRECTLIMIT=255
-
 #for IFDH
 export EXPERIMENT=des
 
@@ -204,36 +203,69 @@ rpnum="r${RNUM}p${PNUM}"
 # tokenize ccd argument (in case of multiple comma-separated ccds)
 ccdlist=(${CCDNUM_LIST//,/ })
 
-#do a single ifdh ls to get the contents of the main expnum directory.
-lsfiles="$(ifdh ls /pnfs/des/${DESTCACHE}/${SCHEMA}/exp/${NITE}/${EXPNUM})"
+PNFSPATH="/pnfs/des/${DESTCACHE}/${SCHEMA}/exp/${NITE}/${EXPNUM}"
+STATPATH=${STATBASE}/${DESTCACHE}/${SCHEMA}/exp/${NITE}/${EXPNUM}
 immaskfiles=""
 psffiles=""
 csvfiles=""
 ccdsvfiles=""
 dotoutfile=""
 ccddotoutfile=""
-for lsfile in $lsfiles
+
+# Check whether SE outputs and .out files exist with gfal-stat; computationally cheaper than ifdh ls.
+
+statfile=D$(printf %08d ${EXPNUM})_${BAND}_$(printf %02d ${CCDNUM_LIST})_r${RNUM}p${PNUM}_immask.fits.fz
+gfal-stat ${STATPATH}/${statfile} > /dev/null
+if [ $? -eq 0 ]; then
+    immaskfiles="$immaskfiles ${PNFSPATH}/${statfile}"
+else
+    echo "$statfile not already present on disk."
+fi
+
+statfile=D$(printf %08d ${EXPNUM})_${BAND}_$(printf %02d ${CCDNUM_LIST})_r${RNUM}p${PNUM}_fullcat.fits   
+gfal-stat ${STATPATH}/${statfile} > /dev/null
+if [ $? -eq 0 ]; then
+    psffiles="$psffiles ${PNFSPATH}/${statfile}"
+else
+    echo "$statfile not already present on disk."
+fi
+
+statfile=allZP_D$(printf %08d ${EXPNUM})_r${RNUM}p${PNUM}.csv
+gfal-stat ${STATPATH}/${statfile} > /dev/null
+if [ $? -eq 0 ]; then
+    csvfiles="$csvfiles ${PNFSPATH}/${statfile}"
+else
+    echo "$statfile not already present on disk."
+fi
+statfile=D$(printf %08d ${EXPNUM})_r${RNUM}p${PNUM}_ZP.csv
+gfal-stat ${STATPATH}/${statfile} > /dev/null
+if [ $? -eq 0 ]; then
+    csvfiles="$csvfiles ${PNFSPATH}/${statfile}"
+else
+    echo "$statfile not already present on disk."
+fi
+
+for csvfile in allZP_D$(printf %08d ${EXPNUM})_r${RNUM}p${PNUM}.csv Zero_D$(printf %08d ${EXPNUM})_$(printf %02d $CCDNUM_LIST)_r${RNUM}p${PNUM}.csv D$(printf %08d ${EXPNUM})_$(printf %02d $CCDNUM_LIST)_r${RNUM}p${PNUM}_ZP.csv
 do
-    if [[ $lsfile == *D$(printf %08d ${EXPNUM})_${BAND}_$(printf %02d ${CCDNUM_LIST})_r${RNUM}p${PNUM}_immask.fits.fz ]]; then
-	immaskfiles="$immaskfiles $lsfile"
-    
-    elif [[ $lsfile == *D$(printf %08d ${EXPNUM})_${BAND}_$(printf %02d ${CCDNUM_LIST})_r${RNUM}p${PNUM}_fullcat.fits ]]; then
-	psffiles="$psffiles $lsfile"
-    
-    elif [[ $lsfile == *allZP_D$(printf %08d ${EXPNUM})_r${RNUM}p${PNUM}.csv ]] || [[ $lsfile == *D$(printf %08d ${EXPNUM})_r${RNUM}p${PNUM}_ZP.csv ]] ; then
-	csvfiles="$csvfiles $lsfile"
-    
-    elif [[ $lsfile == /pnfs/des/${DESTCACHE}/${SCHEMA}/exp/${NITE}/${EXPNUM}/allZP_D$(printf %08d ${EXPNUM})_r${RNUM}p${PNUM}.csv ]] || [[ $lsfile ==  /pnfs/des/${DESTCACHE}/${SCHEMA}/exp/${NITE}/${EXPNUM}/Zero_D$(printf %08d ${EXPNUM})_$(printf %02d $CCDNUM_LIST)_r${RNUM}p${PNUM}.csv ]] || [[ $lsfile == /pnfs/des/${DESTCACHE}/${SCHEMA}/exp/${NITE}/${EXPNUM}/D$(printf %08d ${EXPNUM})_$(printf %02d $CCDNUM_LIST)_r${RNUM}p${PNUM}_ZP.csv ]] ; then
-	ccdcsvfiles="$ccdcsvfiles $lsfile"
-    
-    elif [[ $lsfile == */${EXPNUM}.out ]]; then
-	dotoutfile=$lsfile
-    
-    elif [[ $lsfile == */${EXPNUM}_$(printf %d ${ccdlist}).out ]]; then
-    	ccddotoutfile=$lsfile
-    
-    fi
+    gfal-stat ${STATPATH}/${csvfile} > /dev/null && ccdcsvfiles="$ccdcsvfiles ${PNFSPATH}/${csvfile}"
 done
+
+statfile=${EXPNUM}.out
+gfal-stat ${STATPATH}/${statfile} > /dev/null
+if [ $? -eq 0 ]; then
+    dotoutfile=${PNFSPATH}/${statfile}
+else
+    echo "$statfile not already present on disk."
+fi
+
+statfile=${EXPNUM}_$(printf %d ${ccdlist}).out
+gfal-stat ${STATPATH}/${statfile} > /dev/null
+if [ $? -eq 0 ]; then
+    ccddotoutfile=${PNFSPATH}/${statfile}
+else
+    echo "$statfile not already present on disk."
+fi
+
 # get filenames
 nimmask=`echo $immaskfiles | wc -w`
 if [ $nimmask -ge 1 ]; then
@@ -286,10 +318,9 @@ if [ "$SKIPSE" == "false" ] ; then # if statement allows SE to be skipped if SE 
     
     ifdh cp -D /pnfs/des/resilient/gw/code/MySoft4_v2.tar.gz  /pnfs/des/resilient/gw/code/test_mysql_libs.tar.gz ./ || { echo "Error copying input files. Exiting." ; exit 2 ; }
     tar xzf ./MySoft4_v2.tar.gz
-    #MARIA FIX 
+    #MARIA FIX
     ifdh cp /pnfs/des/persistent/macevedo/desdmLiby1e2.py ./
-    #cp ../desdmLiby1e2.py ./
-    #END MARIA FIX 
+    #END MARIA FIX
     tar xzfm ./test_mysql_libs.tar.gz
        
     chmod +x make_red_catlist.py BLISS-expCalib_Y3apass.py BLISS-expCalib_Y3apass-old.py getcorners.sh
@@ -392,7 +423,8 @@ if [ "$SKIPSE" == "false" ] ; then # if statement allows SE to be skipped if SE 
         pcaprefix='Y2A1_20141205t0315_{filter:s}_r2133p01_skypca-binned-fp.fits'
         elif [ $EXPNUM -le 519543 ]; then
         YEAR=y3
-        EPOCH=e1
+        #EPOCH=e1
+	EPOCH=''
         biasfile='D_n20151113t1123_c{ccd:>02s}_r2350p02_biascor.fits'
         bpmfile='D_n20151113t1123_c{ccd:>02s}_r2359p01_bpm.fits'
         dflatfile='D_n20151113t1123_{filter:s}_c{ccd:>02s}_r2350p02_norm-dflatcor.fits'
@@ -535,7 +567,7 @@ EOF
     
     #setup -j finalcut Y6A1+2 -Z /cvmfs/des.opensciencegrid.org/2015_Q2/eeups/SL6/eups/packages
     setup finalcut Y6A1+2
-    setup diffimg gw8
+    setup diffimg $DIFFIMG_VERSION
     setup CoreUtils 1.0.1+0
     setup wcstools 3.9.6+0
     export PATH=${WCSTOOLS_DIR}/bin:${PATH}
@@ -555,9 +587,21 @@ EOF
 	    for c in $ccdlist; do
         # copies all ccds
 		c=$(printf "%02d" $c)
-		filestocopy1="$(ifdh ls /pnfs/des/${DESTCACHE}/${SCHEMA}/exp/${NITE}/${EXPNUM}/D$(printf %08d ${EXPNUM})_${BAND}_${c}_r${RNUM}p${PNUM}_fullcat.fits | grep fits)"
+		filestocopy1=""
+		filestocopy2=""
+		gfal-stat ${STATBASE}/${DESTCACHE}/${SCHEMA}/exp/${NITE}/${EXPNUM}/D$(printf %08d ${EXPNUM})_${BAND}_${c}_r${RNUM}p${PNUM}_fullcat.fits > /dev/null 2>&1
+		if [ $? -eq 0 ]; then
+		    filestocopy1="/pnfs/des/${DESTCACHE}/${SCHEMA}/exp/${NITE}/${EXPNUM}/D$(printf %08d ${EXPNUM})_${BAND}_${c}_r${RNUM}p${PNUM}_fullcat.fits"
+		else
+		    echo "Error finding ${PNFSPATH}/D$(printf %08d ${EXPNUM})_${BAND}_${c}_r${RNUM}p${PNUM}_fullcat.fits"
+		fi
 		echo "filestocopy1: $filestocopy1"
-		filestocopy2="$(ifdh ls /pnfs/des/${DESTCACHE}/${SCHEMA}/exp/${NITE}/${EXPNUM}/D$(printf %08d ${EXPNUM})_${BAND}_${c}_r${RNUM}p${PNUM}_immask.fits.fz | grep fits)"
+		gfal-stat ${STATBASE}/${DESTCACHE}/${SCHEMA}/exp/${NITE}/${EXPNUM}/D$(printf %08d ${EXPNUM})_${BAND}_${c}_r${RNUM}p${PNUM}_immask.fits.fz > /dev/null 2>&1
+		if [ $? -eq 0 ]; then
+		    filestocopy2="/pnfs/des/${DESTCACHE}/${SCHEMA}/exp/${NITE}/${EXPNUM}/D$(printf %08d ${EXPNUM})_${BAND}_${c}_r${RNUM}p${PNUM}_immask.fits.fz"
+		else
+		    echo "Error finding ${PNFSPATH}/D$(printf %08d ${EXPNUM})_${BAND}_${c}_r${RNUM}p${PNUM}_immask.fits.fz"
+		fi
 		echo "filestocopy2: $filestocopy2"
 		ifdh cp --force=xrootd -D $filestocopy1 $filestocopy2 .
 	    done
@@ -595,20 +639,22 @@ EOF
 	
 	
     #touch bliss_test.log
-	ifdh cp /pnfs/des/persistent/desgw/BLISS-expCalib_Y3apass-old-Nora.py ./BLISS-expCalib_Y3apass-old.py
-        
-	#cp ../BLISS-expCalib_Y3apass-old-Nora.py ./BLISS-expCalib_Y3apass-old.py
-	
-	./BLISS-expCalib_Y3apass-old.py --expnum $EXPNUM --reqnum $RNUM --attnum $PNUM --ccd $CCDNUM_LIST
+    ifdh cp /pnfs/des/persistent/desgw/expCalib-isaac-BNS.py ./expCalib-isaac-BNS.py
+    ./expCalib-isaac-BNS.py --expnum $EXPNUM --reqnum $RNUM --attnum $PNUM --ccd $CCDNUM_LIST
+
+	#ifdh cp /pnfs/des/persistent/desgw/BLISS-expCalib_Y3apass-old-Nora.py ./BLISS-expCalib_Y3apass-old.py
+	#ifdh cp /pnfs/des/persistent/desgw/expCalib-isaac.py ./BLISS-expCalib_Y3apass-old.py
+	#./BLISS-expCalib_Y3apass-old.py --expnum $EXPNUM --reqnum $RNUM --attnum $PNUM --ccd $CCDNUM_LIST
 	
 	RESULT=$? 
-	echo "BLISS-expCalib_Y3pass-old.py exited with status $RESULT"
-	
+	#echo "BLISS-expCalib_Y3pass-old.py exited with status $RESULT"
+    echo "expCalib-isaac-BNS.py exited with status $RESULT"	
+
 	files2cp=`ls allZP*r${RNUM}*p${PNUM}*.csv Zero*r${RNUM}*p${PNUM}*.csv D*${EXPNUM}*_ZP.csv D*${EXPNUM}*CCDsvsZPs.png D*${EXPNUM}*NumClipstar.png D*${EXPNUM}*ZP.png`
 	if [ "x${files2cp}" = "x" ]; then
             echo "Error, no calibration files to copy!"
 	else
-            IFDH_CP_UNLINK_ON_ERROR=1 ifdh cp --force=xrootd -D $files2cp /pnfs/des/${DESTCACHE}/${SCHEMA}/exp/${NITE}/${EXPNUM} || echo "ifdh cp of calibration csv and png files failed. There could be problems with Diffimg down the road when using this exposure."
+            ifdh cp --force=xrootd -D $files2cp /pnfs/des/${DESTCACHE}/${SCHEMA}/exp/${NITE}/${EXPNUM} || echo "ifdh cp of calibration csv and png files failed. There could be problems with Diffimg down the road when using this exposure."
 	fi
     fi
     
@@ -640,7 +686,6 @@ export NITE=$NITE
 ifdh cp ${IFDHCP_OPT} -D /pnfs/des/${DESTCACHE}/${SCHEMA}/exp/${NITE}/${EXPNUM}/${procnum}/input_files/copy_pairs_for_${EXPNUM}.sh  /pnfs/des/${DESTCACHE}/${SCHEMA}/exp/${NITE}/${EXPNUM}/WS_diff.list ./ || { echo "failed to copy WS_diff.list and copy_paris_for_${EXPNUM}.sh files" ; exit 2 ; }  # do we want to exit here?
 
 TEMPLATEPATHS=`cat copy_pairs_for_${EXPNUM}.sh | sed -r -e "s/ifdh\ cp\ (\-\-force=xrootd\ )?\-D\ //" -e "s/[0-9]{6,7}\.out//g" | sed -e 's/\$TOPDIR_WSTEMPLATES\/pairs\///'` ##AGTEST 6-->7
-echo "TEMPLATEPATHS: $TEMPLATEPATHS"
 
 baseccddotout=$(basename $ccddotoutfile)
 ifdh cp -D $dotoutfile $ccddotoutfile ./ || { echo "Failed to copy both combined .out file $dotoutfiles and CCD file ${ccddotoutfiles}. At least one is required. Exiting." ; exit 2 ; }
@@ -708,14 +753,14 @@ for c in $ccdlist; do
     ln -s ${procnum}/input_files/* .
     
     # make some local directories expected by the diffimg pipeline
-    mkdir ${LOCDIR}/headers ${LOCDIR}/ingest ${LOCDIR}/$(basename $(ifdh ls  /pnfs/des/${DESTCACHE}/${SCHEMA}/exp/${NITE}/${EXPNUM}/${LOCDIR}/stamps* 0 | head -1))
+    mkdir ${LOCDIR}/headers ${LOCDIR}/ingest ${LOCDIR}/$(basename $(ifdh ls /pnfs/${DESTCACHE}/${SCHEMA}/exp/${NITE}/${EXPNUM}/${LOCDIR}/stamps* 0 | head -1))
     ln -s ${LOCDIR}/ingest ${LOCDIR}/stamps* ${LOCDIR}/headers .
     
     /cvmfs/grid.cern.ch/util/cvmfs-uptodate /cvmfs/des.opensciencegrid.org # make sure we have new version of cvmfs
     
 
     # Setup
-    setup diffimg gw8
+    setup diffimg $DIFFIMG_VERSiON
     setup CoreUtils 1.0.1+0
     setup wcstools 3.9.6+0
     setup -j easyaccess -Z /cvmfs/des.opensciencegrid.org/eeups/fnaleups
@@ -1013,16 +1058,19 @@ for c in $ccdlist; do
         overlapnite=$(egrep -o /pnfs/des/${DESTCACHE}/${SCHEMA}/exp/[0-9]{8}/${overlapexp}/${overlapexp}.out ${procnum}/input_files/copy_pairs_for_${EXPNUM}.sh | sed -r -e "s/.*\/([0-9]{8})\/.*/\1/")
         overlapccds=`awk '($2=='${CCDNUM_LIST}') { for( f=5; f<=NF; f++) print $f}' $overlapfile`
 	echo "overlap ccds = $overlapccds"
-	tempfiles=$(ifdh ls /pnfs/des/${DESTCACHE}/${SCHEMA}/exp/${overlapnite}/${overlapexp})
 	immaskfiles=""
 	immaskfitsfiles=""
 	psffiles=""
 	csvfiles=""
 	ZPdir="/pnfs/des/${DESTCACHE}/${SCHEMA}/exp/${overlapnite}/${overlapexp}/"
-	ZPfilename=$(echo $tempfiles | grep -o D$(printf %08d $overlapexp)_${rpnum}_ZP.csv 2>/dev/null)
+	ZPfilename=D$(printf %08d $overlapexp)_${rpnum}_ZP.csv
 	echo "ZPfilename for combined file = $ZPfilename"
-        if [ ! -z "$ZPfilename" ]; then
-	    ifdh cp -D ${ZPdir}${ZPfilename} ./ || echo "Error copying $ZPfile"  
+	# check it exists and try to copy if gfal-stat is successful
+	gfal-stat $(echo ${ZPdir}$ZPfilename | sed -e "s#/pnfs/des#${STATBASE}#") > /dev/null 2>&1
+        if [ $? -eq 0 ]; then
+	    ifdh cp -D ${ZPdir}${ZPfilename} ./ || echo "Error copying $ZPfile"
+	else
+	    echo "Unable to find ${ZPdir}$ZPfilename in cache."
 	fi
 
         for overlapccd in $overlapccds
@@ -1035,10 +1083,12 @@ for c in $ccdlist; do
             fi
             file2copy="/pnfs/des/${DESTCACHE}/${SCHEMA}/exp/${overlapnite}/${overlapexp}/D`printf %08d $overlapexp`_${BAND}_`printf %02d $overlapccd`_${rpnum}_immask.fits.fz"
             echo "file2copy = $file2copy"
-	    ZPfilename=$(echo $tempfiles | grep -o D$(printf %08d $overlapexp)_$(printf %02d $overlapccd)_${rpnum}_ZP.csv 2>/dev/null)
+	    ZPfilename=D$(printf %08d $overlapexp)_$(printf %02d $overlapccd)_${rpnum}_ZP.csv
 	    ZPfile=${ZPdir}${ZPfilename}
 	    echo "ZPfile = $ZPfile"
-            if [ -z "$ZPfilename" ] ; then
+	    # check it exists and try to copy if gfal-stat is successful
+	    gfal-stat $(echo $ZPfile | sed -e "s#/pnfs/des#${STATBASE}#") > /dev/null
+            if [ $? -ne 0 ] ; then
                 echo "ZP file for this template and CCD is not available. Hopefully a combined files exists for this exposure."
             else
 		ifdh cp -D $ZPfile ./ || echo "Error copying $ZPfile"
@@ -1073,9 +1123,12 @@ for c in $ccdlist; do
                         echo $newcounter
                         sed -i -e "s/\(.*\) ${overlapcounter} /\1 $newcounter/" "${overlapfile}"
 			if [ "${newcounter}" -lt 1 ]; then
-			    # Change the SEARCHEXP_TEMPEXP.out to .no (but how?)
-			    mv ${TOPDIR_WSDIFF}/pairs/${EXPNUM}-${overlapexp}.out ${TOPDIR_WSDIFF}/pairs/${EXPNUM}-${overlapexp}.no
-			    #mv SEARCHEXP_TEMPEXP.out SEARCHEXP_TEMPEXP.no
+
+                #NS fix for simlink
+                mv ${TOPDIR_WSDIFF}/pairs/${EXPNUM}-${overlapexp}.out ${TOPDIR_WSDIFF}/pairs/${EXPNUM}-${overlapexp}.no
+                ln -sf ${TOPDIR_WSDIFF}/pairs/${EXPNUM}-${overlapexp}.no ${TOPDIR_WSDIFF}/pairs/${EXPNUM}/${EXPNUM}-${overlapexp}.out
+                mv ${TOPDIR_WSDIFF}/pairs/${EXPNUM}/${EXPNUM}-${overlapexp}.out ${TOPDIR_WSDIFF}/pairs/${EXPNUM}/${EXPNUM}-${overlapexp}.no
+                            #mv SEARCHEXP_TEMPEXP.out SEARCHEXP_TEMPEXP.no
 			fi
 		    fi  
                 fi
@@ -1103,8 +1156,10 @@ for c in $ccdlist; do
                     echo $newcounter
                     sed -i -e "s/\(.*\) ${overlapcounter} /\1 $newcounter/" "${overlapfile}"
                     if [ "${newcounter}" -lt 1 ]; then
-                        # Change the SEARCHEXP_TEMPEXP.out to .no (but how?)
+                        #NS fix for simlink
                         mv ${TOPDIR_WSDIFF}/pairs/${EXPNUM}-${overlapexp}.out ${TOPDIR_WSDIFF}/pairs/${EXPNUM}-${overlapexp}.no
+                        ln -sf ${TOPDIR_WSDIFF}/pairs/${EXPNUM}-${overlapexp}.no ${TOPDIR_WSDIFF}/pairs/${EXPNUM}/${EXPNUM}-${overlapexp}.out
+                        mv ${TOPDIR_WSDIFF}/pairs/${EXPNUM}/${EXPNUM}-${overlapexp}.out ${TOPDIR_WSDIFF}/pairs/${EXPNUM}/${EXPNUM}-${overlapexp}.no
 		    fi
 		fi
             fi
@@ -1221,7 +1276,7 @@ for c in $ccdlist; do
             ln -s /cvmfs/des.osgstorage.org/pnfs/fnal.gov/usr/des/persistent/stash/${SCHEMA}/CATALOG_FILES/${NITE}/${SNSTAR_FILENAME} .
             else
             # try to ifdh cp 
-            ifdh cp -D ${IFDHCP_OPT} /pnfs/des/persistent/stash/${SCHEMA}/CATALOG_FILES/${NITE}/${SNSTAR_FILENAME} ./ || echo "ERROR: ${SNSTAR_FILENAME} is not in CVMFS and there was an error copying it to the worker node. RUN02 will probably fail..."
+            IFDH_CP_UNLINK_ON_ERROR=1 ifdh cp -D ${IFDHCP_OPT} /pnfs/des/persistent/stash/${SCHEMA}/CATALOG_FILES/${NITE}/${SNSTAR_FILENAME} ./ || echo "ERROR: ${SNSTAR_FILENAME} is not in CVMFS and there was an error copying it to the worker node. RUN02 will probably fail..."
             fi
         fi
         # image masking for bright galaxy subtraction ; hopefully we don't need this anymore
@@ -1290,7 +1345,7 @@ for c in $ccdlist; do
     # make sure that the files actually exist before we try to copy then. If makestarcat.py did not run, then we won't need to check.
     if [ -f $STARCAT_NAME ] && [ ! -L $STARCAT_NAME ] && [ -f $SNVETO_NAME ] && [ ! -L $SNVETO_NAME ]; then
         ifdh mkdir /pnfs/des/persistent/stash/${SCHEMA}/CATALOG_FILES/${NITE}
-        ifdh cp --force=xrootd -D $STARCAT_NAME $SNVETO_NAME /pnfs/des/persistent/stash/${SCHEMA}/CATALOG_FILES/${NITE}/ || echo "ERROR: copy of $STARCAT_NAME and $SNVETO_NAME failed with status $?. You may see problems running diffimg jobs later."  
+        IFDH_CP_UNLINK_ON_ERROR=1 ifdh cp --force=xrootd -D $STARCAT_NAME $SNVETO_NAME /pnfs/des/persistent/stash/${SCHEMA}/CATALOG_FILES/${NITE}/ || echo "ERROR: copy of $STARCAT_NAME and $SNVETO_NAME failed with status $?. You may see problems running diffimg jobs later."  
     fi
     else
         if [ $MAKESTARCAT_RESULT -eq -1 ]; then
@@ -1357,7 +1412,7 @@ fi
 
     echo "outfiles = $OUTFILES"
 
-    if [ ! -z "$OUTFILES" ]; then ifdh cp ${IFDHCP_OPT} -D $OUTFILES /pnfs/des/${DESTCACHE}/${SCHEMA}/exp/$NITE/$EXPNUM/$LOCDIR/ || echo "FAILURE: Error $? when trying to copy outfiles back" ; fi
+    if [ ! -z "$OUTFILES" ]; then IFDH_CP_UNLINK_ON_ERROR=1 ifdh cp ${IFDHCP_OPT} -D $OUTFILES /pnfs/des/${DESTCACHE}/${SCHEMA}/exp/$NITE/$EXPNUM/$LOCDIR/ || echo "FAILURE: Error $? when trying to copy outfiles back" ; fi
 
     if [ `ls ${TOPDIR_SNFORCEPHOTO_IMAGES}/${NITE} | wc -l` -gt 0 ]; then 
         copies=`ls ${TOPDIR_SNFORCEPHOTO_IMAGES}/${NITE}/ ` 
@@ -1385,7 +1440,15 @@ fi
 
 
     sed -i -e "s/0x47FB/0x47DB/" RUN05_expose_makeWeight
+    
+    echo "$PWD/edit_run1819.sh $PWD" >> RUN17_combined+expose_sexDistorTEMPLATES
 
+    echo "start pipeline"
+    echo "HOLD UP!"
+    echo "Got to add my new and improved makeWSTemplates.sh to see if it works"
+    cp /pnfs/des/persistent/desgw/makeWSTemplates_Nora.sh makeWSTemplates.sh
+    ls -ltr makeWSTemplates.sh
+    echo "Okay, now you can"
     echo "start pipeline"
     #### THIS IS THE PIPELINE!!! #####
     export CCDNUM_LIST
