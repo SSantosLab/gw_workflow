@@ -491,10 +491,7 @@ if [ "$SKIPSE" == "false" ] ; then # if statement allows SE to be skipped if SE 
     else
         corr_dir="/pnfs/des/persistent/desdm/calib/"
 	conf_dir="/pnfs/des/persistent/stash/desdm/config/"
-    fi
-    ## ag / kh hack feb 25, 2020                                                                                                                                                                                                                                               
-    conf_dir="/pnfs/des/persistent/stash/desdm/config/"
-    ###                                        
+    fi                                       
 # write to confFile
     cat <<EOF >> confFile
 [General]
