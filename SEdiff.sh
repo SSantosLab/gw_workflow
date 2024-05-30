@@ -324,7 +324,7 @@ if [ "$SKIPSE" == "false" ] ; then # if statement allows SE to be skipped if SE 
     #END NORA FIX 
     tar xzfm ./test_mysql_libs.tar.gz
        
-    chmod +x make_red_catlist.py BLISS-expCalib_Y3apass.py BLISS-expCalib_Y3apass-old.py getcorners.sh
+    chmod +x make_red_catlist.py expCalib-isaac-BBH.py expCalib-isaac-BNS.py getcorners.sh
     
     rm -f confFile
     
@@ -636,11 +636,11 @@ EOF
 	
 	
     #touch bliss_test.log
-	ifdh cp /pnfs/des/persistent/desgw/BLISS-expCalib_Y3apass-old-Nora-BBHG.py ./BLISS-expCalib_Y3apass-old.py
+	ifdh cp /pnfs/des/persistent/desgw/expCalib-isaac-BBH.py ./expCalib-isaac-BBH.py
         
 	#cp ../BLISS-expCalib_Y3apass-old-Nora.py ./BLISS-expCalib_Y3apass-old.py
 	
-	./BLISS-expCalib_Y3apass-old.py --expnum $EXPNUM --reqnum $RNUM --attnum $PNUM --ccd $CCDNUM_LIST
+	./expCalib-isaac-BBH.py --expnum $EXPNUM --reqnum $RNUM --attnum $PNUM --ccd $CCDNUM_LIST
 	
 	RESULT=$? 
 	echo "BLISS-expCalib_Y3pass-old.py exited with status $RESULT"
