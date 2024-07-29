@@ -1,4 +1,6 @@
 import numpy as np
+import healpy as hp
+from astropy.table import Table
 import pyfits
 import os
 import ConfigParser
@@ -249,7 +251,10 @@ PCFILENAME = PCFILENAMEPREFIX
 def skyCombineFit(inputFile,skycombineFile,skyfitinfoFile,**args):
 
     if not os.path.exists(PCFILENAME.format(**args)):
-        make_link_or_copy(correc_dir+'/skypca/'+str(year)+str(epoch)+'/'+PCFILENAME.format(**args))
+        try: 
+            make_link_or_copy(correc_dir+'/skypca/'+str(year)+str(epoch)+'/'+PCFILENAME.format(**args))
+        except:
+            make_link_or_copy(correc_dir+str(year)+str(epoch)+'/'+PCFILENAME.format(**args))
     #-----------------------
     cmd = 'ls  *'+inputFile+'.fits > listpcain'
     print cmd 
@@ -316,7 +321,10 @@ weight = ConfigSectionMap("skysubtract")['weight']
 def skysubtract(CCD, inname, outname, skyfitinfoFile,**args ):
     args['ccd']=CCD
     if not os.path.exists(pc_filename.format(**args)):
-        make_link_or_copy(correc_dir+'/skypca/'+str(year)+str(epoch)+'/skytemp/'+pc_filename.format(**args))
+        try:
+            make_link_or_copy(correc_dir+'/skypca/'+str(year)+str(epoch)+'/skytemp/'+pc_filename.format(**args))
+        except:
+            make_link_or_copy(correc_dir+'/skypca/'+str(year)+str(epoch)+'/'+pc_filename.format(**args))
 #    copy_from_Dcache(correc_dir+'skytemp_'+str(year)+'_'+str(epoch)+'/'+pc_filename.format(**args))
 
     print template_file.format(**args)
@@ -372,13 +380,41 @@ if not os.path.exists(default_scamp):
 if not os.path.exists(head_FILE):
     make_link_or_copy(data_conf+head_FILE)
 
+def read_coordinates(inputFile):
+    sex_tbl = Table.read(inputFile, hdu=1)
+    ccd_center = [0,0]
+    for row in sex_tbl[0][0]:
+        line = row.decode("utf-8")
+        if 'RA_CENT' in line:
+            ccd_center[0] = float(line.split('=')[1].split()[0])
+        elif 'DEC_CENT' in line:
+            ccd_center[1] = float(line.split('=')[1].split()[0])
+    return ccd_center
+
+def astrefcat_finder(ccd_center, radius=1, inclusive=True):
+    '''
+    Uses the ccd center in the SExtractor input file to find the right catalog files to use
+    Radius is in degrees
+    Written by Isaac M. 19.07.2024
+    '''
+    vec = hp.pixelfunc.ang2vec((90-ccd_center[1]) * np.pi/180, ccd_center[0] * np.pi/180) # FOR OLD HEALPY 1.5dev
+    #vec = hp.ang2vec(*ccd_center, lonlat=True) # FOR NEW HEALPY
+    disc_hpx = hp.query_disc(32, vec, radius=np.radians(radius), inclusive=inclusive)
+    print disc_hpx
+    astref_files = ''
+    for pix in disc_hpx:
+        astref_files += '/cvmfs/des.osgstorage.org/pnfs/fnal.gov/usr/des/persistent/stash/gw/GAIA_DR2/GAIA_DR2_{:02d}XXX/GAIA_DR2_{:05d}.fits,'.format(pix//1000, pix)
+    return astref_files[:-1]
+
 def scamp(inputFile):
+    ccd_center = read_coordinates(inputFile)
+    astref_files = astrefcat_finder(ccd_center)
+    print astref_files
     cmd = 'scamp ' + inputFile +\
-        ' ' + '-AHEADER_GLOBAL ' + head_FILE +\
-        ' -ASTRINSTRU_KEY DUMMY -AHEADER_SUFFIX .aheadnoexist -ASTREFMAG_LIMITS -99,22 ' +\
-        ' -REF_SERVER cocat1.u-strasbg.fr,vizier.nao.ac.jp,vizier.cfa.harvard.edu ' +\
-        ' -ASTREF_CATALOG ' +catalog_ref +' -c ' +default_scamp +\
-        ' -WRITE_XML Y -XML_NAME scamp.xml -MOSAIC_TYPE SAME_CRVAL -ASTREF_BAND DEFAULT -POSITION_MAXERR 60.0 -NTHREADS 1 '
+        ' ' + '-AHEADER_GLOBAL ' + head_FILE +' -ASTRINSTRU_KEY DUMMY -AHEADER_SUFFIX .aheadnoexist -c ' +default_scamp +\
+        ' -ASTREF_CATALOG FILE -ASTREFCAT_NAME ' +astref_files +' -ASTREFCENT_KEYS ra,dec -ASTREFERR_KEYS ra_error,dec_error,theta_error' +\
+        ' -ASTREFMAG_KEY phot_g_mean_mag -ASTREFMAGERR_KEY phot_g_mean_mag_error -ASTREFOBSDATE_KEY ref_epoch -ASTREFMAG_LIMITS -26,22' +\
+        ' -ASTREF_BAND DEFAULT -WRITE_XML Y -XML_NAME scamp.xml -MOSAIC_TYPE SAME_CRVAL -POSITION_MAXERR 60.0 -NTHREADS 1 '
 
     print '\n',cmd,'\n'
 
