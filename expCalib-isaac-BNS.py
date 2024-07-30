@@ -68,7 +68,11 @@ def getallccdfromDELVE(args, catlist_data, catfile, remove_agns=True):
         print 'Querying PanSTARRS instead...'
         std_data = getCatalogPanSTARRS(catlist_data['RA_CENT'][0], catlist_data['DEC_CENT'][0], minra, maxra, mindec, maxdec, band)
         if std_data is None:
-            sys.exit(1)
+            print 'Querying APASS+2MASS instead...'
+            std_data = getCatalogAPASS2MASS(catlist_data['RA_CENT'][0], catlist_data['DEC_CENT'][0], minra, maxra, mindec, maxdec, band)
+            if std_data is None:
+                print 'All Queries Failed, Exiting.'
+                sys.exit(1)
     std_data.columns = ["MATCHID", "RA", "DEC", "WAVG_MAG_PSF"]
     
     if remove_agns:
@@ -77,18 +81,19 @@ def getallccdfromDELVE(args, catlist_data, catfile, remove_agns=True):
         allwiseagns_df = allwiseagns_df[(allwiseagns_df['DEC']>mindec) & (allwiseagns_df['DEC']<maxdec)]
         allwiseagns_df = allwiseagns_df[(allwiseagns_df['RA']>minra) & (allwiseagns_df['RA']<maxra)]
         
-        agn_coords = np.array([allwiseagns_df['RA'], allwiseagns_df['DEC']]).T
-        std_coords = np.array([std_data['RA'], std_data['DEC']]).T
-        
-        match_tolerance = 1.0 # Arcsec
-        coord_broadcast0 = np.repeat(std_coords[np.newaxis, :, :], len(agn_coords), axis=0)
-        coord_broadcast1 = np.repeat(agn_coords[:, np.newaxis, :], len(std_coords), axis=1)
-        min_sep = np.degrees(np.min(vectorized_angsep(coord_broadcast0, coord_broadcast1), axis=1))
-        tolerance_mask = (min_sep < (match_tolerance/3600.)) # Matches should be within some tolerance criteria
-        idx = np.argmin(vectorized_angsep(coord_broadcast0, coord_broadcast1), axis=1)
-        idx = idx[tolerance_mask]
-        
-        std_data = std_data.drop(idx).reset_index(drop=True)
+        if len(allwiseagns_df)>0:
+            agn_coords = np.array([allwiseagns_df['RA'], allwiseagns_df['DEC']]).T
+            std_coords = np.array([std_data['RA'], std_data['DEC']]).T
+            
+            match_tolerance = 2.0 # Arcsec
+            coord_broadcast0 = np.repeat(std_coords[np.newaxis, :, :], len(agn_coords), axis=0)
+            coord_broadcast1 = np.repeat(agn_coords[:, np.newaxis, :], len(std_coords), axis=1)
+            min_sep = np.degrees(np.min(vectorized_angsep(coord_broadcast0, coord_broadcast1), axis=1))
+            tolerance_mask = (min_sep < (match_tolerance/3600.)) # Matches should be within some tolerance criteria
+            idx = np.argmin(vectorized_angsep(coord_broadcast0, coord_broadcast1), axis=1)
+            idx = idx[tolerance_mask]
+            
+            std_data = std_data.drop(idx).reset_index(drop=True)
     
     std_data.to_csv(outfile, columns=["MATCHID", "RA", "DEC", "WAVG_MAG_PSF"], index=False)
     
@@ -112,7 +117,7 @@ def getCatalogDELVE(ra, dec, minra, maxra, mindec, maxdec, band, radius=0.2):
     #vec = hp.pixelfunc.ang2vec(ra, dec, lonlat=True) # For new healpy 1.11.0 and python 2.7.15
     vec = hp.pixelfunc.ang2vec((90-dec) * np.pi/180, ra * np.pi/180) # FOR OLD HEALPY 1.5dev
     disc_hpx = hp.query_disc(32, vec, radius=np.radians(radius), inclusive=True)
-    print "{} pixels to be queried from DELVE_DR2".format(disc_hpx)
+    print "Pixel {} to be queried from DELVE_DR2".format(disc_hpx)
     band = band.upper()
     
     out_columns = ['QUICK_OBJECT_ID', 'RA', 'DEC', 'WAVG_MAG_PSF_'+band]
@@ -169,7 +174,14 @@ def getCatalogPanSTARRS(ra, dec, minra, maxra, mindec, maxdec, band, factor=3.5)
     else:
         result = r.text
     
-    data = pd.read_csv(io.StringIO(result))
+    try:
+        data = pd.read_csv(io.StringIO(result))
+    except ValueError:
+        print 'No PanSTARRS coverage at this region'
+        return None
+    except Exception as e:
+        print e
+        return None
     data.columns = ['id', 'ra', 'dec', query_bands[0], query_bands[1]]
     
     converted = PanSTARRS2DECamMagTransformation(data, band)
@@ -257,6 +269,20 @@ def PanSTARRS2DECamMagTransformation(ps_data, band):
         return convert
     else:
         print 'Band not valid'
+
+
+def getCatalogAPASS2MASS(ra, dec, minra, maxra, mindec, maxdec, band):
+    #ap2m_pix = hp.ang2pix(8, ra, dec, lonlat=True, nest=True) # For new healpy 1.11.0 and python 2.7.15
+    ap2m_pix = hp.ring2nest(8, hp.pixelfunc.ang2pix(8, (90-dec) * np.pi/180, ra * np.pi/180)) # FOR OLD HEALPY 1.5dev
+    print 'Pixel {} to be queried from APASS+2MASS'.format(ap2m_pix)
+    ap2m_filename = '/cvmfs/des.osgstorage.org/pnfs/fnal.gov/usr/des/persistent/stash/ALLSKY_STARCAT/apass_TWO_MASS_{}.csv'.format(ap2m_pix)
+    data = pd.read_csv(ap2m_filename, usecols=['MATCHID', 'RAJ2000_APASS', 'DEJ2000_APASS', '{}_des'.format(band.lower())])
+    data = data[['MATCHID', 'RAJ2000_APASS', 'DEJ2000_APASS', '{}_des'.format(band.lower())]]
+    data.columns = ['QUICK_OBJECT_ID', 'RA', 'DEC', 'WAVG_MAG_PSF_'+band.upper()]
+    mask = (data['RA']>minra)&(data['RA']<maxra)&(data['DEC']>mindec)&(data['DEC']<maxdec)&(data['WAVG_MAG_PSF_'+band.upper()]>-26)
+    if len(data[mask])==0:
+        return None
+    return data[mask]
 
 ################################################################################
 
