@@ -246,6 +246,7 @@ RNUM="2"
 PNUM="01"
 SEASON="11"
 JOBSUB_OPTS="--memory=3000MB --expected-lifetime=medium --cpu=1 --mail_on_error --email-to=kherner@fnal.gov --need-storage-modify /des/persistent/gw/exp --need-storage-modify /des/persistent/gw/forcephoto"
+JOBSUB_TEMP_OPTS="$JOBSUB_OPTS --lines='+FERMIHTC_AutoRelease=True' --lines='+FERMIHTC_GraceLifetime=43200' --lines='+FERMIHTC_GraceMemory=5000'"
 DIFFIMG_EUPS_VERSION="gw8"
 WRITEDB="off"
 RM_MYTEMP="false"
@@ -727,7 +728,7 @@ do
                 done
 #                cat $searchfile
             else		
-		echo "jobsub -n --group=des --singularity-image /cvmfs/singularity.opensciencegrid.org/fermilab/fnal-wn-sl7:latest $JOBSUB_OPTS -N 60 --append_condor_requirements='(TARGET.GLIDEIN_Site==\\\"FermiGrid\\\"||(TARGET.HAS_SINGULARITY==true&&TARGET.HAS_CVMFS_des_opensciencegrid_org==true&&TARGET.HAS_CVMFS_des_osgstorage_org==true))' file://SEdiff.sh -r $RNUM -p $PNUM -E $overlapnum -v $DIFFIMG_EUPS_VERSION -b $BAND -n $overlapnite $JUMPTOEXPCALIBOPTION -d $DESTCACHE -m $SCHEMA -c 0 -t $TEMP_OPTS -S $procnum" >> $outfile
+		echo "jobsub -n --group=des --singularity-image /cvmfs/singularity.opensciencegrid.org/fermilab/fnal-wn-sl7:latest $JOBSUB_TEMP_OPTS -N 60 --append_condor_requirements='(TARGET.GLIDEIN_Site==\\\"FermiGrid\\\"||(TARGET.HAS_SINGULARITY==true&&TARGET.HAS_CVMFS_des_opensciencegrid_org==true&&TARGET.HAS_CVMFS_des_osgstorage_org==true))' file://SEdiff.sh -r $RNUM -p $PNUM -E $overlapnum -v $DIFFIMG_EUPS_VERSION -b $BAND -n $overlapnite $JUMPTOEXPCALIBOPTION -d $DESTCACHE -m $SCHEMA -c 0 -t $TEMP_OPTS -S $procnum" >> $outfile
             fi
             # add the .out file for this overlap image to the list to be copied
             DOTOUTFILES="${DOTOUTFILES} /pnfs/des/${DESTCACHE}/${SCHEMA}/exp/$overlapnite/$overlapnum/${overlapnum}.out"
