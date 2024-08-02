@@ -28,6 +28,7 @@ RM_MYTEMP=true
 
 JOBSUB_OPTS="--memory=2500MB --disk=70GB --cpu=1 --expected-lifetime=5h --email-to=alyssag94@brandeis.edu --disk=70GB --need-storage-modify /des/persistent/gw/exp --need-storage-modify /des/persistent/gw/forcephoto -e GFAL_PLUGIN_DIR=/usr/lib64/gfal2-plugins -e GFAL_CONFIG_DIR=/etc/gfal2.d"
 JOBSUB_OPTS_SE="--memory=3600MB --disk=100GB --cpu=1 --expected-lifetime=5h --need-storage-modify /des/persistent/gw/exp --need-storage-modify /des/persistent/gw/forcephoto -e GFAL_PLUGIN_DIR=/usr/lib64/gfal2-plugins -e GFAL_CONFIG_DIR=/etc/gfal2.d"
+JOBSUB_OPTS_SE="$JOBSUB_OPTS_SE --lines='+FERMIHTC_AutoRelease=True' --lines='+FERMIHTC_GraceLifetime=43200' --lines='+FERMIHTC_GraceMemory=5000'"
 
 RESOURCES="DEDICATED,OPPORTUNISTIC,OFFSITE"
 IGNORECALIB=true
