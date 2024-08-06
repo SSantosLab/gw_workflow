@@ -489,7 +489,7 @@ if [ "$SKIPSE" == "false" ] ; then # if statement allows SE to be skipped if SE 
         corr_dir="/cvmfs/des.osgstorage.org/pnfs/fnal.gov/usr/des/persistent/stash/desdm/calib/"
         conf_dir="/cvmfs/des.osgstorage.org/pnfs/fnal.gov/usr/des/persistent/stash/desdm/config/"
     else
-        corr_dir="/pnfs/des/persistent/desdm/calib/"
+        corr_dir="/pnfs/des/persistent/stash/desdm/calib/"
 	conf_dir="/pnfs/des/persistent/stash/desdm/config/"
     fi                                       
 # write to confFile
@@ -548,7 +548,7 @@ imagflags =  0x0700
 flag_mask =   0x00fd
 flag_astr =   0x0000
 catalog_ref =   GAIA-DR2
-default_scamp =  default2.scamp.20140423
+default_scamp =  default2.scamp.20240701
 head = $headfile
 
 [starflat]
