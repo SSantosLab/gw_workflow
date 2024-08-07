@@ -1,4 +1,4 @@
-!/bin/bash
+#!/bin/bash
 
 if [ $# -lt 1 ]; then
     echo "usage: SEdiff.sh -E EXPNUM -r RNUM -p PNUM -n NITE -b BAND (i|r|g|Y|z|u) -S season (dpXX) [-c ccdlist] [-d destcache (scratch|persistent)] [-m SCHEMA (gw|wsdiff)] [-v diffimg_version] [-t] [-C] [-j] [-s] [-O] [-V SNVETO_NAME] [-T STARCAT_NAME] [-Y] [-F]" 
@@ -489,12 +489,9 @@ if [ "$SKIPSE" == "false" ] ; then # if statement allows SE to be skipped if SE 
         corr_dir="/cvmfs/des.osgstorage.org/pnfs/fnal.gov/usr/des/persistent/stash/desdm/calib/"
         conf_dir="/cvmfs/des.osgstorage.org/pnfs/fnal.gov/usr/des/persistent/stash/desdm/config/"
     else
-        corr_dir="/pnfs/des/persistent/desdm/calib/"
+        corr_dir="/pnfs/des/persistent/stash/desdm/calib/"
 	conf_dir="/pnfs/des/persistent/stash/desdm/config/"
     fi
-    ## ag / kh hack feb 25, 2020                                                                                                                                                                                                                                               
-    conf_dir="/pnfs/des/persistent/stash/desdm/config/"
-    ###                                        
 # write to confFile
     cat <<EOF >> confFile
 [General]
@@ -551,7 +548,7 @@ imagflags =  0x0700
 flag_mask =   0x00fd
 flag_astr =   0x0000
 catalog_ref =   GAIA-DR2
-default_scamp =  default2.scamp.20140423
+default_scamp =  default2.scamp.20240701
 head = $headfile
 
 [starflat]
