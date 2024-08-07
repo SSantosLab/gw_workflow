@@ -1,4 +1,4 @@
-!/bin/bash
+#!/bin/bash
 
 if [ $# -lt 1 ]; then
     echo "usage: SEdiff.sh -E EXPNUM -r RNUM -p PNUM -n NITE -b BAND (i|r|g|Y|z|u) -S season (dpXX) [-c ccdlist] [-d destcache (scratch|persistent)] [-m SCHEMA (gw|wsdiff)] [-v diffimg_version] [-t] [-C] [-j] [-s] [-O] [-V SNVETO_NAME] [-T STARCAT_NAME] [-Y] [-F]" 
@@ -489,7 +489,7 @@ if [ "$SKIPSE" == "false" ] ; then # if statement allows SE to be skipped if SE 
         corr_dir="/cvmfs/des.osgstorage.org/pnfs/fnal.gov/usr/des/persistent/stash/desdm/calib/"
         conf_dir="/cvmfs/des.osgstorage.org/pnfs/fnal.gov/usr/des/persistent/stash/desdm/config/"
     else
-        corr_dir="/pnfs/des/persistent/desdm/calib/"
+        corr_dir="/pnfs/des/persistent/stash/desdm/calib/"
 	conf_dir="/pnfs/des/persistent/stash/desdm/config/"
     fi                                       
 # write to confFile
@@ -636,20 +636,12 @@ EOF
 	
 	
     #touch bliss_test.log
-<<<<<<< HEAD
-	ifdh cp /pnfs/des/persistent/desgw/expCalib-isaac-BBH.py ./expCalib-isaac-BBH.py
-        
-	#cp ../BLISS-expCalib_Y3apass-old-Nora.py ./BLISS-expCalib_Y3apass-old.py
-	
-	./expCalib-isaac-BBH.py --expnum $EXPNUM --reqnum $RNUM --attnum $PNUM --ccd $CCDNUM_LIST
-=======
     ifdh cp /pnfs/des/persistent/desgw/expCalib-isaac-BNS.py ./expCalib-isaac-BNS.py
     ./expCalib-isaac-BNS.py --expnum $EXPNUM --reqnum $RNUM --attnum $PNUM --ccd $CCDNUM_LIST
 
 	#ifdh cp /pnfs/des/persistent/desgw/BLISS-expCalib_Y3apass-old-Nora.py ./BLISS-expCalib_Y3apass-old.py
 	#ifdh cp /pnfs/des/persistent/desgw/expCalib-isaac.py ./BLISS-expCalib_Y3apass-old.py
 	#./BLISS-expCalib_Y3apass-old.py --expnum $EXPNUM --reqnum $RNUM --attnum $PNUM --ccd $CCDNUM_LIST
->>>>>>> 809db39 (implement new calibration and skipping incomplete)
 	
 	RESULT=$? 
 	#echo "BLISS-expCalib_Y3pass-old.py exited with status $RESULT"
@@ -1128,21 +1120,12 @@ for c in $ccdlist; do
                         echo $newcounter
                         sed -i -e "s/\(.*\) ${overlapcounter} /\1 $newcounter/" "${overlapfile}"
 			if [ "${newcounter}" -lt 1 ]; then
-<<<<<<< HEAD
 			    echo "NORA!! LOOK!!"
 			    # Change the SEARCHEXP_TEMPEXP.out to .no (but how?)
 			    mv ${TOPDIR_WSDIFF}/pairs/${EXPNUM}-${overlapexp}.out ${TOPDIR_WSDIFF}/pairs/${EXPNUM}-${overlapexp}.no
 			    ln -sf ${TOPDIR_WSDIFF}/pairs/${EXPNUM}-${overlapexp}.no ${TOPDIR_WSDIFF}/pairs/${EXPNUM}/${EXPNUM}-${overlapexp}.out
 			    mv ${TOPDIR_WSDIFF}/pairs/${EXPNUM}/${EXPNUM}-${overlapexp}.out ${TOPDIR_WSDIFF}/pairs/${EXPNUM}/${EXPNUM}-${overlapexp}.no
 			    #mv SEARCHEXP_TEMPEXP.out SEARCHEXP_TEMPEXP.no
-=======
-
-                #NS fix for simlink
-                mv ${TOPDIR_WSDIFF}/pairs/${EXPNUM}-${overlapexp}.out ${TOPDIR_WSDIFF}/pairs/${EXPNUM}-${overlapexp}.no
-                ln -sf ${TOPDIR_WSDIFF}/pairs/${EXPNUM}-${overlapexp}.no ${TOPDIR_WSDIFF}/pairs/${EXPNUM}/${EXPNUM}-${overlapexp}.out
-                mv ${TOPDIR_WSDIFF}/pairs/${EXPNUM}/${EXPNUM}-${overlapexp}.out ${TOPDIR_WSDIFF}/pairs/${EXPNUM}/${EXPNUM}-${overlapexp}.no
-                            #mv SEARCHEXP_TEMPEXP.out SEARCHEXP_TEMPEXP.no
->>>>>>> 809db39 (implement new calibration and skipping incomplete)
 			fi
 		    fi  
                 fi
@@ -1170,18 +1153,11 @@ for c in $ccdlist; do
                     echo $newcounter
                     sed -i -e "s/\(.*\) ${overlapcounter} /\1 $newcounter/" "${overlapfile}"
                     if [ "${newcounter}" -lt 1 ]; then
-<<<<<<< HEAD
 			echo "NORA!! PAY ATTENTION!!"
                         # Change the SEARCHEXP_TEMPEXP.out to .no (but how?)
                         mv ${TOPDIR_WSDIFF}/pairs/${EXPNUM}-${overlapexp}.out ${TOPDIR_WSDIFF}/pairs/${EXPNUM}-${overlapexp}.no
 			ln -sf ${TOPDIR_WSDIFF}/pairs/${EXPNUM}-${overlapexp}.no ${TOPDIR_WSDIFF}/pairs/${EXPNUM}/${EXPNUM}-${overlapexp}.out
 			mv ${TOPDIR_WSDIFF}/pairs/${EXPNUM}/${EXPNUM}-${overlapexp}.out ${TOPDIR_WSDIFF}/pairs/${EXPNUM}/${EXPNUM}-${overlapexp}.no
-=======
-                        #NS fix for simlink
-                        mv ${TOPDIR_WSDIFF}/pairs/${EXPNUM}-${overlapexp}.out ${TOPDIR_WSDIFF}/pairs/${EXPNUM}-${overlapexp}.no
-                        ln -sf ${TOPDIR_WSDIFF}/pairs/${EXPNUM}-${overlapexp}.no ${TOPDIR_WSDIFF}/pairs/${EXPNUM}/${EXPNUM}-${overlapexp}.out
-                        mv ${TOPDIR_WSDIFF}/pairs/${EXPNUM}/${EXPNUM}-${overlapexp}.out ${TOPDIR_WSDIFF}/pairs/${EXPNUM}/${EXPNUM}-${overlapexp}.no
->>>>>>> 809db39 (implement new calibration and skipping incomplete)
 		    fi
 		fi
             fi
