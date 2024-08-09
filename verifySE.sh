@@ -38,10 +38,10 @@ if [ $CHECK_XRDCP -ne 0 ] || [ $CHECK_UBERFTP -ne 0 ]; then
     fi
 fi
 
-# 2018-03-09 replace with current OSG stack and 3.4 
-. /cvmfs/oasis.opensciencegrid.org/mis/osg-wn-client/3.4/current/el6-x86_64/setup.sh
+# 2024-08-09 replace with current OSG stack and 3.6 
+. /cvmfs/oasis.opensciencegrid.org/mis/osg-wn-client/3.6/current/el7-x86_64/setup.sh
 
-source /cvmfs/des.opensciencegrid.org/eeups/startupcachejob21i.sh
+source /cvmfs/des.opensciencegrid.org/eeups/startupcachejob31i.sh
 export IFDH_CP_MAXRETRIES=2
 export IFDH_XROOTD_EXTRA="-S 4 -f -N"
 export XRD_REDIRECTLIMIT=255
