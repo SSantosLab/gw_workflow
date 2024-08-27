@@ -489,7 +489,7 @@ if [ "$SKIPSE" == "false" ] ; then # if statement allows SE to be skipped if SE 
         corr_dir="/cvmfs/des.osgstorage.org/pnfs/fnal.gov/usr/des/persistent/stash/desdm/calib/"
         conf_dir="/cvmfs/des.osgstorage.org/pnfs/fnal.gov/usr/des/persistent/stash/desdm/config/"
     else
-        corr_dir="/pnfs/des/persistent/stash/desdm/calib/"
+        corr_dir="/pnfs/des/persistent/desdm/calib/"
 	conf_dir="/pnfs/des/persistent/stash/desdm/config/"
     fi                                       
 # write to confFile

@@ -245,7 +245,7 @@ if [ ! -f $optionalfile ] ; then echo "Warning: $optionalfile not found." ; fi
 RNUM="2"
 PNUM="01"
 SEASON="11"
-JOBSUB_OPTS="--memory=3000MB --expected-lifetime=medium --cpu=1 --mail_on_error --email-to=kherner@fnal.gov --need-storage-modify /des/persistent/gw/exp --need-storage-modify /des/persistent/gw/forcephoto"
+JOBSUB_OPTS="--memory=4GB --expected-lifetime=medium --cpu=1 --mail_on_error --email-to=kherner@fnal.gov --need-storage-modify /des/persistent/gw/exp --need-storage-modify /des/persistent/gw/forcephoto"
 JOBSUB_TEMP_OPTS="$JOBSUB_OPTS --lines='+FERMIHTC_AutoRelease=True' --lines='+FERMIHTC_GraceLifetime=43200' --lines='+FERMIHTC_GraceMemory=5000'"
 DIFFIMG_EUPS_VERSION="gw8"
 WRITEDB="off"
