@@ -25,14 +25,14 @@ query = """SELECT id as EXPNUM,
        qc_teff as TEFF,
        object as OBJECT
 FROM exposure.exposure
-WHERE flavor='object' and exptime>29.999  and RA is not NULL and id>=182809
+WHERE flavor='object' and exptime>0.4999  and RA is not NULL and id>=182809
 ORDER BY id"""
 
 conn =  psycopg2.connect(database='decam_prd',
                            user='decam_reader',
-                           host='des90.fnal.gov',
+                           host='des91.fnal.gov',
 #                           password='THEPASSWORD',
-                         port=5442)
+                         port=5442) 
 some_exposures = pandas.read_sql(query, conn)
 conn.close()
 #print some_exposures.keys()
