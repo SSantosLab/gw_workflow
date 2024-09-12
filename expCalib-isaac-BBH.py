@@ -28,6 +28,8 @@ import pandas as pd
 import fitsio
 from astropy.table import Table
 from astropy.stats import sigma_clip
+import astropy.units as u
+from astropy import coordinates as ac
 from astropy.io import fits
 import matplotlib.pyplot as plt
 
@@ -74,6 +76,7 @@ def getallccdfromDELVE(args, catlist_data, catfile, remove_agns=True):
                 print 'All Queries Failed, Exiting.'
                 sys.exit(1)
     std_data.columns = ["MATCHID", "RA", "DEC", "WAVG_MAG_PSF"]
+    print '{} Standard Stars Found...'.format(len(std_data))
     
     if remove_agns:
         allwiseagns_df = pd.read_table("/cvmfs/des.osgstorage.org/pnfs/fnal.gov/usr/des/persistent/stash/gw/ALLWISE_AGN/allwiseagn_v1_082022.dat",
@@ -82,15 +85,12 @@ def getallccdfromDELVE(args, catlist_data, catfile, remove_agns=True):
         allwiseagns_df = allwiseagns_df[(allwiseagns_df['RA']>minra) & (allwiseagns_df['RA']<maxra)]
         
         if len(allwiseagns_df)>0:
-            agn_coords = np.array([allwiseagns_df['RA'], allwiseagns_df['DEC']]).T
-            std_coords = np.array([std_data['RA'], std_data['DEC']]).T
+            agn_catalog = ac.SkyCoord(allwiseagns_df['RA'].values*u.deg, allwiseagns_df['DEC'].values*u.deg)
+            std_catalog = ac.SkyCoord(std_data['RA'].values*u.deg, std_data['DEC'].values*u.deg)
             
             match_tolerance = 2.0 # Arcsec
-            coord_broadcast0 = np.repeat(std_coords[np.newaxis, :, :], len(agn_coords), axis=0)
-            coord_broadcast1 = np.repeat(agn_coords[:, np.newaxis, :], len(std_coords), axis=1)
-            min_sep = np.degrees(np.min(vectorized_angsep(coord_broadcast0, coord_broadcast1), axis=1))
-            tolerance_mask = (min_sep < (match_tolerance/3600.)) # Matches should be within some tolerance criteria
-            idx = np.argmin(vectorized_angsep(coord_broadcast0, coord_broadcast1), axis=1)
+            idx, match_sep, _ = agn_catalog.match_to_catalog_sky(std_catalog)
+            tolerance_mask = match_sep<match_tolerance*u.arcsec
             idx = idx[tolerance_mask]
             
             std_data = std_data.drop(idx).reset_index(drop=True)
@@ -113,7 +113,7 @@ def getallccdfromDELVE(args, catlist_data, catfile, remove_agns=True):
     return
 
 
-def getCatalogDELVE(ra, dec, minra, maxra, mindec, maxdec, band, radius=0.2):
+def getCatalogDELVE(ra, dec, minra, maxra, mindec, maxdec, band, radius=0.05):
     #vec = hp.pixelfunc.ang2vec(ra, dec, lonlat=True) # For new healpy 1.11.0 and python 2.7.15
     vec = hp.pixelfunc.ang2vec((90-dec) * np.pi/180, ra * np.pi/180) # FOR OLD HEALPY 1.5dev
     disc_hpx = hp.query_disc(32, vec, radius=np.radians(radius), inclusive=True)
@@ -352,20 +352,13 @@ def matchStars(std_infile, obs_infile, match_outfile, match_tolerance=1.):
     '''
     std_data = pd.read_csv(std_infile)
     obs_data = pd.read_csv(obs_infile)
-    obs_coords = np.array([obs_data['RA'], obs_data['DEC']]).T
-    std_coords = np.array([std_data['RA'], std_data['DEC']]).T
-    
-    coord_broadcast0 = np.repeat(std_coords[np.newaxis, :, :], len(obs_coords), axis=0)
-    coord_broadcast1 = np.repeat(obs_coords[:, np.newaxis, :], len(std_coords), axis=1)
-    
-    separation_broadcast = vectorized_angsep(coord_broadcast0, coord_broadcast1)
-    
-    min_sep = np.degrees(np.min(separation_broadcast, axis=1))
-    idx = np.argmin(separation_broadcast, axis=1)
-    
-    tolerance_mask = (min_sep < (match_tolerance/3600.)) # Matches should be within some tolerance criteria
+    obs_catalog = ac.SkyCoord(obs_data['RA'].values*u.deg, obs_data['DEC'].values*u.deg)
+    std_catalog = ac.SkyCoord(std_data['RA'].values*u.deg, std_data['DEC'].values*u.deg)
+
+    idx, match_sep, _ = obs_catalog.match_to_catalog_sky(std_catalog)
+    tolerance_mask = match_sep<match_tolerance*u.arcsec
     idx = idx[tolerance_mask]
-    
+
     # Standard star columns are denoted with "_1" and Observed star columns are denoted with "_2"
     outdata = pd.merge(std_data.iloc[idx].reset_index(drop=True).add_suffix('_1'),
                        obs_data[tolerance_mask].reset_index(drop=True).add_suffix('_2'),
@@ -374,27 +367,6 @@ def matchStars(std_infile, obs_infile, match_outfile, match_tolerance=1.):
     outdata.insert(0, 'MATCHID', np.arange(len(outdata))+1)
     outdata.to_csv(match_outfile, index=False)
     return
-
-
-def vectorized_angsep(coords1, coords2):
-    '''
-    Calculates angular separation using a vectorized Vincenty formula and outputs in a specific way
-    Purpose-built for this function by Isaac M
-    
-    Based on astropy.coordinates.angular_separation
-    '''
-    rad_coords1, rad_coords2 = np.radians(coords1), np.radians(coords2)
-    sdlon = np.sin(rad_coords2[:,:,0] - rad_coords1[:,:,0])
-    cdlon = np.cos(rad_coords2[:,:,0] - rad_coords1[:,:,0])
-    slat1 = np.sin(rad_coords1[:,:,1])
-    slat2 = np.sin(rad_coords2[:,:,1])
-    clat1 = np.cos(rad_coords1[:,:,1])
-    clat2 = np.cos(rad_coords2[:,:,1])
-    
-    num1 = clat2 * sdlon
-    num2 = clat1 * slat2 - slat1 * clat2 * cdlon
-    denominator = slat1 * slat2 + clat1 * clat2 * cdlon
-    return np.arctan2(np.hypot(num1, num2), denominator)
 
 ################################################################################
 
