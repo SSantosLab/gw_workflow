@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 #
+# Updated print statements to py3 on 9/28/2021 (Rob Morgan)
 # Version from 10/09/2017 according to Sahar rounding was changed from 357 to 350.
 #
 #
@@ -28,7 +29,7 @@ import numpy as np
 def main():
     import argparse
     import time
-    print " Start with BLISS-expCalib.py \n"
+    print(" Start with BLISS-expCalib.py \n")
     """Create command line arguments"""
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument('--expnum', help='expnum is queried', default=350245, type=int)
@@ -42,7 +43,7 @@ def main():
                         
     args = parser.parse_args()
                         
-    if args.verbose > 0: print args
+    if args.verbose > 0: print(args)
 
 #    sys.exit()
 
@@ -100,7 +101,7 @@ def doset(args):
     import healpy as hp    
     import sys
     
-    if args.verbose >0 : print args
+    if args.verbose >0 : print(args)
 
     # delete previous *Obj.csv files
     oldfiles = glob.glob("*Obj.csv")
@@ -108,19 +109,19 @@ def doset(args):
         if os.path.isfile(f):
             os.remove(f)
         else:
-            print "Old object file not deleted because it could not be found."
+            print("Old object file not deleted because it could not be found.")
 
     catlistFile="D%08d_r%sp%s_red_catlist.csv" % (args.expnum,str(args.reqnum),str(args.attnum))
-#    print " looking for file %s in local directory \n" % catlistFile
+#    print(" looking for file %s in local directory \n" % catlistFile)
     if not os.path.exists(catlistFile):
-        print '%s does not seem to exist... exiting now...' % catlistFile
+        print('%s does not seem to exist... exiting now...' % catlistFile)
         sys.exit(1)
-#    print " file %s found \n" %catlistFile
+#    print(" file %s found \n" %catlistFile)
     data=np.genfromtxt(catlistFile,dtype=None,delimiter=',',names=True)
     # get only data for correct CCD
     correctccd = (data['CCDNUM'] == args.ccd)
     data = data[ correctccd ]
-#    print " before loop \n"    
+#    print(" before loop \n")
 
     for i in range(data['FILENAME'].size):
         # to avoid error when array is not 2D because it only has one entry
@@ -186,17 +187,17 @@ def doset(args):
             desipixlist= desipixc,desipix1,desipix2,desipix3,desipix4,desipix12,desipix23,desipix34,desipix14
             desipixlist=uniqlist(desipixlist)
         
-            ra1=[];ra2=[];dec1=[];dec2=[]
+            ra1, ra2, dec1, dec2 = [], [], [], []
             matchlistout="""%s_match.csv""" % (filetocheck)
             objlistFile ="""%s_Obj.csv"""   % (filetocheck)
             stdlistFile ="""%s_std.csv"""   % (filetocheck)
 
             if not os.path.isfile(objlistFile):
-                print '%s does not seem to exist... exiting now...' % objlistFile            
+                print('%s does not seem to exist... exiting now...' % objlistFile)
                 sys.exit(1)
 
             if not os.path.isfile(stdlistFile):
-                print '%s does not seem to exist... exiting now...' % stdlistFile
+                print('%s does not seem to exist... exiting now...' % stdlistFile)
                 sys.exit(1)
 
             stdracol=1
@@ -206,7 +207,7 @@ def doset(args):
             matchTolArcsec=1.0 #1.0arcsec
             verbose=2
             matchSortedStdwithObsCats(stdlistFile,objlistFile,matchlistout,stdracol,stddeccol,obsracol,obsdeccol,matchTolArcsec,verbose)
-    print "after the loop \n"
+    print("after the loop \n")
             
 
     return 0
@@ -227,11 +228,11 @@ def Wget_data_home(args):
     #Check first if file exists...
     if  glob.glob(myfile):
         #Print '%s does seem to exist... exiting now...' % catname
-        print "relevant cat files already exist in the current directory... no need to wget..."
+        print("relevant cat files already exist in the current directory... no need to wget...")
         #sys.exit(1)
         return 1
     else:
-        print "relevant cat files are not in directory... wgetting them from archive..."
+        print("relevant cat files are not in directory... wgetting them from archive...")
 
         sys.exit(1)
     
@@ -276,14 +277,14 @@ def Read_Sexcatalogfitstocsv(args,fitsname,band):
     zeropoint=args.sex_mag_zeropoint*(SEXdata[fluxType]/SEXdata[fluxType])
   
     with open(outFile,'w') as csvFile:
-            writer = csv.writer(csvFile,delimiter=',',  quotechar='|',
-                                lineterminator='\n', quoting=csv.QUOTE_MINIMAL)
+	    writer = csv.writer(csvFile,delimiter=',',  quotechar='|',
+				lineterminator='\n', quoting=csv.QUOTE_MINIMAL)
 
-            writer.writerow(hdr)
-            line=[]
-            for i in range(SEXdata.size):
-                line=SEXdata['NUMBER'][i],SEXdata['ALPHAWIN_J2000'][i], SEXdata['DELTAWIN_J2000'][i], mag[i], magerr[i], zeropoint[i], magType,band 
-                writer.writerow(line)
+	    writer.writerow(hdr)
+	    line=[]
+	    for i in range(SEXdata.size):
+		line=SEXdata['NUMBER'][i],SEXdata['ALPHAWIN_J2000'][i], SEXdata['DELTAWIN_J2000'][i], mag[i], magerr[i], zeropoint[i], magType,band 
+		writer.writerow(line)
 
     SEXdata=[]
     Fdata=[]
@@ -327,13 +328,13 @@ def getallccdfromGAIA(args):
 
     #print NEED Round RA
     catlistFile="""D%08d_r%sp%s_red_catlist.csv""" % (args.expnum,str(args.reqnum),str(args.attnum))
-    print "looking for file %s \n" % catlistFile
+    print("looking for file %s \n" % catlistFile)
     if not os.path.exists(catlistFile):
-        print '%s does not seem to exist... exiting now...' % catlistFile
+        print('%s does not seem to exist... exiting now...' % catlistFile)
         sys.exit(1)
-#    print " found file %s \n" % catlistFile
+#    print(" found file %s \n" % catlistFile)
     data=pd.read_csv(catlistFile)
-#    print " the file is read  unpack data \n"
+#    print(" the file is read  unpack data \n")
 
     # unpack image data
     BAND=data['BAND'][0]
@@ -470,13 +471,13 @@ def getallccdfromAPASS92MASS(args):
 
     #print NEED Round RA
     catlistFile="""D%08d_r%sp%s_red_catlist.csv""" % (args.expnum,str(args.reqnum),str(args.attnum))
-    print "looking for file %s \n" % catlistFile
+    print("looking for file %s \n" % catlistFile)
     if not os.path.exists(catlistFile):
-        print '%s does not seem to exist... exiting now...' % catlistFile
+        print('%s does not seem to exist... exiting now...' % catlistFile)
         sys.exit(1)
-#    print " found file %s \n" % catlistFile
+#    print(" found file %s \n" % catlistFile)
     data=pd.read_csv(catlistFile)
-#    print " the file is read  unpack data \n"
+#    print(" the file is read  unpack data \n")
     BAND=data['BAND'][0]
     data['desipixc']=getipix(8,data['RA_CENT'], data['DEC_CENT'])
     data['desipix1']=getipix(8,data['RAC1'],data['DECC1']) 
@@ -488,9 +489,9 @@ def getallccdfromAPASS92MASS(args):
     data['desipix23']=getipix(8,data['RA_CENT'],data['DECC2']) 
     data['desipix34']=getipix(8,data['RAC3'],data['DEC_CENT']) 
     data['desipix14']=getipix(8,data['RA_CENT'],data['DECC4']) 
-#    print " first step \n"
+#    print(" first step \n")
     desipixlist= pd.unique(data[['desipixc','desipix1','desipix2','desipix3','desipix4','desipix12','desipix23','desipix34','desipix14']].values.ravel())
-#    print desipixlist
+#    print(desipixlist)
     desipixlist=uniqlist(desipixlist)
     stdRA = np.std(data['RA_CENT'])
     if ( stdRA >20 ) :
@@ -500,17 +501,17 @@ def getallccdfromAPASS92MASS(args):
         data['RAC3']   =[roundra(x) for x in data['RAC3']]
         data['RAC4']   =[roundra(x) for x in data['RAC4']]
 
-#    print " stdRA=%f \n" % stdRA    
+#    print(" stdRA=%f \n" % stdRA) 
 #    if ( stdRA <=20 ) :
-#        print " Something goes wrong  stdRA=%f exiting \n" % stdRA
+#        print(" Something goes wrong  stdRA=%f exiting \n" % stdRA)
 #        sys.exit(1)
-#    print " second step \n"
+#    print(" second step \n")
     minra=min(min(data['RA_CENT']),min(data['RAC1']),min(data['RAC2']),min(data['RAC3']),min(data['RAC4']))-0.1
     mindec=min(min(data['DEC_CENT']),min(data['DECC1']),min(data['DECC2']),min(data['DECC3']),min(data['DECC4']))-0.1
     maxra=max(max(data['RA_CENT']),max(data['RAC1']),max(data['RAC2']),max(data['RAC3']),max(data['RAC4']))+0.1
     maxdec=max(max(data['DEC_CENT']),max(data['DECC1']),max(data['DECC2']),max(data['DECC3']),max(data['DECC4']))+0.1
 
-#    print minra,maxra, mindec,maxdec
+#    print(minra,maxra, mindec,maxdec)
 
     outfile="""STD%s""" % catlistFile
 
@@ -521,7 +522,7 @@ def getallccdfromAPASS92MASS(args):
 
     for i in  desipixlist:
         #myfile="""/data/des20.b/data/sallam/pyPSM_Year2/TWOMASS/ALL-2MASS/2arcsec/apass_TWO_MASS_%d.csv""" %i
-#        print "before copying file %d from stash " % i
+#        print("before copying file %d from stash " % i)
         myfile="""/pnfs/des/persistent/stash/ALLSKY_STARCAT/apass_TWO_MASS_%d.csv""" %i
 #        myfile1 = "/cvmfs/des.osgstorage.org/stash/ALLSKY_STARCAT/apass_TWO_MASS_%d.csv" %i
         ##########
@@ -531,7 +532,7 @@ def getallccdfromAPASS92MASS(args):
         os.system('ifdh cp -D %s .' %myfile)
        
         if  not os.path.exists("./"+mmyfile):
-            print "file was not copyed try to link it \n" 
+            print("file was not copyed try to link it \n")
 #        os.symlink(myfile1,mmyfile)
 
 #        mmyfile="""apass_TWO_MASS_%d.csv""" %i
@@ -571,12 +572,12 @@ def plotradec_sexvsY2Q1(args):
     import sys
     import matplotlib.pyplot as plt
 
-    if args.verbose >0 : print args
+    if args.verbose >0 : print(args)
 
     catlistFile="""D%08d_r%sp%1d_red_catlist.csv""" % (args.expnum,args.reqnum,args.attnum)
 
     if not os.path.isfile(catlistFile):
-        print '%s does not seem to exist... exiting now...' % catlistFile
+        print('%s does not seem to exist... exiting now...' % catlistFile)
         sys.exit(1)
 
     data=np.genfromtxt(catlistFile,dtype=None,delimiter=',',names=True)
@@ -599,11 +600,11 @@ def plotradec_sexvsY2Q1(args):
         stdlistFile="""%s_std.csv""" % (catFilename)        
 
         if not os.path.isfile(objlistFile):
-            print '%s does not seem to exist... exiting now...' % objlistFile
+            print('%s does not seem to exist... exiting now...' % objlistFile)
             sys.exit(1)
 
         if not os.path.isfile(stdlistFile):
-            print '%s does not seem to exist... exiting now...' % stdlistFile
+            print ('%s does not seem to exist... exiting now...' % stdlistFile)
             sys.exit(1)
 
         # Read in the file...
@@ -642,7 +643,7 @@ def matchSortedStdwithObsCats(inputStdFile,inputObsFile,outputMatch,racolStdFile
     matchTolArcsec=matchArcsec
     verbose=verbose
 
-    #print f1,f2,outfile,stdracol,stddeccol,obsracol,obsdeccol,matchTolArcsec,verbose
+    #print(f1,f2,outfile,stdracol,stddeccol,obsracol,obsdeccol,matchTolArcsec,verbose)
 
     # Initialize "dictionaries"...
     # Each element of a "dictionary" is associated with a standard star.
@@ -719,7 +720,7 @@ def matchSortedStdwithObsCats(inputStdFile,inputObsFile,outputMatch,racolStdFile
         # Increment line count from observed data file...
         linecnt += 1
         if ( (linecnt/1000.0 == int(linecnt/1000.0)) and (verbose > 1) ):
-            print '\r'+'Progress (lines read from observed catalog):  ',linecnt,
+            sys.stdout.write('\r'+'Progress (lines read from observed catalog): %i   ' %linecnt)
             sys.stdout.flush()
 
         # Read line from observed data file...
@@ -913,11 +914,11 @@ def sigmaClipZP(args):
     import sys
     import math
 
-    if args.verbose >0 : print args
+    if args.verbose >0 : print(args)
 
     catlistFile="""D%08d_r%sp%1d_red_catlist.csv""" % (args.expnum,args.reqnum,args.attnum)
     if not os.path.isfile(catlistFile):
-        print '%s does not seem to exist... exiting now...' % catlistFile
+        print('%s does not seem to exist... exiting now...' % catlistFile)
         sys.exit(1)
 
     data1=np.genfromtxt(catlistFile,dtype=None,delimiter=',',names=True)
@@ -945,7 +946,7 @@ def sigmaClipZP(args):
         matchListFile="%s_match.csv" % (catFilename)        
 
         if not os.path.isfile(matchListFile):
-            print '%s does not seem to exist... exiting now...' % matchListFile
+            print('%s does not seem to exist... exiting now...' % matchListFile)
             sys.exit(1)
 
         try:
@@ -989,7 +990,7 @@ def sigmaClipZP(args):
 
     ZeroListFile="""Zero_D%08d_%02d_r%sp%1d.csv""" % (args.expnum,args.ccd,args.reqnum,args.attnum)
     if not os.path.isfile(catlistFile):
-        print '%s does not seem to exist... exiting now...' % ZeroListFile
+        print('%s does not seem to exist... exiting now...' % ZeroListFile)
         sys.exit(1)
 
     MergedFile="""Merged_D%08d_%02d_r%sp%1d.csv""" % (args.expnum,args.ccd,args.reqnum,args.attnum)
@@ -1044,7 +1045,7 @@ def sigmaClipZPallCCDs(args):
     from numpy import mean
     import numpy.ma as ma 
 
-    if args.verbose >0 : print args
+    if args.verbose >0 : print(args)
     #allZPout="""allZP_D%08d_r%sp%1d.csv""" % (args.expnum,args.reqnum,args.attnum)	
     allZPout="""allZP_D%08d_r%sp%1d.csv""" % (args.expnum,args.reqnum,args.attnum)
     stdfile="""STDD%08d_r%sp%1d_red_catlist.csv""" % (args.expnum,args.reqnum,args.attnum)
@@ -1071,8 +1072,9 @@ def sigmaClipZPallCCDs(args):
     verbose=2
     matchSortedStdwithObsCats(stdfile,objfile,outfile,stdracol,stddeccol,obsracol,obsdeccol,matchTolArcsec,verbose)
 
+	# Rob Morgan (9/28/21) This indentation seems troublesome. Someone should take a look.
     if not os.path.isfile(outfile):
-	print '%s does not seem to exist... exiting now...' % outfile
+	print('%s does not seem to exist... exiting now...' % outfile)
 	sys.exit(1)
     try:
 	data11=np.genfromtxt(outfile,dtype=None,delimiter=',',names=True)
@@ -1126,16 +1128,16 @@ def ZP_OUTLIERS(args):
     import matplotlib as mpl
 
 
-    if args.verbose >0 : print args
+    if args.verbose >0 : print(args)
     #allZeroFile="""allZP_D%08d_r%sp%1d.csv""" % (args.expnum,args.reqnum,args.attnum)	
     allZeroFile="""allZP_D%08d_r%sp%1d.csv""" % (args.expnum,args.reqnum,args.attnum)
     #if not os.path.isfile(catlistFile):
-    #    print '%s does not seem to exist... exiting now...' % ZeroListFile
+    #    print('%s does not seem to exist... exiting now...' % ZeroListFile)
     #    sys.exit(1)
 
     MergedFile="""Merged_D%08d_%02d_r%sp%1d.csv""" % (args.expnum,args.ccd,args.reqnum,args.attnum)
     if not os.path.isfile(MergedFile):
-        print '%s does not seem to exist... exiting now...' % MergedFile
+        print('%s does not seem to exist... exiting now...' % MergedFile)
         sys.exit(1)
 
     fout="""Merg_allZP_D%08d_%02d_r%sp%1d.csv""" % (args.expnum,args.ccd,args.reqnum,args.attnum)
@@ -1248,19 +1250,19 @@ def plotradec_ZP(args):
     import matplotlib as mpl
     import sys
 
-    if args.verbose >0 : print args
+    if args.verbose >0 : print(args)
 
     catlistFile="""D%08d_r%sp%1d_red_catlist.csv""" % (args.expnum,args.reqnum,args.attnum)
     if not os.path.isfile(catlistFile):
-        print '%s does not seem to exist... exiting now...' % catlistFile
+        print('%s does not seem to exist... exiting now...' % catlistFile)
         sys.exit(1)
 
     #ZeroListFile="""Zero_D%08d_r%sp%1d.csv""" % (args.expnum,args.reqnum,args.attnum)
     #if not os.path.isfile(catlistFile):
-    #    print '%s does not seem to exist... exiting now...' % ZeroListFile
+    #    print('%s does not seem to exist... exiting now...' % ZeroListFile)
     #    sys.exit(1)        
     #Mergedout="""Merged_D%08d_r%sp%1d.csv""" % (args.expnum,args.reqnum,args.attnum)    
-    #print catlistFile,ZeroListFile,Mergedout
+    #print(catlistFile,ZeroListFile,Mergedout)
     #jointwocsv(catlistFile,ZeroListFile,Mergedout)
     #MergedFile="""Merg_allZP_D%08d_r%sp%1d.csv""" % (args.expnum,args.reqnum,args.attnum)
 
@@ -1274,7 +1276,7 @@ def plotradec_ZP(args):
         data['RAC3']   =[roundra(x) for x in data['RAC3']]
         data['RAC4']   =[roundra(x) for x in data['RAC4']]
     
-    #    print " Unexpected value of the RA spred stdRA=%f \n" % stdRA
+    #    print(" Unexpected value of the RA spred stdRA=%f \n" % stdRA)
     #    sys.exit(1)
     w0=(data['ZP']==-999)
     w1=(data['ZP']>-999)
@@ -1472,16 +1474,16 @@ def apply_ZP_Sexcatalogfitstocsv(catFilename,EXPNUM,CCDNUM,zeropoint,zeropoint_r
     data['MAGERR_PSF'] =  np.where(w1 ,(2.5/math.log(10.))*(data['FLUXERR_PSF']/data['FLUX_PSF']) ,np.int16(-9999))
 
     with open(outFile,'w') as csvFile:
-            writer = csv.writer(csvFile,delimiter=',',  quotechar='|',
-                                lineterminator='\n', quoting=csv.QUOTE_MINIMAL)
+		writer = csv.writer(csvFile,delimiter=',',  quotechar='|',
+							lineterminator='\n', quoting=csv.QUOTE_MINIMAL)
 
-            writer.writerow(col)
+		writer.writerow(col)
 
-            line=[]
-            for i in range(data.size):
-                line=EXPNUM,CCDNUM,data['NUMBER'][i],data['ALPHAWIN_J2000'][i],data['DELTAWIN_J2000'][i],data['FLUX_AUTO'][i],data['FLUXERR_AUTO'][i],data['FLUX_PSF'][i],data['FLUXERR_PSF'][i],data['MAG_AUTO'][i],data['MAGERR_AUTO'][i],data['MAG_PSF'][i],data['MAGERR_PSF'][i],data['SPREAD_MODEL'][i],data['SPREADERR_MODEL'][i],data['FWHM_WORLD'][i],data['FWHMPSF_IMAGE'][i],data['FWHMPSF_WORLD'][i],data['CLASS_STAR'][i],data['FLAGS'][i],data['IMAFLAGS_ISO'][i],zeropoint,zeropoint_rms,ZPFLAG
+		line=[]
+		for i in range(data.size):
+			line=EXPNUM,CCDNUM,data['NUMBER'][i],data['ALPHAWIN_J2000'][i],data['DELTAWIN_J2000'][i],data['FLUX_AUTO'][i],data['FLUXERR_AUTO'][i],data['FLUX_PSF'][i],data['FLUXERR_PSF'][i],data['MAG_AUTO'][i],data['MAGERR_AUTO'][i],data['MAG_PSF'][i],data['MAGERR_PSF'][i],data['SPREAD_MODEL'][i],data['SPREADERR_MODEL'][i],data['FWHM_WORLD'][i],data['FWHMPSF_IMAGE'][i],data['FWHMPSF_WORLD'][i],data['CLASS_STAR'][i],data['FLAGS'][i],data['IMAFLAGS_ISO'][i],zeropoint,zeropoint_rms,ZPFLAG
 
-                writer.writerow(line)
+			writer.writerow(line)
 
     data=[]
 
@@ -1494,11 +1496,11 @@ def Onefile(args):
     import pandas as pd
     from astropy.io import fits
 
-    if args.verbose >0 : print args
+    if args.verbose >0 : print(args)
 
     catlistFile="""Merg_allZP_D%08d_%02d_r%sp%1d.csv""" % (args.expnum,args.ccd,args.reqnum,args.attnum)
     if not os.path.isfile(catlistFile):
-        print '%s does not seem to exist...' % catlistFile
+        print('%s does not seem to exist...' % catlistFile)
 
     fout="""D%08d_%02d_r%sp%1d_ZP.csv""" % (args.expnum,args.ccd,args.reqnum,args.attnum)
     fitsout="""D%08d_%02d_r%sp%1d_ZP.fits""" % (args.expnum,args.ccd,args.reqnum,args.attnum)

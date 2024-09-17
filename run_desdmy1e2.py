@@ -71,6 +71,6 @@ os.system('ifdh mkdir '+str(dir_final) )
 
 cmd = 'ifdh cp -D *.out *sextractor* *fullcat* *immask* D*_ZP.fits ' +str(dir_final)
 
-print cmd
+print(cmd)
 
 os.system(cmd)
