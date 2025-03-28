@@ -215,7 +215,7 @@ ccddotoutfile=""
 # Check whether SE outputs and .out files exist with gfal-stat; computationally cheaper than ifdh ls.
 
 statfile=D$(printf %08d ${EXPNUM})_${BAND}_$(printf %02d ${CCDNUM_LIST})_r${RNUM}p${PNUM}_immask.fits.fz
-gfal-stat ${STATPATH}/${statfile} > /dev/null
+BEARER_TOKEN=$(< $BEARER_TOKEN_FILE) gfal-stat ${STATPATH}/${statfile} > /dev/null
 if [ $? -eq 0 ]; then
     immaskfiles="$immaskfiles ${PNFSPATH}/${statfile}"
 else
@@ -223,7 +223,7 @@ else
 fi
 
 statfile=D$(printf %08d ${EXPNUM})_${BAND}_$(printf %02d ${CCDNUM_LIST})_r${RNUM}p${PNUM}_fullcat.fits   
-gfal-stat ${STATPATH}/${statfile} > /dev/null
+BEARER_TOKEN=$(< $BEARER_TOKEN_FILE) gfal-stat ${STATPATH}/${statfile} > /dev/null
 if [ $? -eq 0 ]; then
     psffiles="$psffiles ${PNFSPATH}/${statfile}"
 else
@@ -231,14 +231,14 @@ else
 fi
 
 statfile=allZP_D$(printf %08d ${EXPNUM})_r${RNUM}p${PNUM}.csv
-gfal-stat ${STATPATH}/${statfile} > /dev/null
+BEARER_TOKEN=$(< $BEARER_TOKEN_FILE) gfal-stat ${STATPATH}/${statfile} > /dev/null
 if [ $? -eq 0 ]; then
     csvfiles="$csvfiles ${PNFSPATH}/${statfile}"
 else
     echo "$statfile not already present on disk."
 fi
 statfile=D$(printf %08d ${EXPNUM})_r${RNUM}p${PNUM}_ZP.csv
-gfal-stat ${STATPATH}/${statfile} > /dev/null
+BEARER_TOKEN=$(< $BEARER_TOKEN_FILE) gfal-stat ${STATPATH}/${statfile} > /dev/null
 if [ $? -eq 0 ]; then
     csvfiles="$csvfiles ${PNFSPATH}/${statfile}"
 else
@@ -247,11 +247,11 @@ fi
 
 for csvfile in allZP_D$(printf %08d ${EXPNUM})_r${RNUM}p${PNUM}.csv Zero_D$(printf %08d ${EXPNUM})_$(printf %02d $CCDNUM_LIST)_r${RNUM}p${PNUM}.csv D$(printf %08d ${EXPNUM})_$(printf %02d $CCDNUM_LIST)_r${RNUM}p${PNUM}_ZP.csv
 do
-    gfal-stat ${STATPATH}/${csvfile} > /dev/null && ccdcsvfiles="$ccdcsvfiles ${PNFSPATH}/${csvfile}"
+    BEARER_TOKEN=$(< $BEARER_TOKEN_FILE) gfal-stat ${STATPATH}/${csvfile} > /dev/null && ccdcsvfiles="$ccdcsvfiles ${PNFSPATH}/${csvfile}"
 done
 
 statfile=${EXPNUM}.out
-gfal-stat ${STATPATH}/${statfile} > /dev/null
+BEARER_TOKEN=$(< $BEARER_TOKEN_FILE) gfal-stat ${STATPATH}/${statfile} > /dev/null
 if [ $? -eq 0 ]; then
     dotoutfile=${PNFSPATH}/${statfile}
 else
@@ -259,7 +259,7 @@ else
 fi
 
 statfile=${EXPNUM}_$(printf %d ${ccdlist}).out
-gfal-stat ${STATPATH}/${statfile} > /dev/null
+BEARER_TOKEN=$(< $BEARER_TOKEN_FILE) gfal-stat ${STATPATH}/${statfile} > /dev/null
 if [ $? -eq 0 ]; then
     ccddotoutfile=${PNFSPATH}/${statfile}
 else
@@ -586,14 +586,14 @@ EOF
 		c=$(printf "%02d" $c)
 		filestocopy1=""
 		filestocopy2=""
-		gfal-stat ${STATBASE}/${DESTCACHE}/${SCHEMA}/exp/${NITE}/${EXPNUM}/D$(printf %08d ${EXPNUM})_${BAND}_${c}_r${RNUM}p${PNUM}_fullcat.fits > /dev/null 2>&1
+		BEARER_TOKEN=$(< $BEARER_TOKEN_FILE) gfal-stat ${STATBASE}/${DESTCACHE}/${SCHEMA}/exp/${NITE}/${EXPNUM}/D$(printf %08d ${EXPNUM})_${BAND}_${c}_r${RNUM}p${PNUM}_fullcat.fits > /dev/null 2>&1
 		if [ $? -eq 0 ]; then
 		    filestocopy1="/pnfs/des/${DESTCACHE}/${SCHEMA}/exp/${NITE}/${EXPNUM}/D$(printf %08d ${EXPNUM})_${BAND}_${c}_r${RNUM}p${PNUM}_fullcat.fits"
 		else
 		    echo "Error finding ${PNFSPATH}/D$(printf %08d ${EXPNUM})_${BAND}_${c}_r${RNUM}p${PNUM}_fullcat.fits"
 		fi
 		echo "filestocopy1: $filestocopy1"
-		gfal-stat ${STATBASE}/${DESTCACHE}/${SCHEMA}/exp/${NITE}/${EXPNUM}/D$(printf %08d ${EXPNUM})_${BAND}_${c}_r${RNUM}p${PNUM}_immask.fits.fz > /dev/null 2>&1
+		BEARER_TOKEN=$(< $BEARER_TOKEN_FILE) gfal-stat ${STATBASE}/${DESTCACHE}/${SCHEMA}/exp/${NITE}/${EXPNUM}/D$(printf %08d ${EXPNUM})_${BAND}_${c}_r${RNUM}p${PNUM}_immask.fits.fz > /dev/null 2>&1
 		if [ $? -eq 0 ]; then
 		    filestocopy2="/pnfs/des/${DESTCACHE}/${SCHEMA}/exp/${NITE}/${EXPNUM}/D$(printf %08d ${EXPNUM})_${BAND}_${c}_r${RNUM}p${PNUM}_immask.fits.fz"
 		else
@@ -1061,7 +1061,7 @@ for c in $ccdlist; do
 	ZPfilename=D$(printf %08d $overlapexp)_${rpnum}_ZP.csv
 	echo "ZPfilename for combined file = $ZPfilename"
 	# check it exists and try to copy if gfal-stat is successful
-	gfal-stat $(echo ${ZPdir}$ZPfilename | sed -e "s#/pnfs/des#${STATBASE}#") > /dev/null 2>&1
+	BEARER_TOKEN=$(< $BEARER_TOKEN_FILE) gfal-stat $(echo ${ZPdir}$ZPfilename | sed -e "s#/pnfs/des#${STATBASE}#") > /dev/null 2>&1
         if [ $? -eq 0 ]; then
 	    ifdh cp -D ${ZPdir}${ZPfilename} ./ || echo "Error copying $ZPfile"
 	else
@@ -1082,7 +1082,7 @@ for c in $ccdlist; do
 	    ZPfile=${ZPdir}${ZPfilename}
 	    echo "ZPfile = $ZPfile"
 	    # check it exists and try to copy if gfal-stat is successful
-	    gfal-stat $(echo $ZPfile | sed -e "s#/pnfs/des#${STATBASE}#") > /dev/null
+	    BEARER_TOKEN=$(< $BEARER_TOKEN_FILE) gfal-stat $(echo $ZPfile | sed -e "s#/pnfs/des#${STATBASE}#") > /dev/null
             if [ $? -ne 0 ] ; then
                 echo "ZP file for this template and CCD is not available. Hopefully a combined files exists for this exposure."
             else
