@@ -16,7 +16,7 @@ import logging
 import numpy as np
 import pyfits
 import os
-import ConfigParser
+import configparser
 
 import argparse
 from despyfits.DESImage import DESImage
@@ -29,7 +29,8 @@ from matplotlib.rcsetup import ValidateInStrings
 from multiprocessing import Pool
 
 from scipy.weave.catalog import os_dependent_catalog_name
-from setuptools.command.easy_install import sys_executable
+# RM: I don't think this will work in py3, but looks like it's not used.
+# from setuptools.command.easy_install import sys_executable  
 import shutil
 
 
@@ -83,11 +84,11 @@ def pixcorrect(outname, confPars,CCD, **args):
         ' --flat ' + flat.format(**args) + \
         ' --resaturate --fixcols --addweight'    
 
-        print '\n',cmd,'\n'    
+        print('\n',cmd,'\n') 
     
         retval = subprocess.call(cmd.split(),stderr=subprocess.STDOUT)
         if retval != 0:
-            print " pixcorrect error \n"
+            print(" pixcorrect error \n")
             return -1
         return 0
     
@@ -106,7 +107,7 @@ def nullweight( inname, outname,confPars,CCD,**args):
         ' --resaturate'
     retval = subprocess.call(cmd.split(),stderr=subprocess.STDOUT)
     if retval != 0:
-        print " nulweight error \n"
+        print(" nulweight error \n")
         return -1
     return 0
         
@@ -129,11 +130,11 @@ def sextractor(inname, outname, confPars, CCD, **args):
     ' -DETECT_THRESH 10.0 -SATUR_KEY SATURATE  -CATALOG_TYPE FITS_LDAC -WEIGHT_IMAGE  ' + template_file.format(**args)+'_'+inname+'.fits[2]'+\
     '  -WEIGHT_TYPE  MAP_WEIGHT  '
 
-    print '\n',cmd,'\n'
+    print('\n',cmd,'\n')
 
     retval = subprocess.call(cmd.split(),stderr=subprocess.STDOUT)
     if retval != 0:
-        print " sex error \n"
+        print(" sex error \n")
         return -1
     return 0
          
@@ -152,7 +153,7 @@ def nullweightbkg(inname, outname, CCD, confPars, **args):
 
     retval = subprocess.call(cmd.split(),stderr=subprocess.STDOUT)
     if retval != 0:
-            print " nullweigths error \n"
+            print(" nullweigths error \n")
             return -1
     return 0
  
@@ -179,11 +180,11 @@ def bleedmask(CCD,confPars,inname,outname,**args):
     '  -m -b 5 -f 1.0 -l 7 -n 7 -r 5 -t 20 -v 3 -w 2.0 -y 1.0 -s 100 -v 3 -E 6 -L 30' + \
     '  -x ' +template_file.format(**args)+'_trailbox.fits -o ' +template_file.format(**args)+'_satstars.fits'   
 
-    print '\n',cmd,'\n'    
+    print('\n',cmd,'\n') 
 
     retval = subprocess.call(cmd.split(),stderr=subprocess.STDOUT)
     if retval != 0:
-        print " bleedmask error \n"
+        print(" bleedmask error \n")
     os.remove(template_file.format(**args)+'_'+inname+'.fits')
     return 0
 #------------------------------#
@@ -197,11 +198,11 @@ def skycompress(CCD,confPars,inname,outname,**args):
         ' --skyfilename ' + template_file.format(**args)+'_'+outname+'.fits' + \
         ' --blocksize 128'
 
-        print '\n',cmd,'\n'    
+        print('\n',cmd,'\n')  
 
         retval = subprocess.call(cmd.split(),stderr=subprocess.STDOUT)
         if retval != 0:
-            print " skycompree error \n"
+            print(" skycompree error \n")
         return 0    
 
 
@@ -249,11 +250,11 @@ def skysubtract(CCD, confPars, inname, outname, skyfitinfoFile,**args ):
         ' --domefilename ' + flat.format(**args) +\
         ' --weight  ' + weight
 
-        print '\n',cmd,'\n'
+        print('\n',cmd,'\n')
            
         retval = subprocess.call(cmd.split(),stderr=subprocess.STDOUT)
         if retval != 0:
-            print " sky_subtract error \n"
+            print(" sky_subtract error \n")
         #   clean used files
         os.remove(template_file.format(**args)+'_'+inname+'.fits' )  
         os.remove(pc_filename.format(**args))
@@ -279,12 +280,12 @@ def pixcorr_starflat(inname, outname, CCD, confPars, **args):
         ' --starflat '+ starflat.format(**args) +\
         ' --out '+ template_file.format(**args)+'_'+outname+'.fits'
 
-    print '\n',cmd,'\n'
+    print('\n',cmd,'\n')
 
     retval = subprocess.call(cmd.split(),stderr=subprocess.STDOUT)
 
     if retval != 0:
-        print " starflat error \n"
+        print(" starflat error \n")
 
     os.remove(template_file.format(**args)+'_'+inname+'.fits')
     return 0
@@ -311,10 +312,10 @@ def sextractorsky(inname, outname, CCD, confPars,  **args):
     ' -PARAMETERS_NAME ' + sexbkgparamFile +\
     ' -CATALOG_TYPE NONE -INTERP_TYPE ALL -INTERP_MAXXLAG 16 -INTERP_MAXYLAG 16 '
 
-    print '\n',cmd,'\n'
+    print('\n',cmd,'\n')
     retval = subprocess.call(cmd.split(),stderr=subprocess.STDOUT)
     if retval != 0:
-        print "sextractorsky error \n"
+        print("sextractorsky error \n")
     return 0
 
 #----------------------------------------#
@@ -331,11 +332,11 @@ def immask(CCD, confParams, inname,bkgname, outname, **args):
     ' --bkgfile '+ template_file.format(**args)+'_'+bkgname+'.fits'+\
     ' --draw  --write_streaks  --streaksfile ' + template_file.format(**args)+'_streaksfile.fits' 
 
-    print '\n',cmd,'\n'    
+    print('\n',cmd,'\n')  
 
     retval = subprocess.call(cmd.split(),stderr=subprocess.STDOUT)
     if retval != 0:
-        print "immask error \n"
+        print("immask error \n")
     os.remove(template_file.format(**args)+'_'+inname+'.fits')
     return 0
     
@@ -354,7 +355,7 @@ def rowinterp_nullweight(inname, outname,CCD, confPars, **args):
         ' BADAMP,EDGEBLEED,EDGE,CRAY'
     retval = subprocess.call(cmd.split(),stderr=subprocess.STDOUT)
     if retval != 0:
-        print " rowinterp error \n"
+        print(" rowinterp error \n")
     return 0
 #------------------------------------------#
 #        sextractor for PSFEX              #
@@ -375,11 +376,11 @@ def sextractorPSFEX( inname, outname, CCD, confPars, **args):
         '  -SATUR_KEY SATURATE  -CATALOG_TYPE FITS_LDAC -WEIGHT_IMAGE  ' + template_file.format(**args)+'_'+inname+'.fits[2]'+\
         '  -WEIGHT_TYPE  MAP_WEIGHT  '
 
-    print '\n',cmd,'\n'
+    print('\n',cmd,'\n')
 
     retval = subprocess.call(cmd.split(),stderr=subprocess.STDOUT)
     if retval != 0:
-        print "sextractorPSFEX error \n"
+        print("sextractorPSFEX error \n")
     return 0
 
 
@@ -397,7 +398,7 @@ def psfex( name,CCD, confPars, **args):
 
     retval = subprocess.call(cmd.split(),stderr=subprocess.STDOUT)
     if retval != 0:
-        print " pxfex error \n"
+        print(" pxfex error \n")
 
     return 0
 
@@ -428,12 +429,12 @@ def sextractorPSF( name, name1, outname, filepsf, CCD, confPars, **args):
     ' -DETECT_THRESH 1.5 -SATUR_KEY SATURATE  -CATALOG_TYPE FITS_LDAC '+\
     ' -WEIGHT_IMAGE '+template_file.format(**args)+'_'+name1+'.fits[2],'+ template_file.format(**args)+'_'+name1+'.fits[2]'+ \
     '  -WEIGHT_TYPE MAP_WEIGHT  -CHECKIMAGE_NAME ' + template_file.format(**args)+'_segmap.fits -CHECKIMAGE_TYPE SEGMENTATION '
-    print ' sextractorPSF \n',cmd,'\n'
+    print(' sextractorPSF \n',cmd,'\n')
 # 
 
     retval = subprocess.call(cmd.split(),stderr=subprocess.STDOUT)
     if retval != 0:
-        print " sextractorPSF error \n"
+        print(" sextractorPSF error \n")
     os.remove(template_file.format(**args)+'_'+name+'.fits')
     return 0
     
@@ -451,7 +452,7 @@ class SEProcPoolSTN():
 
 ###########  Configuration ############
 
-        self.Config = ConfigParser.ConfigParser()
+        self.Config = configparser.ConfigParser()
         self.configFile = self.args.confFile 
         self.Config.read(self.configFile)
         self.template_file = self.ConfigSectionMap("General")['template']
@@ -554,7 +555,7 @@ class SEProcPoolSTN():
                 dict1[option] = self.Config.get(section, option)
                 if dict1[option] == -1:
 #                DebugPrint("skip: %s" % option)
-                    print "skip: %s" % option
+                    print("skip: %s" % option)
             except:
                 print("exception on %s!" % option)
                 dict1[option] = None
@@ -644,7 +645,7 @@ class SEProcPoolSTN():
         ' --flat ' + self.flat.format(**args) + \
         ' --resaturate --fixcols --addweight'    
 
-        print '\n',cmd,'\n'    
+        print('\n',cmd,'\n')  
     
         retval = subprocess.call(cmd.split(),stderr=subprocess.STDOUT)
         if retval != 0:
@@ -666,7 +667,7 @@ class SEProcPoolSTN():
         '  -m -b 5 -f 1.0 -l 7 -n 7 -r 5 -t 20 -v 3 -w 2.0 -y 1.0 -s 100 -v 3 -E 6 -L 30' + \
         '  -x ' +self.template_file.format(**args)+'_trailbox.fits -o ' +self.template_file.format(**args)+'_satstars.fits'   
 
-        print '\n',cmd,'\n'    
+        print('\n',cmd,'\n')
 
         retval = subprocess.call(cmd.split(),stderr=subprocess.STDOUT)
         if retval != 0:
@@ -685,7 +686,7 @@ class SEProcPoolSTN():
         ' --skyfilename ' + self.template_file.format(**args)+'_'+outname+'.fits' + \
         ' --blocksize 128'
 
-        print '\n',cmd,'\n'    
+        print('\n',cmd,'\n') 
 
         retval = subprocess.call(cmd.split(),stderr=subprocess.STDOUT)
         if retval != 0:
@@ -707,7 +708,7 @@ class SEProcPoolSTN():
         ' --bkgfile '+self.template_file.format(**args)+'_'+bkgname+'.fits'+\
         ' --draw  --write_streaks  --streaksfile ' + self.template_file.format(**args)+'_streaksfile.fits' 
 
-        print '\n',cmd,'\n'    
+        print('\n',cmd,'\n')  
 
         retval = subprocess.call(cmd.split(),stderr=subprocess.STDOUT)
         if retval != 0:
@@ -732,7 +733,7 @@ class SEProcPoolSTN():
         self.link_from_Dcache(self.correc_dir+'/skypca/'+str(self.year)+str(self.epoch)+'/'+self.PCFILENAME.format(**args))
     #-----------------------
         cmd = 'ls  *'+inputFile+'.fits > listpcain'
-        print'\n', cmd,'\n' 
+        print('\n', cmd,'\n')
         retval = subprocess.call(cmd, shell=True)
 
         if retval != 0:
@@ -742,7 +743,7 @@ class SEProcPoolSTN():
 
     #------------------------
         cmd = 'sky_combine --miniskylist listpcain -o ' + self.exp_template_file.format(**args)+'_'+skycombineFile+'.fits --ccdnums 1,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36,37,38,39,40,41,42,43,44,45,46,47,48,49,50,51,52,53,54,55,56,57,58,59,60,62 --invalid S30,N30' 
-        print cmd
+        print(cmd)
         retval = subprocess.call(cmd.split(),stderr=subprocess.STDOUT)
 
         if retval != 0:
@@ -754,7 +755,7 @@ class SEProcPoolSTN():
         cmd = 'sky_fit --infilename ' +  self.exp_template_file.format(**args)+'_'+ skycombineFile+'.fits' 
         cmd += ' --outfilename '+ self.exp_template_file.format(**args)+'_'+skyfitinfoFile+'.fits --pcfilename  '
         cmd += (self.PCFILENAME[self.PCFILENAME.rfind("/")+1:]).format(**args)
-        print cmd
+        print(cmd)
         retval = subprocess.call(cmd.split(),stderr=subprocess.STDOUT)
 
         if retval != 0:
@@ -776,7 +777,7 @@ class SEProcPoolSTN():
         ' --starflat '+ self.starflat.format(**args) +\
         ' --out '+self.template_file.format(**args)+'_'+outname+'.fits'
 
-        print '\n',cmd,'\n'
+        print('\n',cmd,'\n')
 
         retval = subprocess.call(cmd.split(),stderr=subprocess.STDOUT)
 
@@ -805,7 +806,7 @@ class SEProcPoolSTN():
         ' --domefilename ' +self.flat.format(**args) +\
         ' --weight  ' +self.weight
 
-        print '\n',cmd,'\n'
+        print('\n',cmd,'\n')
            
         retval = subprocess.call(cmd.split(),stderr=subprocess.STDOUT)
         if retval != 0:
@@ -830,15 +831,15 @@ class SEProcPoolSTN():
         ' -ASTREF_CATALOG ' +self.catalog_ref +' -c ' +self.default_scamp +\
         ' -WRITE_XML Y -XML_NAME scamp.xml -MOSAIC_TYPE SAME_CRVAL -ASTREF_BAND DEFAULT -POSITION_MAXERR 10.0 -NTHREADS 1 ' 
 
-        print '\n',cmd,'\n'
+        print('\n',cmd,'\n')
         try:
             retval = subprocess.call(cmd.split(),stderr=subprocess.STDOUT)
         except subprocess.CalledProcessError, ex: # error code <> 0 
-            print "--------error------"
-            print ex.cmd
-            print ex.message
-            print ex.returncode
-            print ex.output # contains stdout and stderr together 
+            print("--------error------")
+            print(ex.cmd)
+            print(ex.message)
+            print(ex.returncode)
+            print)ex.output) # contains stdout and stderr together 
             sys.exit(-1)
         return
 
@@ -882,11 +883,11 @@ class SEProcPoolSTN():
         ' -DETECT_THRESH 10.0 -SATUR_KEY SATURATE  -CATALOG_TYPE FITS_LDAC -WEIGHT_IMAGE  ' + self.template_file.format(**args)+'_'+inname+'.fits[2]'+\
         '  -WEIGHT_TYPE  MAP_WEIGHT  '
 
-        print '\n',cmd,'\n'
+        print('\n',cmd,'\n')
 
         retval = subprocess.call(cmd.split(),stderr=subprocess.STDOUT)
         if retval != 0:
-            print "Error in sExtractoe not null status \n"
+            print("Error in sExtractoe not null status \n")
         return
     
 #------------------------------------------#
@@ -903,11 +904,11 @@ class SEProcPoolSTN():
         '  -SATUR_KEY SATURATE  -CATALOG_TYPE FITS_LDAC -WEIGHT_IMAGE  ' + self.template_file.format(**args)+'_'+inname+'.fits[2]'+\
         '  -WEIGHT_TYPE  MAP_WEIGHT  '
 
-        print '\n',cmd,'\n'
+        print('\n',cmd,'\n')
 
         retval = subprocess.call(cmd.split(),stderr=subprocess.STDOUT)
         if retval != 0:
-            print " Error in sExtractorPSFEX not null status \n"
+            print(" Error in sExtractorPSFEX not null status \n")
         return
 
 #-----------------------------------#
@@ -923,7 +924,7 @@ class SEProcPoolSTN():
 
         retval = subprocess.call(cmd.split(),stderr=subprocess.STDOUT)
         if retval != 0:
-            print "Error in nullweightbkg not null status \n"
+            print("Error in nullweightbkg not null status \n")
 
 #---------------------------------------------
 #    sextractorsky bkg calculator
@@ -942,10 +943,10 @@ class SEProcPoolSTN():
         ' -PARAMETERS_NAME ' + self.sexbkgparamFile +\
         ' -CATALOG_TYPE NONE -INTERP_TYPE ALL -INTERP_MAXXLAG 16 -INTERP_MAXYLAG 16 '
 
-        print '\n',cmd,'\n'
+        print('\n',cmd,'\n')
         retval = subprocess.call(cmd.split(),stderr=subprocess.STDOUT)
         if retval != 0:
-            print "Error in sExtractorsky not null status \n"
+            print("Error in sExtractorsky not null status \n")
         return
 
 #--------------------------------------------#
@@ -957,11 +958,11 @@ class SEProcPoolSTN():
 
         cmd = 'psfex ' + self.template_file.format(**args)+'_'+name+'.fits -c  ' +self.config_filePSF +\
         '  -OUTCAT_NAME  '+ self.template_file.format(**args)+'_psflist.fits  -OUTCAT_TYPE FITS_LDAC'
-        print '\n',cmd,'\n'
+        print('\n',cmd,'\n')
 
         retval = subprocess.call(cmd.split(),stderr=subprocess.STDOUT)
         if retval != 0:
-            print " Error in PSFEX not null status \n"
+            print(" Error in PSFEX not null status \n")
 
         return
 
@@ -985,12 +986,12 @@ class SEProcPoolSTN():
         ' -DETECT_THRESH 1.5 -SATUR_KEY SATURATE  -CATALOG_TYPE FITS_LDAC '+\
         ' -WEIGHT_IMAGE '+self.template_file.format(**args)+'_'+name1+'.fits[2],'+self.template_file.format(**args)+'_'+name1+'.fits[2]'+ \
         '  -WEIGHT_TYPE MAP_WEIGHT  -CHECKIMAGE_NAME ' + self.template_file.format(**args)+'_segmap.fits -CHECKIMAGE_TYPE SEGMENTATION '
-        print ' sextractorPSF \n',cmd,'\n'
+        print(' sextractorPSF \n',cmd,'\n')
 #        ' -INTERP_TYPE NONE  -SEEING_FWHM ' + str(fwhm) +\
 
         retval = subprocess.call(cmd.split(),stderr=subprocess.STDOUT)
         if retval != 0:
-            print " Error in sExtractoe not null status \n"
+            print(" Error in sExtractoe not null status \n")
         os.remove(self.template_file.format(**args)+'_'+name+'.fits')
         return
 
@@ -1007,23 +1008,23 @@ class SEProcPoolSTN():
         CLASSLIM = 0.75      # class threshold to define star
         MAGERRLIMIT = 0.1  # mag error threshold for stars
 
-        if debug: print "!!!! WUTL_STS: (fwhm): Opening scamp_cat to calculate median FWHM & ELLIPTICITY.\n"
+        if debug: print("!!!! WUTL_STS: (fwhm): Opening scamp_cat to calculate median FWHM & ELLIPTICITY.\n")
         hdu = pyfits.open(incat,"readonly")
 
-        if debug: print "!!!! WUTL_STS: (fwhm): Checking to see that hdu2 in scamp_cat is a binary table.\n"
+        if debug: print("!!!! WUTL_STS: (fwhm): Checking to see that hdu2 in scamp_cat is a binary table.\n")
         if 'XTENSION' in hdu[2].header:
             if hdu[2].header['XTENSION'] != 'BINTABLE':
-                print "!!!! WUTL_ERR: (fwhm): this HDU is not a binary table"
+                print("!!!! WUTL_ERR: (fwhm): this HDU is not a binary table")
                 exit(1)
         else:
-            print "!!!! WUTL_ERR: (fwhm): XTENSION keyword not found"
+            print("!!!! WUTL_ERR: (fwhm): XTENSION keyword not found")
             exit(1)
 
         if 'NAXIS2' in hdu[2].header:
             nrows = hdu[2].header['NAXIS2']
-            print "!!!! WUTL_INF: (fwhm): Found %s rows in table" % nrows
+            print("!!!! WUTL_INF: (fwhm): Found %s rows in table" % nrows)
         else:
-            print "!!!! WUTL_ERR: (fwhm): NAXIS2 keyword not found"
+            print("!!!! WUTL_ERR: (fwhm): NAXIS2 keyword not found")
             exit(1)
 
         tbldct = {}
@@ -1031,7 +1032,7 @@ class SEProcPoolSTN():
             if colname in hdu[2].columns.names:
                 tbldct[colname] = hdu[2].data.field(colname)
             else:
-                print "!!!! WUTL_ERR: (fwhm): No %s column in binary table" % colname
+                print("!!!! WUTL_ERR: (fwhm): No %s column in binary table" % colname)
                 exit(1)
 
         hdu.close()
@@ -1061,17 +1062,17 @@ class SEProcPoolSTN():
         else:
             if count%2:
             # Odd number of elements
-                fwhm_med = fwhm_sel[count/2]
-                ellp_med = ellp_sel[count/2]
+                fwhm_med = fwhm_sel[count//2]
+                ellp_med = ellp_sel[count//2]
             else:
         # Even number of elements
-                fwhm_med = 0.5 * (fwhm_sel[count/2]+fwhm_sel[count/2-1])
-                ellp_med = 0.5 * (ellp_sel[count/2]+ellp_sel[count/2-1])
+                fwhm_med = 0.5 * (fwhm_sel[count//2]+fwhm_sel[count//2-1])
+                ellp_med = 0.5 * (ellp_sel[count//2]+ellp_sel[count//2-1])
 
         if debug:
-            print "FWHM=%.4f" % fwhm_med
-            print "ELLIPTIC=%.4f" % ellp_med
-            print "NFWHMCNT=%s" % count
+            print("FWHM=%.4f" % fwhm_med)
+            print("ELLIPTIC=%.4f" % ellp_med)
+            print("NFWHMCNT=%s" % count)
 
         return (fwhm_med,ellp_med,count)    
 
@@ -1094,7 +1095,7 @@ class SEProcPoolSTN():
         for ii in o:
             for oo in info_array:
                 if oo in ii.split('=')[0] :
-                    #print ii.split('=')[0], ii.split('=')[1].split('/')[0]
+                    #print(ii.split('=')[0], ii.split('=')[1].split('/')[0])
                     matrix.append(ii.split('=')[1].split('/')[0])
 
         matrix = np.array(matrix)
@@ -1147,7 +1148,7 @@ class SEProcPoolSTN():
             ' BADAMP,EDGEBLEED,EDGE,CRAY'
         retval = subprocess.call(cmd.split(),stderr=subprocess.STDOUT)
         if retval != 0:
-            print " Error in rowinterp !!!!11 \n"
+            print(" Error in rowinterp !!!!11 \n")
 
 
 #-----------------------------------#
@@ -1164,7 +1165,7 @@ class SEProcPoolSTN():
             ' --resaturate'
         retval = subprocess.call(cmd.split(),stderr=subprocess.STDOUT)
         if retval != 0:
-            print "Error in nullweight \n"
+            print("Error in nullweight \n")
             
 #--------------------------------#
 #      creating regions          #
@@ -1277,7 +1278,7 @@ class SEProcPoolSTN():
                 dy = float(string.split(tokens[7],'"')[0])
                 chi2 = float(tokens[8])
                 nstars = int(tokens[9])
-#                print tokens
+#                print(tokens)
                 break
         return (dx,dy,chi2,nstars)
 #
@@ -1318,13 +1319,13 @@ class SEProcPoolSTN():
         
 if __name__ == '__main__':
     nbpar = len(sys.argv)
-    print sys.argv
+    print(sys.argv)
     conF = "confFile"
     conF = sys.argv[1]
     multiprocessing.freeze_support()
-    print " Start SEProc.py with conf File %s\n" % conF
+    print(" Start SEProc.py with conf File %s\n" % conF)
     se = SEProcPoolSTN(conF)
-    print "instance created \n"
+    print("instance created \n")
     EXPNUM =  se.ConfigSectionMap("General")['expnum']
     FILTER = se.ConfigSectionMap("General")['filter']
     NITE = se.ConfigSectionMap("General")['nite']
@@ -1336,10 +1337,10 @@ if __name__ == '__main__':
     YEAR = se.ConfigSectionMap("General")['year']
     EPOCH = se.ConfigSectionMap("General")['epoch']
     ncpu = int(se.ConfigSectionMap("General")['ncpu'])
-    print "ncpu=%d \n" % ncpu
+    print("ncpu=%d \n" % ncpu)
 #EXPFILE =  'DECam_00'+str(EXPNUM)+'.fits.fz'
     EXPFILE = data_file
-    print "Start working with file %s \n" % EXPFILE
+    print("Start working with file %s \n" % EXPFILE)
     args = {'expnum': EXPNUM, 'filter': FILTER, 'ccd':'0', 'r':rRun, 'p':pRun, 'year': YEAR, 'epoch': EPOCH}
     se.setArgs(**args)
 #running crosstalk
@@ -1347,12 +1348,12 @@ if __name__ == '__main__':
 # I have to replace NITE with empty string to avoid modification of the file path
 # as it add to the path NITE and we have different data model
 #
-    print " Start crosstalk \n"
+    print(" Start crosstalk \n")
     se.crosstalk(EXPFILE,'',**args)
     nccd = len(CCD)
     xfiles_list = glob.glob('*_xtalk.fits')
     if len(xfiles_list) <  nccd:
-        print " Possibly corrupted file expect %d extensions but got only %d \n" % (nccd,len(xfiles_list))
+        print(" Possibly corrupted file expect %d extensions but got only %d \n" % (nccd,len(xfiles_list)))
         sys.exit(-1)
 #running pixelcorrect and bleedmask
     se.link_from_Dcache(se.data_conf+'default.psf')
@@ -1366,11 +1367,11 @@ if __name__ == '__main__':
     confPars = se.getConfVals()
     pool = Pool(processes=ncpu)
     pars = [[args,confPars,ccdstring] for ccdstring in instrings ]
-    print " Start first pool \n"
+    print(" Start first pool \n")
     pool.map(l1p, pars)
 #    pool.close()
 #    pool.join()
-    print " Finish first pool \n"
+    print(" Finish first pool \n")
     se.fileclean('xtalk','.fits') 
     se.fileclean('nullweight','.fits')
     
@@ -1387,25 +1388,25 @@ if __name__ == '__main__':
     se.change_head('Scamp_allCCD_r'+rRun+'p'+pRun+'.head', 'sextractor', 'detrend', 'wcs', CCD, **args)
 #
 
-    print "SECOND LOOP \n"
+    print("SECOND LOOP \n")
 #    pool = Pool(processes=ncpu)
     pool.map(l2p, pars)
 #    pool.close()
 #    pool.join()
-    print "Finish second pool \n"
+    print("Finish second pool \n")
     se.fileclean('detrend','.fits')
 
     se.skyCombineFit('bleedmask-mini','bleedmask-mini-fp','skyfit-binned-fp',**args)
 # 
 
-    print "THIRD LOOP \n"
+    print("THIRD LOOP \n")
 #    pool = Pool(processes=ncpu)
     pool.map(l3p, pars)
     pool.close()
     pool.join()
-    print "Finish third pool \n"
+    print("Finish third pool \n")
     se.fileclean('nullwtbkg','.fits')
-#    print res
+#    print(res)
     
 
-    print " End run on exposure  \n" 
+    print(" End run on exposure  \n")

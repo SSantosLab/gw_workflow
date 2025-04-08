@@ -11,7 +11,7 @@ import string
 
 
 
-class AstrometryCheck():
+class AstrometryCheck:
     
     def __init__(self,catlistFile):
         self.catlist = catlistFile
@@ -30,7 +30,7 @@ class AstrometryCheck():
             if first:
                 first = False
                 continue
-            tokens = string.split(line,',')
+            tokens = line.split(',')
             self.ra_cent.append(float(tokens[7]))
             self.dec_cent.append(float(tokens[8]))
             self.rac1.append(float(tokens[9]))
